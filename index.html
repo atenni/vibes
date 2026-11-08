@@ -1,43 +1,127 @@
 <!doctype html>
 <html lang="en-AU">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Small web experiments and useful browser tools by Andrew Tennikoff.">
-  <meta name="theme-color" content="#121816">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <title>Vibes · Browser tools and experiments</title>
-  <style>
-    :root { color-scheme: dark; --paper: #121816; --surface: #1b2420; --raised: #24342b; --ink: #e6eee8; --muted: #a8b8ad; --line: #3a4b40; --accent: #8bd5a8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: var(--paper); }
-    * { box-sizing: border-box; }
-    body { margin: 0; }
-    main { max-width: 900px; margin: auto; padding: 80px 24px 32px; }
-    .eyebrow { font-size: .75rem; letter-spacing: .14em; font-weight: 600; }
-    h1 { font-size: clamp(3.5rem, 12vw, 6rem); letter-spacing: -.07em; margin: 20px 0 12px; line-height: 1; font-weight: 650; }
-    .intro { color: var(--muted); line-height: 1.7; max-width: 440px; margin-bottom: 48px; }
-    .tool { display: block; max-width: 500px; border: 1px solid var(--line); border-radius: 14px; padding: 26px; color: inherit; background: var(--surface); text-decoration: none; }
-    .tool:hover { background: var(--raised); }
-    .tool:focus-visible { outline: 3px solid #efb75e; outline-offset: 4px; }
-    .tag { font-size: .7rem; letter-spacing: .1em; color: var(--accent); }
-    h2 { font-size: 1.35rem; margin: 18px 0 10px; }
-    .tool p { color: var(--muted); font-size: .95rem; line-height: 1.7; margin: 0; }
-    .open { display: block; margin-top: 24px; color: var(--accent); font-size: .85rem; }
-    footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
-    footer a { color: var(--accent); text-underline-offset: 3px; }
-  </style>
-</head>
-<body>
-  <main>
-    <div class="eyebrow">BROWSER TOOLS AND EXPERIMENTS</div>
-    <h1>Vibes</h1>
-    <p class="intro">Web experiments and browser-based utilities.</p>
-    <a class="tool" href="cidr/">
-      <span class="tag">NETWORKING</span>
-      <h2>CIDR helper</h2>
-      <p>Calculate IPv4 and IPv6 address ranges and subnet sizes. Split networks into smaller subnets.</p>
-      <span class="open">Open calculator ↗</span>
-    </a>
-    <footer>By Andrew Tennikoff · <a href="https://github.com/atenni/vibes">Source on GitHub</a></footer>
-  </main>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Small web experiments and useful browser tools by Andrew Tennikoff."
+    />
+    <meta name="theme-color" content="#121816" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <title>Vibes · Browser tools and experiments</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --paper: #121816;
+        --surface: #1b2420;
+        --raised: #24342b;
+        --ink: #e6eee8;
+        --muted: #a8b8ad;
+        --line: #3a4b40;
+        --accent: #8bd5a8;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: var(--paper);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      main {
+        max-width: 900px;
+        margin: auto;
+        padding: 80px 24px 32px;
+      }
+      .eyebrow {
+        font-size: 0.75rem;
+        letter-spacing: 0.14em;
+        font-weight: 600;
+      }
+      h1 {
+        font-size: clamp(3.5rem, 12vw, 6rem);
+        letter-spacing: -0.07em;
+        margin: 20px 0 12px;
+        line-height: 1;
+        font-weight: 650;
+      }
+      .intro {
+        color: var(--muted);
+        line-height: 1.7;
+        max-width: 440px;
+        margin-bottom: 48px;
+      }
+      .tool {
+        display: block;
+        max-width: 500px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 26px;
+        color: inherit;
+        background: var(--surface);
+        text-decoration: none;
+      }
+      .tool:hover {
+        background: var(--raised);
+      }
+      .tool:focus-visible {
+        outline: 3px solid #efb75e;
+        outline-offset: 4px;
+      }
+      .tag {
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        color: var(--accent);
+      }
+      h2 {
+        font-size: 1.35rem;
+        margin: 18px 0 10px;
+      }
+      .tool p {
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.7;
+        margin: 0;
+      }
+      .open {
+        display: block;
+        margin-top: 24px;
+        color: var(--accent);
+        font-size: 0.85rem;
+      }
+      footer {
+        margin-top: 64px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+      footer a {
+        color: var(--accent);
+        text-underline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="eyebrow">BROWSER TOOLS AND EXPERIMENTS</div>
+      <h1>Vibes</h1>
+      <p class="intro">Web experiments and browser-based utilities.</p>
+      <a class="tool" href="cidr/">
+        <span class="tag">NETWORKING</span>
+        <h2>CIDR helper</h2>
+        <p>
+          Calculate IPv4 and IPv6 address ranges and subnet sizes. Split
+          networks into smaller subnets.
+        </p>
+        <span class="open">Open calculator ↗</span>
+      </a>
+      <footer>
+        By Andrew Tennikoff ·
+        <a href="https://github.com/atenni/vibes">Source on GitHub</a>
+      </footer>
+    </main>
+  </body>
 </html>
