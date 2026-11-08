@@ -12,6 +12,8 @@ const number = new Intl.NumberFormat('en-AU');
 let subnet = null;
 /** @type {ReturnType<typeof setTimeout> | undefined} */
 let confirmationTimeout;
+/** @type {Animation | undefined} */
+let resultHighlight;
 /** @type {WeakMap<HTMLButtonElement, ReturnType<typeof setTimeout>>} */
 const copyTimeouts = new WeakMap();
 
@@ -30,15 +32,29 @@ function resetConfirmation() {
   clearTimeout(confirmationTimeout);
   setText('calculate-label', 'Calculate');
   setText('calculate-icon', '↗');
-  element('result-overview').classList.remove('is-updated');
 }
 
 function confirmCalculation() {
   resetConfirmation();
   setText('calculate-label', 'Calculated');
   setText('calculate-icon', '✓');
-  element('result-overview').classList.add('is-updated');
   confirmationTimeout = setTimeout(resetConfirmation, 1500);
+}
+
+function flashResult() {
+  const area = element('result-overview');
+  resultHighlight?.cancel();
+  const accent = getComputedStyle(area).getPropertyValue('--accent').trim();
+  const frames = matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? [{ outlineColor: accent }, { outlineColor: accent }]
+    : [
+      { outlineColor: 'transparent', offset: 0 },
+      { outlineColor: accent, offset: 0.2 },
+      { outlineColor: accent, offset: 0.7 },
+      { outlineColor: 'transparent', offset: 1 },
+    ];
+  // One gentle pulse; replacing it prevents rapid clicks from stacking effects.
+  resultHighlight = area.animate(frames, { duration: 1200, easing: 'ease-in-out' });
 }
 
 /** @param {string} id @param {bigint} address @param {number} prefix @param {import('./ip.mjs').IPVersion} version */
@@ -92,15 +108,16 @@ function renderSplit() {
 
 // Keep the summary and key figures visible without always jumping to their top.
 function resultScrollDelta() {
+  const result = element('result-overview').getBoundingClientRect();
   const summary = element('result-summary').getBoundingClientRect();
-  const stats = element('subnet-stats').getBoundingClientRect();
   const viewport = window.visualViewport;
   const top = (viewport?.offsetTop ?? 0) + 16;
   const bottom = (viewport?.offsetTop ?? 0) + (viewport?.height ?? innerHeight) - 16;
-  if (summary.top >= top && stats.bottom <= bottom) return 0;
+  if (result.top >= top && result.bottom <= bottom) return 0;
   // On very short screens, prioritise the network heading over fitting every card.
-  if (stats.bottom - summary.top > bottom - top || summary.top < top) return summary.top - top;
-  return stats.bottom - bottom;
+  if (result.height > bottom - top) return summary.top - top;
+  if (result.top < top) return result.top - top;
+  return result.bottom - bottom;
 }
 
 function revealResult() {
@@ -118,13 +135,14 @@ function revealResult() {
   });
 }
 
-/** @param {string} value @param {boolean} updateURL @returns {boolean} */
-function calculate(value, updateURL = true) {
+/** @param {string} value @param {{ updateURL?: boolean, highlight?: boolean }} options @returns {boolean} */
+function calculate(value, { updateURL = true, highlight = true } = {}) {
   resetConfirmation();
   input.value = value;
   try {
     subnet = calculateSubnet(value);
   } catch (error) {
+    resultHighlight?.cancel();
     subnet = null;
     setText('error', error.message);
     element('error').hidden = false;
@@ -200,6 +218,7 @@ function calculate(value, updateURL = true) {
     history.replaceState(null, '', url);
   }
   setText('status', `Calculated ${subnet.cidr}.`);
+  if (highlight) flashResult();
   return true;
 }
 
@@ -268,5 +287,5 @@ element('copy-details').addEventListener('click', () => {
     ]),
   ].join('\n'), 'Subnet details copied.');
 });
-window.addEventListener('popstate', () => calculate(new URL(location.href).searchParams.get('cidr') ?? '192.168.1.42/24', false));
-calculate(new URL(location.href).searchParams.get('cidr') ?? input.value);
+window.addEventListener('popstate', () => calculate(new URL(location.href).searchParams.get('cidr') ?? '192.168.1.42/24', { updateURL: false }));
+calculate(new URL(location.href).searchParams.get('cidr') ?? input.value, { highlight: false });
