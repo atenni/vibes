@@ -10,10 +10,25 @@ const splitSelect = /** @type {HTMLSelectElement} */ (element('split-prefix'));
 const number = new Intl.NumberFormat('en-AU');
 /** @type {ReturnType<typeof calculateSubnet> | null} */
 let subnet = null;
+/** @type {ReturnType<typeof setTimeout> | undefined} */
+let confirmationTimeout;
 
 /** @param {string} id @param {string | number} value */
 function setText(id, value) {
   element(id).textContent = String(value);
+}
+
+function resetConfirmation() {
+  clearTimeout(confirmationTimeout);
+  setText('calculate-label', 'Calculate');
+  setText('calculate-icon', '↗');
+}
+
+function confirmCalculation() {
+  resetConfirmation();
+  setText('calculate-label', 'Calculated');
+  setText('calculate-icon', '✓');
+  confirmationTimeout = setTimeout(resetConfirmation, 1500);
 }
 
 /** @param {string} id @param {bigint} address @param {number} prefix @param {import('./ip.mjs').IPVersion} version */
@@ -56,16 +71,46 @@ function renderSplit() {
     button.textContent = network;
     button.addEventListener('click', () => {
       calculate(network);
-      input.focus();
-      element('calculator').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // The selected button is replaced, so give keyboard users a stable target.
+      element('network').focus({ preventScroll: true });
+      revealResult();
     });
     item.append(button);
     element('subnets').append(item);
   }
 }
 
-/** @param {string} value @param {boolean} updateURL */
+// Keep the summary and key figures visible without always jumping to their top.
+function resultScrollDelta() {
+  const summary = element('result-summary').getBoundingClientRect();
+  const stats = element('subnet-stats').getBoundingClientRect();
+  const viewport = window.visualViewport;
+  const top = (viewport?.offsetTop ?? 0) + 16;
+  const bottom = (viewport?.offsetTop ?? 0) + (viewport?.height ?? innerHeight) - 16;
+  if (summary.top >= top && stats.bottom <= bottom) return 0;
+  // On very short screens, prioritise the network heading over fitting every card.
+  if (stats.bottom - summary.top > bottom - top || summary.top < top) return summary.top - top;
+  return stats.bottom - bottom;
+}
+
+function revealResult() {
+  if (Math.abs(resultScrollDelta()) < 2) return;
+  element('network').focus({ preventScroll: true });
+  // Re-measure after focus releases the mobile keyboard; do not chase viewport changes.
+  requestAnimationFrame(() => {
+    if (!subnet || element('results').hidden) return;
+    const delta = resultScrollDelta();
+    if (Math.abs(delta) < 2) return;
+    window.scrollBy({
+      top: delta,
+      behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+    });
+  });
+}
+
+/** @param {string} value @param {boolean} updateURL @returns {boolean} */
 function calculate(value, updateURL = true) {
+  resetConfirmation();
   input.value = value;
   try {
     subnet = calculateSubnet(value);
@@ -76,7 +121,7 @@ function calculate(value, updateURL = true) {
     input.setAttribute('aria-invalid', 'true');
     element('results').hidden = true;
     setText('status', '');
-    return;
+    return false;
   }
   input.removeAttribute('aria-invalid');
   element('error').hidden = true;
@@ -143,6 +188,7 @@ function calculate(value, updateURL = true) {
     history.replaceState(null, '', url);
   }
   setText('status', `Calculated ${subnet.cidr}.`);
+  return true;
 }
 
 /** @param {string} text @param {string} message */
@@ -157,8 +203,14 @@ async function copy(text, message) {
 
 element('calculator').addEventListener('submit', (event) => {
   event.preventDefault();
-  calculate(input.value);
+  if (calculate(input.value)) {
+    confirmCalculation();
+    revealResult();
+  } else {
+    input.focus({ preventScroll: true });
+  }
 });
+input.addEventListener('input', resetConfirmation);
 for (const button of document.querySelectorAll('[data-example]')) {
   button.addEventListener('click', () => calculate(button.getAttribute('data-example')));
 }

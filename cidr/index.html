@@ -14,7 +14,6 @@
   <main>
     <header>
       <a class="back" href="../">← Vibes</a>
-      <div class="eyebrow">NETWORKING</div>
       <h1>CIDR helper</h1>
       <p class="intro">Calculate IPv4 and IPv6 address ranges and subnet sizes.</p>
     </header>
@@ -24,7 +23,7 @@
         <label for="cidr">IP address / prefix</label>
         <div class="input-row">
           <input id="cidr" name="cidr" type="text" value="192.168.1.42/24" placeholder="192.168.1.42/24" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="input-hint error" required>
-          <button class="primary" type="submit">Calculate <span aria-hidden="true">↗</span></button>
+          <button class="primary" type="submit" aria-label="Calculate"><span id="calculate-label">Calculate</span> <span id="calculate-icon" aria-hidden="true">↗</span></button>
         </div>
         <div id="input-hint" class="hint">
           <div class="prefix-limits">
@@ -56,15 +55,15 @@
     </section>
 
     <div id="results" hidden>
-      <section class="summary" aria-labelledby="network-label">
+      <section id="result-summary" class="summary" aria-labelledby="network">
         <div>
-          <h2 id="network-label" class="eyebrow">NETWORK</h2>
-          <div id="network" class="network"></div>
+          <p id="network-label" class="eyebrow">NETWORK</p>
+          <h2 id="network" class="network" tabindex="-1"></h2>
           <p id="normalised" class="hint"></p>
         </div>
         <button id="share" type="button" class="secondary">Copy link</button>
       </section>
-      <section class="stats" aria-label="Subnet details">
+      <section id="subnet-stats" class="stats" aria-label="Subnet details">
         <div class="stat total-stat"><h3>Total addresses</h3><p id="total"></p><small id="count-note" class="ipv6-only" hidden></small></div>
         <div class="stat ipv4-only"><h3>Usable addresses</h3><p id="usable"></p></div>
         <div class="stat ipv4-only"><h3>Subnet mask</h3><p id="mask" class="mono"></p></div>
