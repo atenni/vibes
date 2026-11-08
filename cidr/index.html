@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A browser-only IPv4 and IPv6 CIDR calculator. Find address ranges and subnet sizes, or split networks into smaller subnets.">
+  <meta name="theme-color" content="#121816">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <title>CIDR helper · Vibes</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.mjs"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <a class="back" href="../">← Vibes</a>
+      <div class="eyebrow">NETWORKING</div>
+      <h1>CIDR helper</h1>
+      <p class="intro">Calculate IPv4 and IPv6 address ranges and subnet sizes.</p>
+    </header>
+
+    <section class="input-panel" aria-label="Network input">
+      <form id="calculator" novalidate>
+        <label for="cidr">IP address / prefix</label>
+        <div class="input-row">
+          <input id="cidr" name="cidr" type="text" value="192.168.1.42/24" placeholder="192.168.1.42/24" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="input-hint error" required>
+          <button class="primary" type="submit">Calculate <span aria-hidden="true">↗</span></button>
+        </div>
+        <div id="input-hint" class="hint">
+          <div class="prefix-limits">
+            <span class="prefix-limit"><span class="family-label">IPv4</span> /0–/32</span>
+            <span class="prefix-limit"><span class="family-label family-v6">IPv6</span> /0–/128</span>
+          </div>
+          <p class="detection-note">The address format is detected automatically.</p>
+        </div>
+        <p id="error" class="error" role="alert" hidden></p>
+      </form>
+      <div class="examples" role="group" aria-labelledby="examples-title">
+        <h2 id="examples-title">Examples</h2>
+        <div class="example-family" role="group" aria-label="IPv4 examples">
+          <span class="family-label" aria-hidden="true">IPv4</span>
+          <div class="example-buttons">
+            <button type="button" data-example="10.0.0.0/16">Private /16</button>
+            <button type="button" data-example="172.16.4.130/26">Small /26</button>
+            <button type="button" data-example="192.0.2.0/31">Point-to-point /31</button>
+          </div>
+        </div>
+        <div class="example-family" role="group" aria-label="IPv6 examples">
+          <span class="family-label family-v6" aria-hidden="true">IPv6</span>
+          <div class="example-buttons">
+            <button type="button" data-example="2001:db8:1234::42/64">IPv6 /64</button>
+            <button type="button" data-example="2001:db8:abcd:1200::/56">IPv6 /56</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="results" hidden>
+      <section class="summary" aria-labelledby="network-label">
+        <div>
+          <h2 id="network-label" class="eyebrow">NETWORK</h2>
+          <div id="network" class="network"></div>
+          <p id="normalised" class="hint"></p>
+        </div>
+        <button id="share" type="button" class="secondary">Copy link</button>
+      </section>
+      <section class="stats" aria-label="Subnet details">
+        <div class="stat total-stat"><h3>Total addresses</h3><p id="total"></p><small id="count-note" class="ipv6-only" hidden></small></div>
+        <div class="stat ipv4-only"><h3>Usable addresses</h3><p id="usable"></p></div>
+        <div class="stat ipv4-only"><h3>Subnet mask</h3><p id="mask" class="mono"></p></div>
+        <div class="stat ipv4-only"><h3>Wildcard mask</h3><p id="wildcard" class="mono"></p></div>
+        <div class="stat ipv6-only" hidden><h3>Prefix length</h3><p id="prefix-length"></p></div>
+        <div class="stat ipv6-only" hidden><h3>Host bits</h3><p id="host-bits"></p></div>
+      </section>
+      <section class="panel" aria-labelledby="range-title">
+        <div class="section-heading"><h2 id="range-title">Address range</h2><button id="copy-details" class="text-button" type="button">Copy details</button></div>
+        <dl class="ranges">
+          <div><dt>Network address</dt><dd id="network-address"></dd></div>
+          <div><dt id="last-label">Broadcast address</dt><dd id="last-address"></dd></div>
+          <div class="ipv4-only"><dt>First usable</dt><dd id="first-host"></dd></div>
+          <div class="ipv4-only"><dt>Last usable</dt><dd id="last-host"></dd></div>
+          <div class="expanded ipv6-only" hidden><dt>Expanded input address</dt><dd id="expanded-address"></dd></div>
+        </dl>
+        <p id="range-note" class="note"></p>
+        <nav class="adjacent" aria-label="Adjacent networks">
+          <button id="previous" class="secondary" type="button"></button>
+          <button id="next" class="secondary" type="button"></button>
+        </nav>
+      </section>
+      <section class="panel" aria-labelledby="bits-title">
+        <div class="section-heading"><h2 id="bits-title">Binary representation</h2><div class="legend"><span class="network-key">Network bits</span><span>Host bits</span></div></div>
+        <div class="binary-scroll" tabindex="0" role="region" aria-label="Binary address details; scroll horizontally if needed">
+          <div class="binary-row"><span class="binary-label">Address</span><code id="address-bits"></code></div>
+          <div class="binary-row"><span class="binary-label">Mask</span><code id="mask-bits"></code></div>
+          <div class="binary-row"><span class="binary-label">Network</span><code id="network-bits"></code></div>
+        </div>
+        <p id="bits-note" class="hint"></p>
+      </section>
+      <section class="panel" aria-labelledby="split-title">
+        <div class="section-heading"><h2 id="split-title">Split this network</h2><label class="split-control" for="split-prefix">Into <select id="split-prefix"></select></label></div>
+        <p id="split-note" class="hint"></p>
+        <ul id="subnets" class="subnets"></ul>
+      </section>
+    </div>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <noscript><p class="error">This calculator needs JavaScript enabled. All calculations run locally in your browser.</p></noscript>
+    <footer><span>All calculations stay in your browser.</span><a href="../">Vibes</a></footer>
+  </main>
+</body>
+</html>
