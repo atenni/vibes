@@ -55,30 +55,35 @@
     </section>
 
     <div id="results" hidden>
-      <section id="result-summary" class="summary" aria-labelledby="network">
-        <div>
-          <p id="network-label" class="eyebrow">NETWORK</p>
-          <h2 id="network" class="network" tabindex="-1"></h2>
-          <p id="normalised" class="hint"></p>
-        </div>
-        <button id="share" type="button" class="secondary">Copy link</button>
-      </section>
-      <section id="subnet-stats" class="stats" aria-label="Subnet details">
-        <div class="stat total-stat"><h3>Total addresses</h3><p id="total"></p><small id="count-note" class="ipv6-only" hidden></small></div>
-        <div class="stat ipv4-only"><h3>Usable addresses</h3><p id="usable"></p></div>
-        <div class="stat ipv4-only"><h3>Subnet mask</h3><p id="mask" class="mono"></p></div>
-        <div class="stat ipv4-only"><h3>Wildcard mask</h3><p id="wildcard" class="mono"></p></div>
-        <div class="stat ipv6-only" hidden><h3>Prefix length</h3><p id="prefix-length"></p></div>
-        <div class="stat ipv6-only" hidden><h3>Host bits</h3><p id="host-bits"></p></div>
-      </section>
+      <div id="result-overview" class="result-overview">
+        <section id="result-summary" class="summary" aria-labelledby="result-heading">
+          <div>
+            <p class="eyebrow">RESULT · <span id="network-label">NETWORK</span></p>
+            <h2 id="result-heading" tabindex="-1"><button id="network" class="network copy-value" type="button" data-copy-value data-copy-label="network CIDR"></button></h2>
+            <p id="normalised" class="hint"></p>
+          </div>
+          <button id="share" type="button" class="secondary">Copy link</button>
+        </section>
+        <section id="subnet-stats" class="stats" aria-label="Subnet details">
+          <div class="stat total-stat"><h3>Total addresses</h3><p id="total"></p><small id="count-note" class="ipv6-only" hidden></small></div>
+          <div class="stat ipv4-only"><h3>Usable addresses</h3><p id="usable"></p></div>
+          <div class="stat ipv4-only"><h3>Subnet mask</h3><p class="mono"><button id="mask" class="copy-value" type="button" data-copy-value data-copy-label="subnet mask"></button></p></div>
+          <div class="stat ipv4-only"><h3>Wildcard mask</h3><p class="mono"><button id="wildcard" class="copy-value" type="button" data-copy-value data-copy-label="wildcard mask"></button></p></div>
+          <div class="stat ipv6-only" hidden><h3>Prefix length</h3><p id="prefix-length"></p></div>
+          <div class="stat ipv6-only" hidden><h3>Host bits</h3><p id="host-bits"></p></div>
+        </section>
+      </div>
       <section class="panel" aria-labelledby="range-title">
         <div class="section-heading"><h2 id="range-title">Address range</h2><button id="copy-details" class="text-button" type="button">Copy details</button></div>
+        <p class="hint copy-hint">Click an address, range or mask to copy it.</p>
         <dl class="ranges">
-          <div><dt>Network address</dt><dd id="network-address"></dd></div>
-          <div><dt id="last-label">Broadcast address</dt><dd id="last-address"></dd></div>
-          <div class="ipv4-only"><dt>First usable</dt><dd id="first-host"></dd></div>
-          <div class="ipv4-only"><dt>Last usable</dt><dd id="last-host"></dd></div>
-          <div class="expanded ipv6-only" hidden><dt>Expanded input address</dt><dd id="expanded-address"></dd></div>
+          <div><dt>Network address</dt><dd><button id="network-address" class="copy-value" type="button" data-copy-value data-copy-label="network address"></button></dd></div>
+          <div><dt id="last-label">Broadcast address</dt><dd><button id="last-address" class="copy-value" type="button" data-copy-value data-copy-label="last address"></button></dd></div>
+          <div class="full-range"><dt>Full range</dt><dd><button id="address-range" class="copy-value" type="button" data-copy-value data-copy-label="address range"></button></dd></div>
+          <div class="ipv4-only"><dt>First usable</dt><dd><button id="first-host" class="copy-value" type="button" data-copy-value data-copy-label="first usable address"></button></dd></div>
+          <div class="ipv4-only"><dt>Last usable</dt><dd><button id="last-host" class="copy-value" type="button" data-copy-value data-copy-label="last usable address"></button></dd></div>
+          <div class="full-range ipv4-only"><dt>Usable range</dt><dd><button id="usable-range" class="copy-value" type="button" data-copy-value data-copy-label="usable range"></button></dd></div>
+          <div class="expanded ipv6-only" hidden><dt>Expanded input address</dt><dd><button id="expanded-address" class="copy-value" type="button" data-copy-value data-copy-label="expanded input address"></button></dd></div>
         </dl>
         <p id="range-note" class="note"></p>
         <nav class="adjacent" aria-label="Adjacent networks">

@@ -12,22 +12,32 @@ const number = new Intl.NumberFormat('en-AU');
 let subnet = null;
 /** @type {ReturnType<typeof setTimeout> | undefined} */
 let confirmationTimeout;
+/** @type {WeakMap<HTMLButtonElement, ReturnType<typeof setTimeout>>} */
+const copyTimeouts = new WeakMap();
 
 /** @param {string} id @param {string | number} value */
 function setText(id, value) {
-  element(id).textContent = String(value);
+  const target = element(id);
+  target.textContent = String(value);
+  if (target.hasAttribute('data-copy-value')) {
+    target.setAttribute('aria-label', `Copy ${target.dataset.copyLabel}: ${value}`);
+    target.title = `Click to copy ${target.dataset.copyLabel}`;
+    target.classList.remove('copied', 'copy-failed');
+  }
 }
 
 function resetConfirmation() {
   clearTimeout(confirmationTimeout);
   setText('calculate-label', 'Calculate');
   setText('calculate-icon', '↗');
+  element('result-overview').classList.remove('is-updated');
 }
 
 function confirmCalculation() {
   resetConfirmation();
   setText('calculate-label', 'Calculated');
   setText('calculate-icon', '✓');
+  element('result-overview').classList.add('is-updated');
   confirmationTimeout = setTimeout(resetConfirmation, 1500);
 }
 
@@ -72,7 +82,7 @@ function renderSplit() {
     button.addEventListener('click', () => {
       calculate(network);
       // The selected button is replaced, so give keyboard users a stable target.
-      element('network').focus({ preventScroll: true });
+      element('result-heading').focus({ preventScroll: true });
       revealResult();
     });
     item.append(button);
@@ -95,7 +105,7 @@ function resultScrollDelta() {
 
 function revealResult() {
   if (Math.abs(resultScrollDelta()) < 2) return;
-  element('network').focus({ preventScroll: true });
+  element('result-heading').focus({ preventScroll: true });
   // Re-measure after focus releases the mobile keyboard; do not chase viewport changes.
   requestAnimationFrame(() => {
     if (!subnet || element('results').hidden) return;
@@ -145,11 +155,13 @@ function calculate(value, updateURL = true) {
     setText('wildcard', format(wildcard));
     setText('first-host', format(firstHost));
     setText('last-host', format(lastHost));
+    setText('usable-range', `${format(firstHost)} - ${format(lastHost)}`);
   } else {
     setText('expanded-address', expandedAddress(address, version));
   }
   setText('network-address', format(network));
   setText('last-address', format(last));
+  setText('address-range', `${format(network)} - ${format(last)}`);
   setText('last-label', ipv6 || prefix >= 31 ? 'Last address' : 'Broadcast address');
   setText('range-note', ipv6
     ? prefix === 128
@@ -191,14 +203,28 @@ function calculate(value, updateURL = true) {
   return true;
 }
 
-/** @param {string} text @param {string} message */
+/** @param {string} text @param {string} message @returns {Promise<boolean>} */
 async function copy(text, message) {
   try {
     await navigator.clipboard.writeText(text);
     setText('status', message);
+    return true;
   } catch {
     setText('status', 'Could not access the clipboard. You can select and copy the text manually.');
+    return false;
   }
+}
+
+for (const control of document.querySelectorAll('button[data-copy-value]')) {
+  const button = /** @type {HTMLButtonElement} */ (control);
+  button.addEventListener('click', async () => {
+    const value = button.textContent ?? '';
+    const success = await copy(value, `Copied ${button.dataset.copyLabel}: ${value}`);
+    clearTimeout(copyTimeouts.get(button));
+    button.classList.remove('copied', 'copy-failed');
+    button.classList.add(success ? 'copied' : 'copy-failed');
+    copyTimeouts.set(button, setTimeout(() => button.classList.remove('copied', 'copy-failed'), 1500));
+  });
 }
 
 element('calculator').addEventListener('submit', (event) => {

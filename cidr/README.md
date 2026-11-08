@@ -14,6 +14,8 @@ A browser-only IPv4 and IPv6 subnet calculator with exact `BigInt` arithmetic. N
 - Shows the full IPv6 address range, expanded input address and exact address count. IPv6 has no broadcast address; the tool does not claim that every address is assignable.
 - Splits either address family into up to 256 equal subnets; select a child to inspect it.
 - Supports shareable `?cidr=` URLs and copying subnet details.
+- Click an underlined CIDR, address, mask or range to copy its value. Ranges are copied as `start - end`, with no labels or extra formatting. Copy controls also work with the keyboard and show local success/failure feedback.
+- Groups the summary and key figures in a labelled result area. Successful Calculate/Enter submissions briefly confirm success and emphasise that area, scrolling only when it is not already visible.
 
 All calculations run locally in your browser.
 
