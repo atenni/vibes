@@ -1,0 +1,10 @@
+repos:
+  - repo: local
+    hooks:
+      - id: prettier
+        name: Prettier
+        entry: prettier --write --ignore-unknown
+        language: node
+        additional_dependencies:
+          - prettier@3.9.10
+        types: [text]

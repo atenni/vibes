@@ -1,0 +1,36 @@
+name: Pre-commit
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: false
+      - name: Get runtime versions
+        id: runtimes
+        run: |
+          python_version=$(uvx --from pre-commit python -c 'import platform; print(platform.python_version())')
+          node_version=$(node --version)
+          echo "python=$python_version" >> "$GITHUB_OUTPUT"
+          echo "node=$node_version" >> "$GITHUB_OUTPUT"
+      - name: Cache pre-commit environments
+        uses: actions/cache@v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key:
+            ${{ runner.os }}-${{ runner.arch }}-pre-commit-${{
+            steps.runtimes.outputs.python }}-${{ steps.runtimes.outputs.node
+            }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Run pre-commit hooks
+        run: uvx pre-commit run --all-files --show-diff-on-failure
