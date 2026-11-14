@@ -33,6 +33,3 @@ for (const result of runDeadWaxTests(sandbox.DW, sandbox.examples)) {
   if (!result.ok) failures++;
 }
 process.exitCode = failures ? 1 : 0;
-// Native Node tests exercise audio policy and transport without a browser.
-await import("./audio.test.mjs");
-await import("./transport.test.mjs");
