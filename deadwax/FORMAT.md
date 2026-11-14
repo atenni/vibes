@@ -368,7 +368,7 @@ Each is a complete format example with editable chords, grids and drift bounds.
 Run from the repository root (no dependencies):
 
 ```sh
-node deadwax/test.mjs
+node --test deadwax/
 ```
 
 Or open [tests.html](tests.html). The same assertions cover valid examples,
