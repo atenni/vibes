@@ -1,0 +1,22 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: node
+      # Node discovers *.test.mjs, test.mjs and friends in every folder.
+      - name: Run Node tests
+        run: node --test
