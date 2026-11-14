@@ -20,6 +20,24 @@ matte hardware.
 - **Safari and iOS are first-class targets.** iOS is the primary device. The
   layout was checked in WebKit (desktop and iPhone emulation).
 
+## Integration (read first)
+
+- **`design/` never goes into `feat/deadwax-poc` or `main`.** GitHub Pages
+  publishes `main` from the repository root, so this folder would become a
+  public page. `style/initial-design` is a reference-only branch and is never
+  merged.
+- **Port, don't copy:** the deliverable is the CSS and markup inside
+  `deadwax/index.html`. The CSP (`style-src 'unsafe-inline'`) blocks external
+  stylesheets, so inlining is required anyway. Read files without checking them
+  out, for example `git show style/initial-design:design/components.css`.
+- **Fence the pasted CSS** in the inline `<style>`, so later updates can replace
+  whole blocks:
+  `/* ==== design: tokens.css @ <commit> ==== */ … /* ==== end tokens.css ==== */`,
+  and the same for `components.css`. Each design update then comes with a commit
+  ID: replace the fenced blocks with that commit's files, and apply the markup
+  and wiring changes listed in the message. `git diff <old>..<new> -- design/`
+  shows exactly what changed.
+
 ## Files
 
 | File                    | What it is                                                           | Copy into `index.html`?             |
