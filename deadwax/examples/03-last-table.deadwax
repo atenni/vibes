@@ -1,0 +1,57 @@
+deadwax 1
+title The last table
+tempo 80
+meter 4/4
+key D minor
+swing 0.26
+bars 4
+seed 161803
+
+chords Em7b5:4 A7b9:4 Dm9:4 Bb13:2 A7alt:2
+bass auto walking
+melody -:1 A4:1 G4:1 F4:1 E4:2 C#5:1 -:1 D5:2 A4:1 F4:1 E4:1 D4:1 C#4:1 -:1
+kick X... .... x... ..g.
+rim .... X... ...g X...
+hats x.gx x.g. x.gx x.g.
+brushes .... g... .... g...
+
+instrument chords epiano
+instrument bass upright
+instrument melody epiano
+level chords 0.7
+level bass 0.8
+level melody 0.4
+level drums 0.65
+
+texture vinyl 0.12
+texture surface 0.04
+texture tape 0.05
+texture rumble 0.06
+texture rain 0
+texture room 0.03
+texture hum 0.02
+
+drift rate 0.35
+drift tempo 58 100
+drift swing 0 0.4
+drift humanise 0 0.8
+drift busyness 0.05 0.9
+drift embellish 0 0.8
+drift density 0.1 0.95
+drift register 0.2 0.8
+drift substitution 0 0.45
+drift rhythm 0 0.7
+drift timbre 0 1
+drift tone 0.1 0.9
+drift saturation 0.05 0.8
+drift wow 0 0.75
+drift reverb 0.1 0.75
+drift balance 0.2 0.8
+drift arrangement 0 0.45
+drift vinyl 0 0.5
+drift tape 0 0.4
+drift surface 0 0.2
+drift rumble 0 0.2
+drift rain 0 0.5
+drift room 0 0.3
+drift hum 0 0.2

@@ -1,0 +1,82 @@
+# Experimental: evaluate this approach as the monorepo grows. See README.md.
+name: Project tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      projects: ${{ steps.projects.outputs.projects }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: node
+      - name: Test shared runner
+        run: node --test scripts/test-projects.test.mjs
+      - name: Select affected projects
+        id: projects
+        env:
+          BASE_REF:
+            ${{ github.event.pull_request.base.sha || github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          args=()
+          # Manual runs and new branches test everything.
+          if [[ "$EVENT_NAME" != "workflow_dispatch" && -n "$BASE_REF" && ! "$BASE_REF" =~ ^0+$ ]]; then
+            args+=(--base "$BASE_REF")
+          fi
+          projects=$(node scripts/test-projects.mjs --list --json "${args[@]}")
+          echo "projects=$projects" >> "$GITHUB_OUTPUT"
+          echo "Selected projects: $projects"
+
+  test:
+    needs: discover
+    if: needs.discover.outputs.projects != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJSON(needs.discover.outputs.projects) }}
+    name: Test ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: node
+      - name: Run project-local tests
+        env:
+          PROJECT: ${{ matrix.project }}
+        run: node scripts/test-projects.mjs "$PROJECT"
+
+  # A stable check for branch protection, including changes with no opted-in projects.
+  # Matrix job names vary, so require this check rather than individual project jobs.
+  project-tests:
+    name: Project tests
+    if: always()
+    needs: [discover, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Check results
+        env:
+          DISCOVERY_RESULT: ${{ needs.discover.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+          PROJECTS_JSON: ${{ needs.discover.outputs.projects }}
+        run: |
+          [[ "$DISCOVERY_RESULT" == "success" ]]
+          [[ "$TEST_RESULT" == "success" || ( "$TEST_RESULT" == "skipped" && "$PROJECTS_JSON" == "[]" ) ]]

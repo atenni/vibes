@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="data:," />
+    <title>Dead Wax — parser and planner tests</title>
+    <style>
+      body {
+        font: 15px/1.6 system-ui;
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+        background: #0c1011;
+        color: #e6e0d2;
+      }
+      a {
+        color: #f2b35b;
+      }
+      .pass {
+        color: #86b5a2;
+      }
+      .fail {
+        color: #f2937f;
+      }
+      iframe {
+        display: none;
+      }
+      li {
+        margin: 7px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Pressing tests</h1>
+    <p>
+      <a href="./">Back to the listening room</a> · Parser, seeded planner,
+      Drift and capture. No audio starts.
+    </p>
+    <p id="summary">Running…</p>
+    <ol id="results"></ol>
+    <script type="module">
+      import { runDeadWaxTests } from "./tests.mjs";
+
+      const frame = document.createElement("iframe");
+      // Do not import a ?gist query into the test frame.
+      frame.src = "index.html";
+      frame.onload = () => {
+        try {
+          const results = runDeadWaxTests(
+            frame.contentWindow.DeadWax,
+            frame.contentWindow.DeadWaxExamples,
+          );
+          for (const result of results) {
+            const li = document.createElement("li");
+            li.className = result.ok ? "pass" : "fail";
+            li.textContent =
+              (result.ok ? "PASS: " : "FAIL: ") +
+              result.name +
+              (result.message ? " — " + result.message : "");
+            document.getElementById("results").append(li);
+          }
+          const passed = results.filter((r) => r.ok).length;
+          document.getElementById("summary").textContent =
+            `${passed}/${results.length} passed.`;
+          document.title = `${passed === results.length ? "PASS" : "FAIL"} — Dead Wax tests`;
+        } catch (error) {
+          document.getElementById("summary").textContent =
+            "Could not run tests: " + error.message;
+        }
+      };
+      document.body.append(frame);
+    </script>
+  </body>
+</html>
