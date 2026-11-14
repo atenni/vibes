@@ -1,0 +1,2156 @@
+/*
+ * Dead Wax components, direction C ("After hours").
+ * Requires tokens.css. Paste both into deadwax/index.html, tokens first.
+ * Markup and wiring notes: design/components.md.
+ *
+ * State conventions
+ *   body[data-audio]    off | on                 (playing or paused; lamp level)
+ *   body[data-view]     desk | score | shelf     (which view is shown)
+ *   body[data-pressing] none                     (nothing loaded)
+ *   .is-*               component state classes  (is-active, is-locked …)
+ *   aria-pressed / :checked / [hidden] are used directly as state hooks.
+ */
+
+/* ───────────────────────────── Base ───────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--c-room);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--c-ink);
+  font: var(--fs-base) / var(--lh-base) var(--font-ui);
+  background:
+    radial-gradient(
+      60rem 26rem at 50% -8rem,
+      color-mix(
+        in oklab,
+        var(--c-amber) calc(4% + var(--lamp) * 6%),
+        transparent
+      ),
+      transparent 70%
+    ),
+    var(--c-room);
+  transition: --lamp var(--t-lamp-off) var(--ease-out);
+  overflow-x: hidden;
+}
+
+body[data-audio="on"] {
+  --lamp: 1;
+  transition-duration: var(--t-lamp-on);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: var(--c-amber);
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--c-amber);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--sp-4);
+  top: -4rem;
+  z-index: 50;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--c-amber);
+  color: var(--c-amber-ink);
+  border-radius: var(--r-sm);
+}
+.skip-link:focus {
+  top: var(--sp-2);
+}
+
+.legend {
+  font-family: var(--font-legend);
+  font-size: var(--fs-legend);
+  font-weight: 600;
+  font-stretch: condensed;
+  letter-spacing: var(--track-legend);
+  text-transform: uppercase;
+  line-height: var(--lh-tight);
+  color: var(--c-muted);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: var(--fs-sm);
+}
+
+kbd {
+  font: 0.72rem / 1 var(--font-mono);
+  color: var(--c-ink);
+  padding: 0.18em 0.45em;
+  border: 1px solid var(--c-edge);
+  border-bottom-width: 2px;
+  border-radius: var(--r-xs);
+  background: var(--c-panel);
+}
+
+/* ───────────────────────────── Page shell ───────────────────────────── */
+
+.page {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: var(--sp-4) var(--sp-4) var(--sp-8);
+}
+
+.masthead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3) var(--sp-4);
+  flex-wrap: wrap;
+  padding: var(--sp-2) 0 var(--sp-4);
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  color: var(--c-ink);
+  text-decoration: none;
+  border-radius: var(--r-sm);
+}
+.wordmark svg {
+  display: block;
+  height: 26px;
+  width: auto;
+}
+
+.masthead__end {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+/* Power indicator: lamp plus text, so state never relies on colour. */
+.power {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* View switcher. Buttons, with aria-current on the active one. */
+.tabs {
+  display: flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--c-inset);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-inset);
+}
+.tab {
+  min-height: 36px;
+  padding: 0 var(--sp-4);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--c-muted);
+  font-family: var(--font-legend);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-stretch: condensed;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition:
+    background var(--t-quick),
+    color var(--t-quick);
+}
+.tab:hover {
+  color: var(--c-ink);
+}
+.tab[aria-current="page"] {
+  background: var(--c-panel-hi);
+  color: var(--c-ink);
+  box-shadow: var(--sh-key);
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--c-edge);
+  background: var(--c-panel);
+  color: var(--c-ink);
+  font: 600 var(--fs-sm) var(--font-mono);
+}
+
+/* Views. Only the current one is shown, except in the wide split layout. */
+.views {
+  display: grid;
+  gap: var(--sp-4);
+}
+.view {
+  display: none;
+  min-width: 0;
+}
+body[data-view="desk"] .view--desk,
+body[data-view="score"] .view--score,
+body[data-view="shelf"] .view--shelf {
+  display: grid;
+}
+
+/* Wide screens: the Score view puts the editor beside the desk. */
+@media (min-width: 1440px) {
+  body[data-view="score"] {
+    --page-max: 1640px;
+  }
+  body[data-view="score"] .views {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  body[data-view="score"] .view--desk {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "transport" "drift" "mixer" "textures";
+  }
+  body[data-view="score"] .view--score {
+    position: sticky;
+    top: var(--sp-4);
+  }
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-6);
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--c-seam);
+  color: var(--c-muted);
+  font-size: var(--fs-sm);
+}
+.foot__keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  align-items: center;
+}
+
+/* ───────────────────────────── Notices ───────────────────────────── */
+
+.notice {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--c-amber);
+  border-left-width: 4px;
+  border-radius: var(--r-sm);
+  background: color-mix(in oklab, var(--c-amber) 8%, var(--c-chassis));
+  font-size: var(--fs-sm);
+}
+.notice::before {
+  content: "!";
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: var(--c-amber);
+  color: var(--c-amber-ink);
+  font: 700 0.8rem/1 var(--font-mono);
+}
+.notice:empty {
+  display: none;
+}
+.notice--danger {
+  border-color: var(--c-danger);
+  background: var(--c-danger-bg);
+}
+.notice--danger::before {
+  background: var(--c-danger);
+}
+
+/* ───────────────────────────── Racks ───────────────────────────── */
+
+.rack {
+  position: relative;
+  min-width: 0;
+  padding: var(--sp-5);
+  border: 1px solid var(--c-seam-strong);
+  border-radius: var(--r-lg);
+  background: var(--tx-grain), var(--c-chassis);
+  box-shadow: var(--sh-rack);
+}
+
+/* Four rack screws, purely decorative. */
+.rack::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  pointer-events: none;
+  --screw: radial-gradient(
+    circle,
+    #3f4a4b 0 2.2px,
+    #0d1112 2.6px 3.2px,
+    transparent 3.6px
+  );
+  background:
+    var(--screw) top left / 8px 8px no-repeat,
+    var(--screw) top right / 8px 8px no-repeat,
+    var(--screw) bottom left / 8px 8px no-repeat,
+    var(--screw) bottom right / 8px 8px no-repeat;
+  opacity: 0.8;
+}
+
+.rack__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+
+.rack__title {
+  margin: 0;
+  font-family: var(--font-legend);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  font-stretch: condensed;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-ink);
+}
+
+.rack__aside {
+  margin-left: auto;
+}
+
+/* ───────────────────────────── Desk layout ───────────────────────────── */
+
+.view--desk {
+  gap: var(--sp-4);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "transport" "drift" "mixer" "textures";
+}
+.transport {
+  grid-area: transport;
+}
+.drift {
+  grid-area: drift;
+}
+.mixer {
+  grid-area: mixer;
+}
+.textures {
+  grid-area: textures;
+}
+
+@media (min-width: 1080px) {
+  .view--desk {
+    grid-template-columns: minmax(0, 1.8fr) minmax(330px, 1fr);
+    grid-template-rows: auto auto auto 1fr;
+    grid-template-areas:
+      "transport transport"
+      "drift mixer"
+      "drift textures"
+      "drift .";
+    align-items: start;
+  }
+}
+
+/* ───────────────────────────── Lamp ───────────────────────────── */
+
+.lamp {
+  flex: none;
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--c-amber-unlit);
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.5);
+  transition:
+    background var(--t-calm),
+    box-shadow var(--t-calm);
+}
+.lamp.is-on,
+body[data-audio="on"] .power .lamp,
+:checked ~ .lamp,
+[aria-pressed="true"] > .lamp {
+  background: var(--c-amber);
+  box-shadow: 0 0 10px var(--c-amber-glow);
+}
+
+/* ───────────────────────────── Keys (buttons) ───────────────────────────── */
+
+.key {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--tap);
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--c-edge);
+  border-radius: var(--r-sm);
+  background: linear-gradient(var(--c-panel-hi), var(--c-panel));
+  color: var(--c-ink);
+  box-shadow: var(--sh-key);
+  font-family: var(--font-legend);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-stretch: condensed;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  user-select: none;
+  transition:
+    transform var(--t-quick),
+    box-shadow var(--t-quick),
+    background var(--t-quick);
+}
+.key:hover:not(:disabled) {
+  background: linear-gradient(
+    color-mix(in oklab, var(--c-panel-hi) 80%, var(--c-ink)),
+    var(--c-panel-hi)
+  );
+}
+.key:active:not(:disabled),
+.key[aria-pressed="true"],
+.key:has(:checked) {
+  transform: translateY(1px);
+  box-shadow: var(--sh-key-down);
+  background: var(--c-panel);
+}
+.key:disabled {
+  cursor: default;
+  color: var(--c-muted);
+  border-style: dashed;
+  box-shadow: none;
+  background: var(--c-chassis);
+}
+.key svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+.key__kbd {
+  font: 400 0.7rem var(--font-mono);
+  color: var(--c-muted);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Primary key: amber cap, used for Apply and Save. */
+.key--primary {
+  background: var(--c-amber);
+  border-color: var(--c-amber);
+  color: var(--c-amber-ink);
+}
+.key--primary:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--c-amber) 88%, white);
+}
+
+.key--danger {
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+}
+
+/* Quiet key: for secondary actions in lists. */
+.key--quiet {
+  min-height: 36px;
+  padding: 0 var(--sp-3);
+  box-shadow: none;
+  background: transparent;
+}
+
+/* ── Transport keys ── */
+.transport__keys {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.key--transport {
+  min-width: 76px;
+  min-height: 56px;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--sp-2) var(--sp-3);
+}
+.key--transport svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Play/Pause: one key. Shows "Play" when paused, "Pause" while playing. */
+.key--play {
+  min-width: 88px;
+  min-height: 72px;
+}
+.key--play .icon-pause,
+.key--play .when-on {
+  display: none;
+}
+body[data-audio="on"] .key--play .icon-pause,
+body[data-audio="on"] .key--play .when-on {
+  display: inline;
+}
+body[data-audio="on"] .key--play .icon-play,
+body[data-audio="on"] .key--play .when-off {
+  display: none;
+}
+body[data-audio="on"] #play {
+  color: var(--c-amber);
+  border-color: color-mix(in oklab, var(--c-amber) 50%, var(--c-edge));
+  background: var(--c-panel);
+  box-shadow:
+    var(--sh-key-down),
+    0 0 18px -6px var(--c-amber-glow);
+  transform: translateY(1px);
+}
+body[data-audio="on"] #play .lamp {
+  background: var(--c-amber);
+  box-shadow: 0 0 10px var(--c-amber-glow);
+}
+
+/* ───────────────────────────── Transport rack ───────────────────────────── */
+
+.transport {
+  display: grid;
+  gap: var(--sp-4) var(--sp-5);
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "keys record" "display display";
+  align-items: center;
+}
+/* Desktop: the chord display takes most of the width. */
+@media (min-width: 1080px) {
+  .transport {
+    grid-template-columns: auto minmax(300px, 1fr) minmax(0, 2fr);
+    grid-template-areas: "keys record display";
+  }
+}
+body[data-view="score"] .transport {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "keys record" "display display";
+}
+.transport__keys {
+  grid-area: keys;
+}
+.transport__record {
+  grid-area: record;
+  min-width: 0;
+}
+.transport__display {
+  grid-area: display;
+}
+
+.title {
+  margin: var(--sp-1) 0 var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: 500;
+  line-height: var(--lh-tight);
+  letter-spacing: 0.005em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.record-line {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-5);
+  margin: 0;
+}
+.meta div {
+  display: grid;
+  gap: 3px;
+}
+.meta dd {
+  margin: 0;
+  font: 400 var(--fs-md) / 1.2 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Inline input that reads like a display value (Seed). */
+.inline-input {
+  width: 11ch;
+  padding: 0 0 2px;
+  border: 0;
+  border-bottom: 1px dashed var(--c-edge);
+  background: transparent;
+  font: 400 var(--fs-md) / 1.2 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.inline-input::-webkit-inner-spin-button,
+.inline-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+.inline-input:disabled {
+  border-bottom-style: solid;
+  border-bottom-color: transparent;
+  color: var(--c-ink);
+  opacity: 1;
+}
+.inline-input:invalid {
+  border-bottom: 2px solid var(--c-danger);
+}
+
+/* ───────────────────────────── Form fields ───────────────────────────── */
+
+.field {
+  display: grid;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.input,
+.select {
+  min-height: var(--tap);
+  width: 100%;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--c-edge);
+  border-radius: var(--r-sm);
+  background: var(--c-inset);
+  color: var(--c-ink);
+  box-shadow: var(--sh-inset);
+}
+.input::placeholder {
+  color: var(--c-muted);
+}
+.input[aria-invalid="true"] {
+  border-color: var(--c-danger);
+}
+.select {
+  appearance: none;
+  padding-right: 2rem;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23e6e0d2' stroke-width='1.5'/%3E%3C/svg%3E")
+      right 0.8rem center / 10px 6px no-repeat,
+    var(--c-inset);
+  text-overflow: ellipsis;
+}
+.select--compact {
+  min-height: 36px;
+  width: auto;
+  max-width: 100%;
+  font-size: var(--fs-sm);
+}
+
+.input-row {
+  display: flex;
+  gap: var(--sp-2);
+}
+.input-row .input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ───────────────────────────── Display (position) ───────────────────────────── */
+
+.display {
+  min-width: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--c-inset);
+  box-shadow: var(--sh-inset);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.display__top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--sp-1) var(--sp-3);
+  margin-bottom: var(--sp-3);
+  font-size: var(--fs-sm);
+}
+.display__clock {
+  color: var(--c-muted);
+  transition: color var(--t-calm);
+}
+body[data-audio="on"] .display__clock {
+  color: var(--c-amber);
+}
+
+/*
+ * #bars: one cell per bar, any loop length. Bars sit in musical rows of 4,
+ * or rows of 8 when the loop divides by 8 and the display is wide enough
+ * (container query, so it follows the display's width, not the window's).
+ * JS sets: data-row="1|2|3" for loops shorter than 4 bars, data-eight when
+ * bars % 8 === 0, data-long when bars > 8. Long loops scroll inside a window
+ * of two rows; JS keeps the active bar in view.
+ */
+.display {
+  container-type: inline-size;
+}
+.bars {
+  --bar-dur: 3.33s; /* set by JS: 60 / tempo × quarter-note beats per bar */
+  --beats: 4; /* set by JS: quarter-note beats per bar */
+  --cols: 4;
+  --row-h: 3.9rem;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-auto-rows: var(--row-h);
+  gap: var(--sp-2) 6px;
+  margin: 0;
+  padding: 0 2px 0 0;
+  list-style: none;
+  max-height: calc(var(--row-h) * 2 + var(--sp-2));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-seam-strong) transparent;
+}
+.bars[data-row="1"] {
+  --cols: 1;
+}
+.bars[data-row="2"] {
+  --cols: 2;
+}
+.bars[data-row="3"] {
+  --cols: 3;
+}
+@container (min-width: 620px) {
+  .bars[data-eight] {
+    --cols: 8;
+    column-gap: 4px;
+  }
+  /* A wider gap between the two halves of an 8-bar row. */
+  .bars[data-eight] .bar:nth-child(8n + 5) {
+    margin-left: var(--sp-2);
+  }
+  .bars[data-eight] .bar__btn {
+    padding-inline: 6px;
+  }
+  .bars[data-eight] .bar__chord {
+    font-size: var(--fs-sm);
+  }
+}
+@container (max-width: 400px) {
+  .bars {
+    --row-h: 3.5rem;
+    gap: 6px 4px;
+  }
+  .bars .bar__btn {
+    padding: 5px 6px 6px;
+  }
+  .bars .bar__chord {
+    font-size: var(--fs-sm);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bars {
+    scroll-behavior: auto;
+  }
+}
+
+/* Chords that continue from the previous bar, or several chords in a bar. */
+.bar__chord .is-held {
+  color: var(--c-muted);
+}
+.bar__chord .is-held::before {
+  content: "↦ ";
+}
+.bar__chord .sep {
+  color: var(--c-muted);
+  padding-inline: 0.2em;
+}
+
+/*
+ * Loop map: one segment per bar for loops longer than 8 bars, so the whole
+ * loop is visible even when the chord window is scrolled. Visual only
+ * (aria-hidden); #clock carries the same information as text.
+ */
+.loopmap {
+  display: none;
+  gap: 2px;
+  height: 12px;
+  margin: 0 0 var(--sp-3);
+}
+.display:has(.bars[data-long]) .loopmap {
+  display: flex;
+}
+.loopmap i {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 2px;
+  background: var(--c-amber-unlit);
+  opacity: 0.6;
+}
+/* Segments are grouped in fours, like phrases. */
+.loopmap i:nth-child(4n + 1):not(:first-child) {
+  margin-left: 5px;
+}
+.loopmap i.is-past {
+  background: color-mix(in oklab, var(--c-amber) 45%, var(--c-amber-unlit));
+}
+.loopmap i.is-active {
+  opacity: 1;
+  background: var(--c-amber);
+  box-shadow: 0 0 8px var(--c-amber-glow);
+}
+body:not([data-audio="on"]) .loopmap i.is-active {
+  box-shadow: none;
+}
+
+.bar {
+  min-width: 0;
+}
+/* Each bar is a button: tap to jump there. */
+.bar__btn {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 6px 8px 8px;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: color-mix(in oklab, var(--c-panel) 55%, transparent);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--t-quick);
+}
+.bar__btn:hover {
+  background: var(--c-panel);
+}
+.bar__btn:focus-visible {
+  outline-offset: 1px;
+}
+.bar__n {
+  font-size: 0.68rem;
+  color: var(--c-muted);
+}
+.bar__chord {
+  font-size: var(--fs-base);
+  color: var(--c-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bar__sweep {
+  position: relative;
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 calc(100% / var(--beats) - 2px),
+      var(--c-inset) calc(100% / var(--beats) - 2px) calc(100% / var(--beats))
+    ),
+    var(--c-amber-unlit);
+}
+.bar__sweep::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--c-amber);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.bar.is-active .bar__btn {
+  background: color-mix(in oklab, var(--c-amber) 14%, var(--c-inset));
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklab, var(--c-amber) 60%, transparent);
+}
+/* Cued: tapped while playing; it starts at the next bar line. */
+.bar.is-cued .bar__btn {
+  box-shadow: inset 0 0 0 1px var(--c-amber);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      color-mix(in oklab, var(--c-amber) 14%, transparent) 0 4px,
+      transparent 4px 8px
+    ),
+    var(--c-inset);
+}
+.bar.is-cued .bar__n::after {
+  content: " ◂ next";
+  color: var(--c-amber);
+}
+.bar.is-active .bar__chord {
+  color: var(--c-amber);
+}
+.bar.is-active .bar__n::after {
+  content: " ◂ now";
+  color: var(--c-amber);
+}
+body[data-audio="on"] .bar.is-active .bar__sweep::before {
+  animation: dw-sweep calc(var(--bar-dur) * (1 - var(--from, 0))) linear both;
+  box-shadow: 0 0 8px var(--c-amber);
+}
+@keyframes dw-sweep {
+  from {
+    transform: scaleX(var(--from, 0));
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+/* Paused: the sweep holds where the playhead stopped. */
+body:not([data-audio="on"]) .bar.is-active .bar__sweep::before {
+  transform: scaleX(var(--from, 0));
+  background: color-mix(in oklab, var(--c-amber) 60%, var(--c-amber-unlit));
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-audio="on"] .bar.is-active .bar__sweep::before {
+    animation: none;
+    transform: scaleX(1);
+  }
+}
+
+/* Message line under the bars (#status). */
+.display__status {
+  margin: var(--sp-3) 0 0;
+  min-height: 1.4em;
+  font-size: var(--fs-sm);
+  color: var(--c-ink);
+}
+.display__status::before {
+  content: "› ";
+  color: var(--c-amber);
+}
+
+/* Empty: no Pressing on the platter. */
+.display__empty {
+  display: none;
+  padding: var(--sp-3) 0;
+  font-family: var(--font-ui);
+  color: var(--c-muted);
+}
+body[data-pressing="none"] .display__empty {
+  display: block;
+}
+body[data-pressing="none"] .bars,
+body[data-pressing="none"] .display__top {
+  display: none;
+}
+
+/* First run: browsers need a click before audio can start. */
+.first-run {
+  display: none;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-3);
+  color: var(--c-ink);
+  font: var(--fs-sm) var(--font-ui);
+}
+body[data-first-run] .first-run {
+  display: flex;
+}
+body[data-first-run] #play {
+  animation: dw-breathe 3.6s ease-in-out infinite;
+}
+@keyframes dw-breathe {
+  50% {
+    box-shadow:
+      var(--sh-key),
+      0 0 0 5px color-mix(in oklab, var(--c-amber) 22%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-first-run] #play {
+    animation: none;
+    box-shadow:
+      var(--sh-key),
+      0 0 0 3px color-mix(in oklab, var(--c-amber) 40%, transparent);
+  }
+}
+
+/* ───────────────────────────── Toggle switch (Drift on/off) ───────────────────────────── */
+
+.toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--tap);
+  cursor: pointer;
+}
+.toggle input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.toggle__track {
+  position: relative;
+  width: 46px;
+  height: 24px;
+  border-radius: var(--r-pill);
+  background: var(--c-inset);
+  border: 1px solid var(--c-edge);
+  box-shadow: var(--sh-inset);
+}
+.toggle__lever {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(#d9d2c3, #8d877a);
+  box-shadow: var(--sh-cap);
+  transition: transform var(--t-calm) var(--ease-damped);
+}
+.toggle :checked ~ .toggle__track .toggle__lever {
+  transform: translateX(22px);
+}
+.toggle :checked ~ .toggle__track {
+  border-color: var(--c-amber);
+}
+.toggle__text::after {
+  content: "Off";
+  font: 600 var(--fs-sm) var(--font-legend);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+.toggle :checked ~ .toggle__text::after {
+  content: "On";
+  color: var(--c-ink);
+}
+.toggle:has(:focus-visible) .toggle__track {
+  outline: 2px solid var(--c-amber);
+  outline-offset: 2px;
+}
+
+/* ───────────────────────────── Knob ───────────────────────────── */
+/*
+ * A real <input type="range"> covers the knob (transparent), so keyboard,
+ * screen readers and touch work without JS. JS sets --v (0–1) on .knob.
+ * Optional enhancement: vertical drag (see components.md).
+ */
+
+.knob {
+  --v: 0;
+  --size: var(--knob);
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-1);
+  width: max-content;
+  min-width: calc(var(--size) + 12px);
+}
+.knob__dial {
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  /* value arc: amber up to the value, unlit after, open at the bottom */
+  background: conic-gradient(
+    from 225deg,
+    var(--c-amber) 0 calc(var(--v) * 270deg),
+    var(--c-seam-strong) calc(var(--v) * 270deg) 270deg,
+    transparent 270deg
+  );
+  -webkit-mask: radial-gradient(
+    circle,
+    #000 calc(50% - 6px),
+    transparent calc(50% - 6px) calc(50% - 4px),
+    #000 calc(50% - 4px)
+  );
+  mask: radial-gradient(
+    circle,
+    #000 calc(50% - 6px),
+    transparent calc(50% - 6px) calc(50% - 4px),
+    #000 calc(50% - 4px)
+  );
+}
+.knob__cap {
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  width: calc(var(--size) - 14px);
+  height: calc(var(--size) - 14px);
+  margin-left: calc((var(--size) - 14px) / -2);
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(
+      rgb(255 255 255 / 0.04) 0 6deg,
+      transparent 6deg 12deg
+    ),
+    radial-gradient(circle at 50% 30%, #2c3536, #0e1213 75%);
+  box-shadow:
+    0 4px 8px rgb(0 0 0 / 0.7),
+    inset 0 1px 0 rgb(255 255 255 / 0.12);
+  transform: rotate(calc(var(--v) * 270deg - 135deg));
+  transition: transform var(--t-quick) var(--ease-out);
+  pointer-events: none;
+}
+.knob__cap::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  width: 3px;
+  height: 32%;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--c-ink);
+}
+.knob__input {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--size);
+  height: var(--size);
+  margin: 0 0 0 calc(var(--size) / -2);
+  opacity: 0;
+  cursor: grab;
+  touch-action: none;
+}
+.knob:has(.knob__input:focus-visible) .knob__dial {
+  outline: 2px solid var(--c-amber);
+  outline-offset: 3px;
+}
+.knob__name {
+  text-align: center;
+}
+.knob__value {
+  font: 400 var(--fs-sm) var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.knob--lg {
+  --size: 84px;
+}
+.knob--sm {
+  --size: 52px;
+}
+
+/* ───────────────────────────── Fader (vertical range) ───────────────────────────── */
+
+.fader {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  appearance: none;
+  -webkit-appearance: none;
+  width: var(--tap);
+  height: var(--fader-h);
+  margin: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+.fader::-webkit-slider-runnable-track {
+  width: 6px;
+  border-radius: 3px;
+  background:
+    linear-gradient(var(--c-seam-strong), var(--c-seam-strong)) center / 100%
+      100%,
+    var(--c-inset);
+  box-shadow: inset 0 0 0 1px #000;
+}
+.fader::-moz-range-track {
+  width: 6px;
+  border-radius: 3px;
+  background: var(--c-inset);
+  box-shadow: inset 0 0 0 1px #000;
+}
+.fader::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 36px;
+  height: 20px;
+  margin-left: -15px;
+  border-radius: 3px;
+  border: 0;
+  background:
+    linear-gradient(var(--c-inset), var(--c-inset)) center / 70% 2px no-repeat,
+    linear-gradient(#d9d2c3, #8d877a);
+  box-shadow: var(--sh-cap);
+}
+.fader::-moz-range-thumb {
+  width: 36px;
+  height: 20px;
+  border-radius: 3px;
+  border: 0;
+  background:
+    linear-gradient(var(--c-inset), var(--c-inset)) center / 70% 2px no-repeat,
+    linear-gradient(#d9d2c3, #8d877a);
+  box-shadow: var(--sh-cap);
+}
+.fader:focus-visible {
+  outline-offset: 4px;
+}
+
+/* ───────────────────────────── Mixer strips ───────────────────────────── */
+
+.strips {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+.strip {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-1);
+  border: 1px solid var(--c-seam);
+  border-radius: var(--r-md);
+  background: var(--c-panel);
+  transition: opacity var(--t-calm);
+}
+.strip--master {
+  border-color: color-mix(in oklab, var(--c-amber) 40%, var(--c-seam));
+}
+.strip__value {
+  font: 400 var(--fs-sm) var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.strip:has(.mute[aria-pressed="true"]) .fader,
+.strip:has(.mute[aria-pressed="true"]) .strip__value {
+  opacity: 0.4;
+}
+.strip:has(.mute[aria-pressed="true"]) .strip__value::after {
+  content: " · muted";
+  font-family: var(--font-legend);
+  font-size: var(--fs-legend);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mute {
+  min-width: 44px;
+  min-height: 32px;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--c-edge);
+  border-radius: var(--r-xs);
+  background: var(--c-inset);
+  color: var(--c-ink);
+  font: 600 0.7rem var(--font-legend);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.mute[aria-pressed="true"] {
+  background: var(--c-amber);
+  border-color: var(--c-amber);
+  color: var(--c-amber-ink);
+  box-shadow: 0 0 12px -2px var(--c-amber-glow);
+}
+
+/* ───────────────────────────── Textures ───────────────────────────── */
+
+.knob-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: var(--sp-4) var(--sp-2);
+  justify-items: center;
+}
+
+/* ───────────────────────────── Drift rack ───────────────────────────── */
+
+.drift__status {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--c-muted);
+  font-size: var(--fs-sm);
+  font-style: italic;
+}
+@media (min-width: 760px) {
+  .drift__status {
+    flex-basis: auto;
+  }
+}
+
+.drift__console {
+  display: grid;
+  gap: var(--sp-5);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "gauge" "steer";
+}
+@media (min-width: 760px) {
+  .drift__console {
+    grid-template-columns: minmax(0, 1.25fr) minmax(250px, 1fr);
+    grid-template-areas: "steer gauge";
+  }
+}
+.drift__steer {
+  grid-area: steer;
+  display: grid;
+  gap: var(--sp-4);
+  align-content: start;
+}
+.drift__gauge-col {
+  grid-area: gauge;
+  width: 100%;
+  max-width: 460px;
+  justify-self: center;
+  display: grid;
+  gap: var(--sp-4);
+  align-content: start;
+}
+.drift__wander {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+.drift__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.drift__actions .key {
+  flex: 1 1 auto;
+}
+
+/* Drift off: the bridge rests a little dimmer. */
+.drift:has(#drift:not(:checked)) .bridge,
+.drift:has(#drift:not(:checked)) .drift__gauge {
+  filter: saturate(0.6) brightness(0.85);
+}
+
+/* ── Rockers: four opposed direction pairs (#directions) ── */
+.rockers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 148px), 1fr));
+  gap: var(--sp-3) var(--sp-3);
+}
+.rocker {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.rocker__name {
+  padding: 0;
+}
+.rocker__body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  gap: 3px;
+  border-radius: var(--r-sm);
+  background: var(--c-inset);
+  box-shadow: var(--sh-inset);
+}
+.rocker__side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--tap);
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--c-edge);
+  border-radius: 3px;
+  background: linear-gradient(var(--c-panel-hi), var(--c-panel));
+  box-shadow: var(--sh-key);
+  color: var(--c-ink);
+  font: 600 var(--fs-sm) var(--font-legend);
+  font-stretch: condensed;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition:
+    transform var(--t-quick),
+    box-shadow var(--t-quick);
+}
+.rocker__side[aria-pressed="true"] {
+  color: var(--c-amber);
+  border-color: color-mix(in oklab, var(--c-amber) 55%, var(--c-edge));
+  background: var(--c-panel);
+  box-shadow: var(--sh-key-down);
+  transform: translateY(1px);
+}
+.rocker__side .lamp {
+  width: 7px;
+  height: 7px;
+}
+
+/* ───────────────────────────── VU meters ───────────────────────────── */
+/*
+ * .vu       centre-zero meter, one per dimension. JS sets --d (−1 … 1),
+ *           where ±1 is the edge of that dimension's permitted drift range.
+ * .vu--gauge one-sided meter for total distance from home. --d is 0 … 1.
+ * The needle eases over --t-needle, so a once-per-bar update looks damped.
+ */
+
+.vu {
+  --d: 0;
+  --sweep: 48deg;
+  min-width: 0;
+  margin: 0;
+}
+.vu__face {
+  position: relative;
+  aspect-ratio: 2 / 1.12;
+  overflow: hidden;
+  border-radius: var(--r-sm);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 56'%3E%3Cpath d='M15.8 33.1A46 46 0 0 1 84.2 33.1' fill='none' stroke='%232b2113' stroke-width='1'/%3E%3Cpath d='M15.8 33.1L21.0 37.7' stroke='%232b2113' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M23.0 26.6L25.3 29.9' stroke='%232b2113' stroke-width='1.0' stroke-linecap='round'/%3E%3Cpath d='M31.3 21.8L32.9 25.5' stroke='%232b2113' stroke-width='1.0' stroke-linecap='round'/%3E%3Cpath d='M40.4 18.8L41.3 22.8' stroke='%232b2113' stroke-width='1.0' stroke-linecap='round'/%3E%3Cpath d='M50.0 17.8L50.0 24.8' stroke='%232f6a55' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M59.6 18.8L58.7 22.8' stroke='%232b2113' stroke-width='1.0' stroke-linecap='round'/%3E%3Cpath d='M68.7 21.8L67.1 25.5' stroke='%232b2113' stroke-width='1.0' stroke-linecap='round'/%3E%3Cpath d='M77.0 26.6L74.7 29.9' stroke='%232b2113' stroke-width='1.0' stroke-linecap='round'/%3E%3Cpath d='M84.2 33.1L79.0 37.7' stroke='%232b2113' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M14.2 31.6A46 46 0 0 1 20.3 25.9' fill='none' stroke='%239c2b18' stroke-width='2.2'/%3E%3Cpath d='M79.7 25.9A46 46 0 0 1 85.8 31.6' fill='none' stroke='%239c2b18' stroke-width='2.2'/%3E%3C/svg%3E")
+      center top / 100% auto no-repeat,
+    radial-gradient(
+      120% 90% at 50% 120%,
+      color-mix(in oklab, var(--c-amber) calc(var(--lamp) * 35%), transparent),
+      transparent 70%
+    ),
+    var(--c-face);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.35),
+    inset 0 6px 10px -6px rgb(0 0 0 / 0.5);
+}
+/* Pivot sits below the face edge, like a real VU. */
+.vu__needle {
+  position: absolute;
+  left: 50%;
+  bottom: -14%;
+  width: 1.6px;
+  height: 92%;
+  margin-left: -0.8px;
+  border-radius: 1px;
+  background: color-mix(
+    in oklab,
+    var(--c-needle) calc(var(--lamp) * 100%),
+    var(--c-face-ink)
+  );
+  transform-origin: 50% 100%;
+  transform: rotate(calc(var(--d) * var(--sweep)));
+  transition: transform var(--t-needle) var(--ease-damped);
+}
+.vu__face::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  width: 22px;
+  height: 22px;
+  margin-left: -11px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #3a3328, #15110b);
+}
+/* Peak lamp: lit at the edge of the permitted range. */
+.vu__peak {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(43 33 19 / 0.25);
+}
+.vu.is-limit .vu__peak {
+  background: var(--c-needle);
+  box-shadow: 0 0 6px var(--c-needle);
+}
+.vu__legend {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px;
+  padding: 5px 1px 0;
+}
+.vu__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vu__value {
+  font: 400 0.72rem var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.vu.is-limit .vu__value {
+  color: var(--c-amber);
+  font-weight: 700;
+}
+
+/* Locked: this Pressing doesn't permit the dimension to drift. */
+.vu.is-locked .vu__face {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgb(43 33 19 / 0.12) 0 4px,
+      transparent 4px 9px
+    ),
+    var(--c-face-off);
+  filter: brightness(0.7);
+}
+.vu.is-locked .vu__needle {
+  transform: rotate(0);
+  background: var(--c-face-ink);
+}
+.vu.is-locked .vu__value {
+  color: var(--c-muted);
+}
+
+/* Paused: needles hold where they are; the face and needle lose their backlight via --lamp. */
+
+/* Gauge: one-sided total distance from home. */
+.vu--gauge {
+  --sweep: 50deg;
+}
+.vu--gauge .vu__face {
+  aspect-ratio: 2 / 1.08;
+  border-radius: var(--r-md);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 108'%3E%3Cpath d='M24.9 64.4A98 98 0 0 1 175.1 64.4' fill='none' stroke='%232b2113' stroke-width='1.2'/%3E%3Cpath d='M24.9 64.4L36.9 74.5' stroke='%232f6a55' stroke-width='2.6' stroke-linecap='round'/%3E%3Cpath d='M37.0 52.4L42.7 59.1' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M51.0 42.6L55.4 50.2' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M66.5 35.4L69.5 43.6' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M83.0 30.9L84.5 39.6' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M100.0 29.4L100.0 45.1' stroke='%232b2113' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M117.0 30.9L115.5 39.6' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M133.5 35.4L130.5 43.6' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M149.0 42.6L144.6 50.2' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M163.0 52.4L157.3 59.1' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M175.1 64.4L163.1 74.5' stroke='%232b2113' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M142.7 35.9A98 98 0 0 1 177.4 62.5' fill='none' stroke='%239c2b18' stroke-width='3.6'/%3E%3C/svg%3E")
+      center top / 100% auto no-repeat,
+    radial-gradient(
+      120% 90% at 50% 120%,
+      color-mix(in oklab, var(--c-amber) calc(var(--lamp) * 35%), transparent),
+      transparent 70%
+    ),
+    var(--c-face);
+}
+.vu--gauge .vu__needle {
+  width: 2.4px;
+  margin-left: -1.2px;
+  bottom: -18%;
+  height: 100%;
+  transform: rotate(calc(var(--d) * 2 * var(--sweep) - var(--sweep)));
+}
+.vu--gauge .vu__face::after {
+  width: 34px;
+  height: 34px;
+  margin-left: -17px;
+  bottom: -14px;
+}
+.vu--gauge .vu__scale {
+  position: absolute;
+  inset: auto 6% 10% 6%;
+  display: flex;
+  justify-content: space-between;
+  color: var(--c-face-ink);
+}
+.vu--gauge .vu__legend {
+  padding-top: var(--sp-2);
+}
+.gauge__readout {
+  font: 400 var(--fs-readout) / 1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── The meter bridge: one row per group, like a console's meter bridge ── */
+.bridge {
+  display: grid;
+  gap: var(--sp-4);
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--c-seam);
+}
+.bridge__group {
+  display: grid;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.bridge__name {
+  padding: 0;
+}
+.bridge__meters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: var(--sp-3) var(--sp-2);
+}
+@media (min-width: 760px) {
+  .bridge__group {
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    align-items: start;
+  }
+  .bridge__name {
+    padding-top: var(--sp-3);
+  }
+  .bridge__meters {
+    grid-template-columns: repeat(7, minmax(0, 84px));
+  }
+}
+
+/* ───────────────────────────── Score (editor) ───────────────────────────── */
+
+.view--score {
+  gap: var(--sp-4);
+}
+.score {
+  display: grid;
+  gap: var(--sp-4);
+}
+.score .rack__head {
+  margin-bottom: 0;
+}
+
+.editor {
+  --ed-pad: var(--sp-3);
+  --ed-gutter: 3.4rem;
+  --ed-lh: 1.6;
+  --ed-fs: 0.86rem;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--ed-gutter) minmax(0, 1fr);
+  height: clamp(320px, 62vh, 760px);
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--c-inset);
+  box-shadow: var(--sh-inset);
+  font: var(--ed-fs) / var(--ed-lh) var(--font-mono);
+  font-variant-ligatures: none;
+  tab-size: 2;
+}
+.editor:has(.editor__input:focus-visible) {
+  outline: 2px solid var(--c-amber);
+  outline-offset: 2px;
+}
+.editor__input:focus-visible {
+  outline: none;
+}
+.editor__gutter {
+  overflow: hidden;
+  padding: var(--ed-pad) var(--sp-2) var(--ed-pad) 0;
+  border-right: 1px solid var(--c-seam);
+  color: var(--c-muted);
+  text-align: right;
+  user-select: none;
+}
+.editor__gutter-inner {
+  white-space: pre;
+}
+.editor__gutter .is-error {
+  color: var(--c-danger);
+  font-weight: 700;
+}
+.editor__surface {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+.editor__tint,
+.editor__input {
+  margin: 0;
+  padding: var(--ed-pad);
+  font: inherit;
+  white-space: pre;
+  overflow-wrap: normal;
+  letter-spacing: 0;
+}
+.editor__tint {
+  position: absolute;
+  inset: 0 auto auto 0;
+  min-width: 100%;
+  color: var(--c-ink);
+  pointer-events: none;
+}
+.editor__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  resize: none;
+  border: 0;
+  background: transparent;
+  color: var(--c-ink);
+  caret-color: var(--c-amber);
+  overflow: auto;
+}
+/* Only hide the textarea's own glyphs once the tint layer is live. */
+.editor.is-tinted .editor__input {
+  color: transparent;
+}
+.editor__input::selection {
+  background: color-mix(in oklab, var(--c-amber) 35%, transparent);
+  color: transparent;
+}
+
+/* Tint classes produced by the cheap line tokeniser. */
+.t-kw {
+  color: var(--c-amber);
+}
+.t-name {
+  color: var(--c-home);
+}
+.t-num {
+  color: var(--c-ink);
+}
+.t-dur,
+.t-rest,
+.t-comment {
+  color: var(--c-muted);
+}
+.t-comment {
+  font-style: italic;
+}
+.t-hit {
+  color: var(--c-ink);
+  font-weight: 700;
+}
+.t-ghost {
+  color: var(--c-muted);
+}
+.t-line-error {
+  display: inline-block;
+  min-width: 100%;
+  background: var(--c-danger-bg);
+  box-shadow: inset 3px 0 0 var(--c-danger);
+}
+.t-error {
+  text-decoration: underline wavy var(--c-danger);
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+}
+
+.score__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: center;
+}
+.score__bar .spacer {
+  flex: 1;
+}
+
+/* Validity chip: icon + words, never colour alone. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--c-home);
+  color: var(--c-home);
+  font: 600 var(--fs-legend) var(--font-legend);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.chip--error {
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+}
+
+/* #errors: one button per diagnostic; clicking jumps to the location. */
+.errors {
+  display: grid;
+  gap: var(--sp-1);
+}
+.errors:empty {
+  display: none;
+}
+.error {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-3);
+  align-items: baseline;
+  width: 100%;
+  min-height: 36px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid color-mix(in oklab, var(--c-danger) 50%, transparent);
+  border-left: 3px solid var(--c-danger);
+  border-radius: var(--r-xs);
+  background: var(--c-danger-bg);
+  text-align: left;
+  font-size: var(--fs-sm);
+}
+.error__pos {
+  font: 600 0.78rem var(--font-mono);
+  color: var(--c-danger);
+  white-space: nowrap;
+}
+
+/* ───────────────────────────── Shelf ───────────────────────────── */
+
+.view--shelf {
+  gap: var(--sp-4);
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 1080px) {
+  .view--shelf {
+    grid-template-columns: minmax(0, 1.5fr) minmax(340px, 1fr);
+    align-items: start;
+  }
+}
+
+.save-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+.save-row .input {
+  flex: 1 1 14rem;
+  width: auto;
+}
+
+/* #library: list of saved Pressings as sleeves. */
+.sleeves {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sleeve {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  gap: var(--sp-3);
+  align-items: center;
+  padding: var(--sp-3);
+  border: 1px solid var(--c-seam);
+  border-radius: var(--r-md);
+  background: var(--c-panel);
+}
+.sleeve__spine {
+  align-self: stretch;
+  border-radius: 2px;
+  background: hsl(var(--hue, 35) 45% 55%);
+  opacity: 0.85;
+}
+.sleeve__title {
+  margin: 0;
+  font: 500 var(--fs-md) / 1.25 var(--font-display);
+  overflow-wrap: anywhere;
+}
+.sleeve__meta {
+  margin: 2px 0 0;
+  color: var(--c-muted);
+  font: var(--fs-sm) var(--font-mono);
+}
+.sleeve.is-current {
+  border-color: color-mix(in oklab, var(--c-amber) 55%, var(--c-seam));
+}
+.sleeve.is-current .sleeve__body::before {
+  content: "On the platter";
+  display: block;
+  margin-bottom: 2px;
+  font: 600 var(--fs-legend) var(--font-legend);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-amber);
+}
+.sleeve__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sp-1);
+}
+/* Rename and delete-confirm replace the actions in place. */
+.sleeve__rename,
+.sleeve__confirm {
+  grid-column: 2 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: center;
+}
+.sleeve__rename .input {
+  flex: 1 1 12rem;
+  width: auto;
+  min-height: 36px;
+}
+.sleeve__confirm p {
+  margin: 0;
+  flex: 1 1 12rem;
+  font-size: var(--fs-sm);
+}
+@media (max-width: 759px) {
+  .sleeve {
+    grid-template-columns: 8px minmax(0, 1fr);
+  }
+  .sleeve__actions {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+}
+
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-8) var(--sp-4);
+  border: 1px dashed var(--c-seam-strong);
+  border-radius: var(--r-md);
+  text-align: center;
+  color: var(--c-muted);
+}
+.empty svg {
+  width: 48px;
+  height: 48px;
+  color: var(--c-seam-strong);
+}
+.empty p {
+  margin: 0;
+  max-width: 34ch;
+}
+.empty strong {
+  color: var(--c-ink);
+  font-weight: 500;
+}
+
+/* ── Import ── */
+.import {
+  display: grid;
+  gap: var(--sp-5);
+  align-content: start;
+}
+.dropzone {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-6) var(--sp-4);
+  border: 2px dashed var(--c-edge);
+  border-radius: var(--r-md);
+  background: var(--c-inset);
+  text-align: center;
+  transition:
+    border-color var(--t-quick),
+    background var(--t-quick);
+}
+.dropzone svg {
+  width: 32px;
+  height: 32px;
+  color: var(--c-muted);
+}
+.dropzone.is-over,
+body.is-dragging .dropzone {
+  border-color: var(--c-amber);
+  background: color-mix(in oklab, var(--c-amber) 8%, var(--c-inset));
+}
+.linkish {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-amber);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Gist importer. data-state on .gist: idle | loading | done | error | limited | choose */
+.gist {
+  display: grid;
+  gap: var(--sp-3);
+}
+.gist__msg {
+  display: none;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+}
+.gist__msg::before {
+  flex: none;
+  font: 700 0.8rem/1.4 var(--font-mono);
+}
+.gist:not([data-state="idle"]) .gist__msg {
+  display: flex;
+}
+.gist[data-state="loading"] .gist__msg {
+  background: var(--c-panel);
+}
+.gist[data-state="loading"] .gist__msg::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  margin-top: 3px;
+  border-radius: 50%;
+  border: 2px solid var(--c-amber);
+  border-right-color: transparent;
+  animation: dw-spin 1.4s linear infinite;
+}
+.gist[data-state="done"] .gist__msg {
+  background: color-mix(in oklab, var(--c-home) 12%, var(--c-panel));
+}
+.gist[data-state="done"] .gist__msg::before {
+  content: "✓";
+  color: var(--c-home);
+}
+.gist[data-state="error"] .gist__msg {
+  background: var(--c-danger-bg);
+  box-shadow: inset 3px 0 0 var(--c-danger);
+}
+.gist[data-state="error"] .gist__msg::before {
+  content: "✕";
+  color: var(--c-danger);
+}
+.gist[data-state="limited"] .gist__msg {
+  background: color-mix(in oklab, var(--c-amber) 10%, var(--c-panel));
+  box-shadow: inset 3px 0 0 var(--c-amber);
+}
+.gist[data-state="limited"] .gist__msg::before {
+  content: "⏱";
+  color: var(--c-amber);
+}
+.gist[data-state="choose"] .gist__msg {
+  background: var(--c-panel);
+}
+.gist[data-state="choose"] .gist__msg::before {
+  content: "?";
+  color: var(--c-amber);
+}
+.gist__files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: end;
+}
+.gist__files[hidden] {
+  display: none;
+}
+.gist__files .field {
+  flex: 1 1 12rem;
+}
+@keyframes dw-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gist[data-state="loading"] .gist__msg::before {
+    animation: none;
+    border-right-color: var(--c-amber);
+    opacity: 0.6;
+  }
+}
+
+/* Whole-page drop target while a file is dragged over the window. */
+.drop-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: none;
+  place-items: center;
+  background: rgb(8 11 12 / 0.82);
+  pointer-events: none;
+}
+.drop-veil div {
+  padding: var(--sp-8) var(--sp-10);
+  border: 2px dashed var(--c-amber);
+  border-radius: var(--r-lg);
+  font: 600 var(--fs-lg) var(--font-legend);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-amber);
+  text-align: center;
+}
+body.is-dragging .drop-veil {
+  display: grid;
+}
+
+/* ───────────────────────────── Dialog (shortcuts) ───────────────────────────── */
+
+.sheet {
+  width: min(32rem, calc(100vw - 2rem));
+  padding: var(--sp-5);
+  border: 1px solid var(--c-seam-strong);
+  border-radius: var(--r-lg);
+  background: var(--tx-grain), var(--c-chassis);
+  color: var(--c-ink);
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.7);
+}
+.sheet::backdrop {
+  background: rgb(8 11 12 / 0.7);
+}
+.sheet[open] {
+  animation: dw-fade var(--t-calm) var(--ease-out);
+}
+@keyframes dw-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.shortcut-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0 0 var(--sp-4);
+  align-items: baseline;
+}
+.shortcut-list dt {
+  white-space: nowrap;
+}
+.shortcut-list dd {
+  margin: 0;
+  color: var(--c-muted);
+}
+
+/* ───────────────────────────── Small screens ───────────────────────────── */
+
+@media (max-width: 759px) {
+  :root {
+    --fader-h: 112px;
+    --knob: 58px;
+  }
+  .page {
+    padding-inline: var(--sp-3);
+  }
+  .rack {
+    padding: var(--sp-4) var(--sp-3);
+  }
+  .masthead {
+    gap: var(--sp-3);
+  }
+  .tabs {
+    order: 3;
+    width: 100%;
+  }
+  .tab {
+    flex: 1;
+  }
+  .foot__keys {
+    display: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .strips {
+    gap: 4px;
+  }
+  .strip {
+    padding-inline: 0;
+  }
+  .key--play {
+    min-width: 72px;
+  }
+}

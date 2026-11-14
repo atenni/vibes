@@ -1,0 +1,146 @@
+/*
+ * Dead Wax design tokens, direction C ("After hours").
+ * Dark theme only. System fonts only (no network requests).
+ * Paste into the first <style> block of deadwax/index.html.
+ *
+ * Contrast notes (WCAG 2.2, measured against --c-panel unless stated):
+ *   --c-ink 12.4:1, --c-muted 6.4:1, --c-amber 8.9:1, --c-home 7.1:1,
+ *   --c-danger 7.2:1. Interactive edges (--c-edge) are 3.2:1 or higher on
+ *   every surface. On meter faces: --c-face-ink 9.1:1, needle 4.3:1.
+ */
+
+/* Lets the lamp level animate when meters warm up or cool down. */
+@property --lamp {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* ── Colour: surfaces (darkest → lightest) ─────────────────────────── */
+  --c-inset: #080b0c; /* recessed displays, fader slots, inputs */
+  --c-room: #0c1011; /* page background */
+  --c-chassis: #141a1b; /* rack panels */
+  --c-panel: #1a2122; /* raised modules inside racks */
+  --c-panel-hi: #232b2c; /* buttons, keys, caps */
+
+  /* ── Colour: lines ─────────────────────────────────────────────────── */
+  --c-seam: #2b3536; /* decorative dividers only (not for controls) */
+  --c-seam-strong: #3c4849; /* decorative module borders */
+  --c-edge: #6b7a7a; /* interactive control borders: ≥3:1 everywhere */
+
+  /* ── Colour: text ──────────────────────────────────────────────────── */
+  --c-ink: #e6e0d2; /* primary text */
+  --c-muted: #9aa5a1; /* legends, secondary text */
+
+  /* ── Colour: signal ────────────────────────────────────────────────── */
+  --c-amber: #f2b35b; /* the lamp: lit, active, playing, focus */
+  --c-amber-ink: #241606; /* text on amber */
+  --c-amber-unlit: #5a4524; /* unlit LEDs and lamps (decorative) */
+  --c-amber-glow: color-mix(in oklab, var(--c-amber) 55%, transparent);
+  --c-home: #86b5a2; /* "home": the origin, the written Pressing */
+  --c-danger: #f2937f; /* parse errors, failed requests */
+  --c-danger-bg: color-mix(in oklab, var(--c-danger) 12%, var(--c-panel));
+
+  /* ── Colour: meter faces ───────────────────────────────────────────── */
+  --c-face-lit: #d6c29a; /* backlit face while playing */
+  --c-face-off: #9a8c70; /* unlit face while stopped */
+  --c-face: color-mix(
+    in oklab,
+    var(--c-face-lit) calc(var(--lamp) * 100%),
+    var(--c-face-off)
+  );
+  --c-face-ink: #2b2113; /* scale, legends on face */
+  --c-needle: #9c2b18; /* needle while lit */
+  --c-face-home: #2f6a55; /* home tick on face */
+
+  /* ── Type (system stacks only) ─────────────────────────────────────── */
+  /* Condensed grotesque for console legends and labels. */
+  --font-legend:
+    "Avenir Next Condensed", "Bahnschrift SemiCondensed", "Roboto Condensed",
+    "Arial Narrow", sans-serif-condensed, system-ui, sans-serif;
+  /* Geometric 60s/70s display face for the title. */
+  --font-display:
+    Futura, "Futura PT", "Century Gothic", "Avenir Next", "Trebuchet MS",
+    system-ui, sans-serif;
+  /* Body and form text. */
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Readouts, the display and the editor. */
+  --font-mono:
+    ui-monospace, "SF Mono", Menlo, "Cascadia Mono", Consolas, "Roboto Mono",
+    monospace;
+
+  --fs-legend: 0.72rem; /* uppercase, tracked */
+  --fs-sm: 0.82rem;
+  --fs-base: 0.95rem;
+  --fs-md: 1.1rem;
+  --fs-lg: 1.45rem;
+  --fs-title: clamp(1.45rem, 1.1rem + 1.6vw, 2.15rem);
+  --fs-readout: 1.6rem;
+
+  --lh-tight: 1.15;
+  --lh-base: 1.5;
+  --track-legend: 0.16em;
+  --track-wordmark: 0.3em;
+
+  /* ── Space (4px base) ──────────────────────────────────────────────── */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-10: 2.5rem;
+
+  /* ── Radii ─────────────────────────────────────────────────────────── */
+  --r-xs: 3px; /* LEDs, small caps */
+  --r-sm: 5px; /* keys, inputs */
+  --r-md: 8px; /* modules, displays */
+  --r-lg: 12px; /* racks */
+  --r-pill: 999px;
+
+  /* ── Size ──────────────────────────────────────────────────────────── */
+  --page-max: 1320px;
+  --tap: 44px; /* minimum touch target */
+  --knob: 64px;
+  --fader-h: 132px;
+
+  /* ── Depth ─────────────────────────────────────────────────────────── */
+  --sh-rack:
+    inset 0 1px 0 rgb(255 255 255 / 0.05), 0 22px 40px -32px rgb(0 0 0 / 0.9);
+  --sh-key:
+    inset 0 1px 0 rgb(255 255 255 / 0.08), 0 2px 0 rgb(0 0 0 / 0.55),
+    0 3px 6px -2px rgb(0 0 0 / 0.6);
+  --sh-key-down: inset 0 2px 4px rgb(0 0 0 / 0.6);
+  --sh-inset: inset 0 2px 8px rgb(0 0 0 / 0.65), inset 0 0 0 1px #000;
+  --sh-cap: 0 3px 5px rgb(0 0 0 / 0.7), inset 0 1px 0 rgb(255 255 255 / 0.35);
+
+  /* Faint anodised grain for racks: an inline SVG noise texture with no network
+     request, kept at 4% opacity so text contrast is unaffected. */
+  --tx-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E");
+
+  /* ── Focus ─────────────────────────────────────────────────────────── */
+  --focus-ring: 0 0 0 2px var(--c-room), 0 0 0 4px var(--c-amber);
+
+  /* ── Motion: slow, damped, like the drift ──────────────────────────── */
+  --ease-damped: cubic-bezier(0.25, 0.8, 0.25, 1); /* needles, faders */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --t-quick: 140ms; /* key presses, hovers */
+  --t-calm: 420ms; /* panel changes */
+  --t-needle: 1800ms; /* meter needle settling once per bar */
+  --t-lamp-on: 1200ms; /* needle drop: lamps warm up */
+  --t-lamp-off: 2600ms; /* tape stop: lamps fade, needles sink */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-quick: 0ms;
+    --t-calm: 0ms;
+    --t-needle: 0ms;
+    --t-lamp-on: 0ms;
+    --t-lamp-off: 0ms;
+  }
+}

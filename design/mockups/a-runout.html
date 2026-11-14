@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Direction A · Run-out — Dead Wax mockup</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #12110f;
+        --surface: #1a1916;
+        --raised: #23211d;
+        --line: #34312b;
+        --ink: #ece6d8;
+        --muted: #a8a090;
+        --accent: #d9935f;
+        --accent-ink: #1b120b;
+        --label: #e8dcc4;
+        --label-ink: #2a241b;
+        --home: #8fa898;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(
+            120% 80% at 20% 0%,
+            color-mix(in oklab, var(--accent) 7%, transparent),
+            transparent 60%
+          ),
+          var(--bg);
+        color: var(--ink);
+        font:
+          15px/1.5 "IBM Plex Sans",
+          system-ui,
+          sans-serif;
+      }
+      .mono {
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+      }
+      .etch {
+        font:
+          500 0.68rem/1 "IBM Plex Mono",
+          monospace;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      main {
+        max-width: 1200px;
+        margin: auto;
+        padding: 24px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--line);
+      }
+      .wordmark {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font:
+          400 1.9rem/1 "Instrument Serif",
+          serif;
+        letter-spacing: -0.01em;
+      }
+      header nav {
+        margin-left: auto;
+        display: flex;
+        gap: 4px;
+      }
+      header nav button,
+      .btn {
+        font: 500 0.8rem "IBM Plex Sans";
+        color: var(--ink);
+        background: transparent;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 6px 14px;
+      }
+      header nav button[aria-current="page"] {
+        background: var(--raised);
+        border-color: var(--muted);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        gap: 24px;
+        margin-top: 24px;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 22px;
+      }
+      .now {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 24px;
+        align-items: center;
+      }
+      h1 {
+        font:
+          400 2.6rem/1.05 "Instrument Serif",
+          serif;
+        margin: 6px 0 10px;
+      }
+      h1 em {
+        color: var(--muted);
+      }
+      h2 {
+        font:
+          400 1.6rem/1 "Instrument Serif",
+          serif;
+        margin: 0;
+      }
+      dl.meta {
+        display: grid;
+        grid-template-columns: repeat(4, auto);
+        gap: 4px 18px;
+        margin: 14px 0 18px;
+        justify-content: start;
+      }
+      dl.meta dt {
+        grid-row: 1;
+      }
+      dl.meta dd {
+        margin: 0;
+        grid-row: 2;
+        font: 500 1rem "IBM Plex Mono";
+      }
+      .transport {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .play {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        border: 0;
+        background: var(--accent);
+        color: var(--accent-ink);
+        display: grid;
+        place-items: center;
+        box-shadow: 0 0 0 6px
+          color-mix(in oklab, var(--accent) 18%, transparent);
+      }
+      .chords {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        margin-top: 18px;
+      }
+      .chord {
+        border-top: 2px solid var(--line);
+        padding: 8px 2px 0;
+      }
+      .chord b {
+        display: block;
+        font: 500 1rem "IBM Plex Mono";
+      }
+      .chord.on {
+        border-color: var(--accent);
+      }
+      .chord.on b {
+        color: var(--accent);
+      }
+      .chord.on .etch::after {
+        content: " · now";
+        color: var(--accent);
+      }
+      .parts {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px;
+        margin-top: 20px;
+        padding-top: 18px;
+        border-top: 1px dashed var(--line);
+      }
+      .part label {
+        display: flex;
+        justify-content: space-between;
+      }
+      .part .meter {
+        height: 6px;
+        border-radius: 3px;
+        background: var(--raised);
+        margin: 8px 0;
+        overflow: hidden;
+      }
+      .part .meter i {
+        display: block;
+        height: 100%;
+        background: var(--ink);
+        opacity: 0.7;
+      }
+      .part button {
+        font: 500 0.7rem "IBM Plex Mono";
+        color: var(--muted);
+        background: none;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 2px 8px;
+      }
+      .part button[aria-pressed="true"] {
+        color: var(--ink);
+        border-color: var(--ink);
+        text-decoration: line-through;
+      }
+      .drift-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+      }
+      .switch i {
+        width: 38px;
+        height: 22px;
+        border-radius: 11px;
+        background: var(--accent);
+        position: relative;
+      }
+      .switch i::after {
+        content: "";
+        position: absolute;
+        right: 3px;
+        top: 3px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--accent-ink);
+      }
+      .groove-wrap {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        gap: 18px;
+        align-items: center;
+        margin-top: 12px;
+      }
+      .legend {
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+      .legend ul {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0 0;
+        columns: 2;
+      }
+      .legend li {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 2px 0;
+        font: 0.75rem "IBM Plex Mono";
+      }
+      .legend li b {
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .dirs {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        margin: 18px 0 12px;
+      }
+      .dirs button {
+        font: 500 0.8rem "IBM Plex Sans";
+        color: var(--ink);
+        background: var(--raised);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 0;
+      }
+      .dirs button[aria-pressed="true"] {
+        border-color: var(--accent);
+        box-shadow: inset 0 -2px 0 var(--accent);
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .slider {
+        flex: 1;
+        min-width: 160px;
+      }
+      .slider .track {
+        height: 4px;
+        background: var(--line);
+        border-radius: 2px;
+        position: relative;
+        margin-top: 10px;
+      }
+      .slider .track i {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 35%;
+        background: var(--accent);
+        border-radius: 2px;
+      }
+      .slider .track b {
+        position: absolute;
+        left: 35%;
+        top: -7px;
+        width: 18px;
+        height: 18px;
+        margin-left: -9px;
+        border-radius: 50%;
+        background: var(--ink);
+      }
+      footer {
+        margin-top: 18px;
+        display: flex;
+        justify-content: space-between;
+      }
+      kbd {
+        font: 0.68rem "IBM Plex Mono";
+        border: 1px solid var(--line);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        padding: 1px 5px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="wordmark">
+          <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+            <circle cx="32" cy="32" r="30" fill="currentColor" opacity=".16" />
+            <circle
+              cx="32"
+              cy="32"
+              r="22"
+              fill="none"
+              stroke="currentColor"
+              stroke-opacity=".3"
+            />
+            <circle cx="32" cy="32" r="12" fill="var(--accent)" />
+            <path
+              d="M32 2 A30 30 0 0 1 62 32"
+              fill="none"
+              stroke="var(--accent)"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            />
+            <circle cx="32" cy="32" r="1.8" fill="var(--bg)" />
+          </svg>
+          Dead Wax
+        </div>
+        <span class="etch">DW·104729·A&nbsp;&nbsp;side one</span>
+        <nav aria-label="Views">
+          <button aria-current="page">Player</button><button>Editor</button
+          ><button>Shelf</button>
+        </nav>
+      </header>
+
+      <div class="grid">
+        <section class="card">
+          <div class="now">
+            <svg
+              id="record"
+              viewBox="0 0 300 300"
+              role="img"
+              aria-label="Bar 2 of 4, chord G7alt"
+            ></svg>
+            <div>
+              <div class="etch">On the platter</div>
+              <h1>Window seat, <em>1:17 am</em></h1>
+              <dl class="meta">
+                <dt class="etch">Tempo</dt>
+                <dd>72 <small>bpm</small></dd>
+                <dt class="etch">Key</dt>
+                <dd>C min</dd>
+                <dt class="etch">Meter</dt>
+                <dd>4/4</dd>
+                <dt class="etch">Seed</dt>
+                <dd>104729</dd>
+              </dl>
+              <div class="transport">
+                <button class="play" aria-label="Stop">
+                  <svg width="18" height="18" viewBox="0 0 18 18">
+                    <rect
+                      x="3"
+                      y="3"
+                      width="12"
+                      height="12"
+                      rx="2"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </button>
+                <div>
+                  <div class="mono">Loop 3 · bar 2.3</div>
+                  <div class="etch">Playing · needle down</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="chords">
+            <div class="chord"><span class="etch">Bar 1</span><b>Dm7♭5</b></div>
+            <div class="chord on">
+              <span class="etch">Bar 2</span><b>G7alt</b>
+            </div>
+            <div class="chord"><span class="etch">Bar 3</span><b>Cm9</b></div>
+            <div class="chord">
+              <span class="etch">Bar 4</span><b>A♭maj7♯11</b>
+            </div>
+          </div>
+          <div class="parts">
+            <div class="part">
+              <label class="etch">Keys <span>70</span></label>
+              <div class="meter"><i style="width: 70%"></i></div>
+              <button aria-pressed="false">Mute</button>
+            </div>
+            <div class="part">
+              <label class="etch">Bass <span>80</span></label>
+              <div class="meter"><i style="width: 80%"></i></div>
+              <button aria-pressed="false">Mute</button>
+            </div>
+            <div class="part">
+              <label class="etch">Drums <span>65</span></label>
+              <div class="meter"><i style="width: 65%"></i></div>
+              <button aria-pressed="false">Mute</button>
+            </div>
+            <div class="part">
+              <label class="etch">Melody <span>40</span></label>
+              <div class="meter"><i style="width: 40%"></i></div>
+              <button aria-pressed="true">Muted</button>
+            </div>
+            <div class="part">
+              <label class="etch">Master <span>65</span></label>
+              <div class="meter"><i style="width: 65%"></i></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="drift-head">
+            <h2>Drift</h2>
+            <span class="switch"><i></i>On</span>
+          </div>
+          <div class="groove-wrap">
+            <svg
+              id="groove"
+              viewBox="0 0 260 260"
+              role="img"
+              aria-label="Distance from home 23 percent"
+            ></svg>
+            <div class="legend">
+              <div class="etch">Distance from home</div>
+              <div
+                style="
+                  font: 400 3rem/1 &quot;Instrument Serif&quot;;
+                  color: var(--ink);
+                "
+              >
+                23<small style="font-size: 1.2rem">%</small>
+              </div>
+              <p style="margin: 6px 0 0">
+                A perfect circle is the record as written. The shape stretches
+                outwards as a dimension rises and pulls in as it falls.
+              </p>
+              <ul>
+                <li>tempo <b>+6</b></li>
+                <li>swing <b>+0.05</b></li>
+                <li>busy <b>−12%</b></li>
+                <li>tone <b>−21%</b></li>
+                <li>reverb <b>+18%</b></li>
+                <li>wow <b>+9%</b></li>
+                <li>rain <b>+14%</b></li>
+                <li>density <b>+4%</b></li>
+              </ul>
+            </div>
+          </div>
+          <div class="dirs">
+            <button aria-pressed="true">Darker</button><button>Brighter</button
+            ><button>Busier</button><button>Sparser</button>
+            <button>Looser</button><button>Tighter</button
+            ><button>Dreamier</button><button>Dustier</button>
+          </div>
+          <div class="row">
+            <div class="slider">
+              <span class="etch">Wander · 35%</span>
+              <div class="track"><i></i><b></b></div>
+            </div>
+            <button class="btn">Return home</button
+            ><button class="btn">Hold</button
+            ><button class="btn">Capture</button>
+          </div>
+        </section>
+      </div>
+      <footer>
+        <span class="etch"
+          >Textures · crackle 12 · hiss 5 · rain 20 · room 3</span
+        ><span class="etch"
+          ><kbd>Space</kbd> play &nbsp;<kbd>D</kbd> drift &nbsp;<kbd>H</kbd>
+          home &nbsp;<kbd>?</kbd> keys</span
+        >
+      </footer>
+    </main>
+    <script>
+      const ns = "http://www.w3.org/2000/svg";
+      const el = (n, a, p) => {
+        const e = document.createElementNS(ns, n);
+        for (const k in a) e.setAttribute(k, a[k]);
+        p.appendChild(e);
+        return e;
+      };
+      // Record: grooves, four chord arcs, label
+      const r = document.getElementById("record");
+      el("circle", { cx: 150, cy: 150, r: 146, fill: "var(--raised)" }, r);
+      for (let i = 60; i < 144; i += 3)
+        el(
+          "circle",
+          {
+            cx: 150,
+            cy: 150,
+            r: i,
+            fill: "none",
+            stroke: "var(--line)",
+            "stroke-width": 0.6,
+            opacity: 0.6,
+          },
+          r,
+        );
+      const arc = (rad, a0, a1) => {
+        const p = (a) => [150 + rad * Math.sin(a), 150 - rad * Math.cos(a)];
+        const [x0, y0] = p(a0),
+          [x1, y1] = p(a1);
+        return `M${x0} ${y0} A${rad} ${rad} 0 0 1 ${x1} ${y1}`;
+      };
+      ["Dm7♭5", "G7alt", "Cm9", "A♭maj7♯11"].forEach((c, i) => {
+        const a0 = (i * Math.PI) / 2 + 0.06,
+          a1 = ((i + 1) * Math.PI) / 2 - 0.06;
+        el(
+          "path",
+          {
+            d: arc(132, a0, a1),
+            fill: "none",
+            stroke: i === 1 ? "var(--accent)" : "var(--muted)",
+            "stroke-width": i === 1 ? 6 : 2,
+            "stroke-linecap": "round",
+            opacity: i === 1 ? 1 : 0.5,
+          },
+          r,
+        );
+      });
+      el("circle", { cx: 150, cy: 150, r: 52, fill: "var(--label)" }, r);
+      const t = el(
+        "text",
+        {
+          x: 150,
+          y: 138,
+          "text-anchor": "middle",
+          fill: "var(--label-ink)",
+          "font-family": "IBM Plex Mono",
+          "font-size": 8,
+          "letter-spacing": 1.5,
+        },
+        r,
+      );
+      t.textContent = "TEST PRESSING";
+      const t2 = el(
+        "text",
+        {
+          x: 150,
+          y: 172,
+          "text-anchor": "middle",
+          fill: "var(--label-ink)",
+          "font-family": "Instrument Serif",
+          "font-size": 15,
+        },
+        r,
+      );
+      t2.textContent = "Window seat";
+      el("circle", { cx: 150, cy: 150, r: 3, fill: "var(--bg)" }, r);
+      // playhead
+      const ph = arc(132, 1.95, 1.96);
+      el(
+        "circle",
+        {
+          cx: 150 + 132 * Math.sin(2.1),
+          cy: 150 - 132 * Math.cos(2.1),
+          r: 7,
+          fill: "var(--accent)",
+          stroke: "var(--surface)",
+          "stroke-width": 3,
+        },
+        r,
+      );
+
+      // Groove: radar where home = circle
+      const g = document.getElementById("groove");
+      const dims = [
+        "tempo",
+        "swing",
+        "humanise",
+        "busy",
+        "embellish",
+        "density",
+        "register",
+        "tone",
+        "saturation",
+        "wow",
+        "reverb",
+        "arrangement",
+        "vinyl",
+        "tape",
+        "rain",
+        "room",
+      ];
+      const val = [
+        0.2, 0.18, 0.05, -0.12, 0.08, 0.04, -0.06, -0.21, 0.1, 0.09, 0.18, 0.0,
+        0.11, 0.03, 0.14, 0.02,
+      ];
+      for (let i = 30; i <= 120; i += 30)
+        el(
+          "circle",
+          {
+            cx: 130,
+            cy: 130,
+            r: i,
+            fill: "none",
+            stroke: "var(--line)",
+            "stroke-width": 0.8,
+          },
+          g,
+        );
+      el(
+        "circle",
+        {
+          cx: 130,
+          cy: 130,
+          r: 80,
+          fill: "none",
+          stroke: "var(--home)",
+          "stroke-width": 1.5,
+          "stroke-dasharray": "3 4",
+        },
+        g,
+      );
+      const pts = dims.map((d, i) => {
+        const a = (i / dims.length) * Math.PI * 2;
+        const rr = 80 + val[i] * 140;
+        el(
+          "line",
+          {
+            x1: 130 + 30 * Math.sin(a),
+            y1: 130 - 30 * Math.cos(a),
+            x2: 130 + 120 * Math.sin(a),
+            y2: 130 - 120 * Math.cos(a),
+            stroke: "var(--line)",
+            "stroke-width": 0.6,
+          },
+          g,
+        );
+        return [130 + rr * Math.sin(a), 130 - rr * Math.cos(a)];
+      });
+      el(
+        "polygon",
+        {
+          points: pts.map((p) => p.join(",")).join(" "),
+          fill: "color-mix(in oklab, var(--accent) 18%, transparent)",
+          stroke: "var(--accent)",
+          "stroke-width": 1.8,
+          "stroke-linejoin": "round",
+        },
+        g,
+      );
+      pts.forEach(([x, y]) =>
+        el("circle", { cx: x, cy: y, r: 2.6, fill: "var(--accent)" }, g),
+      );
+      const h = el(
+        "text",
+        {
+          x: 130,
+          y: 134,
+          "text-anchor": "middle",
+          fill: "var(--home)",
+          "font-family": "IBM Plex Mono",
+          "font-size": 10,
+          "letter-spacing": 1.5,
+        },
+        g,
+      );
+      h.textContent = "HOME";
+    </script>
+  </body>
+</html>

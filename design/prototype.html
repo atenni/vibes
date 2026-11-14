@@ -1,0 +1,2411 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0c1011" />
+    <meta
+      name="description"
+      content="A small, self-contained lo-fi jazz studio. Write a Pressing, let it wander, bring it home."
+    />
+    <!-- Favicon: a VU arc with an amber needle. Inline SVG, no request. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23141a1b'/%3E%3Cpath d='M10.7 33.1A26 26 0 0 1 53.3 33.1' fill='none' stroke='%23e6e0d2' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M32 48L46.1 21.5' stroke='%23f2b35b' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='48' r='6' fill='%23e6e0d2'/%3E%3C/svg%3E"
+    />
+    <title>Dead Wax — a small listening room</title>
+    <!-- In index.html, paste these two files into one inline <style>. -->
+    <link rel="stylesheet" href="tokens.css" />
+    <link rel="stylesheet" href="components.css" />
+    <style>
+      /* Prototype-only: the state switcher. Do not copy into index.html. */
+      .proto {
+        position: fixed;
+        left: 12px;
+        bottom: 12px;
+        z-index: 60;
+        max-width: min(22rem, calc(100vw - 24px));
+        font: 12px/1.4 var(--font-ui);
+        color: #111;
+      }
+      .proto summary {
+        cursor: pointer;
+        width: max-content;
+        padding: 6px 10px;
+        border-radius: 6px;
+        background: #e9e2f8;
+        font-weight: 600;
+      }
+      .proto[open] summary {
+        border-radius: 6px 6px 0 0;
+      }
+      .proto div {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 8px;
+        border-radius: 0 6px 6px 6px;
+        background: #e9e2f8;
+        max-height: 50vh;
+        overflow: auto;
+      }
+      .proto b {
+        flex-basis: 100%;
+        margin-top: 4px;
+      }
+      .proto button {
+        padding: 3px 7px;
+        border: 1px solid #8a7fa6;
+        border-radius: 4px;
+        background: #fff;
+        color: #111;
+      }
+    </style>
+  </head>
+  <body data-view="desk" data-audio="off" data-first-run>
+    <a class="skip-link" href="#main">Skip to the controls</a>
+
+    <div class="page">
+      <header class="masthead">
+        <a class="wordmark" href="./" aria-label="Dead Wax, home">
+          <!-- Wordmark: monoline capitals drawn as strokes, so no font is needed. -->
+          <svg viewBox="0 0 110 16" role="img" aria-hidden="true">
+            <g
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M0 8.7A11 11 0 0 1 18 8.7" />
+              <path
+                d="M26 3H29.5A4.5 5 0 0 1 29.5 13H26Z M43 3H37V13H43M37 8H41.5 M47 13L51 3L55 13M48.6 9H53.4 M59 3H62.5A4.5 5 0 0 1 62.5 13H59Z M74 3L76.5 13L79 6L81.5 13L84 3 M88 13L92 3L96 13M89.6 9H94.4 M100 3L108 13M108 3L100 13"
+              />
+            </g>
+            <path
+              d="M9 15L14.6 4.4"
+              stroke="var(--c-amber)"
+              stroke-width="1.8"
+              stroke-linecap="round"
+            />
+            <circle cx="9" cy="15" r="1.8" fill="currentColor" />
+          </svg>
+        </a>
+
+        <nav class="tabs" aria-label="Views">
+          <button
+            class="tab"
+            type="button"
+            data-view="desk"
+            aria-current="page"
+            aria-keyshortcuts="P"
+          >
+            Desk
+          </button>
+          <button
+            class="tab"
+            type="button"
+            data-view="score"
+            aria-keyshortcuts="E"
+          >
+            Score
+          </button>
+          <button
+            class="tab"
+            type="button"
+            data-view="shelf"
+            aria-keyshortcuts="L"
+          >
+            Shelf
+          </button>
+        </nav>
+
+        <div class="masthead__end">
+          <span class="power legend"
+            ><span class="lamp" aria-hidden="true"></span
+            ><span id="power-text">Standby</span></span
+          >
+          <button
+            class="icon-btn"
+            type="button"
+            id="shortcuts-open"
+            aria-haspopup="dialog"
+            aria-controls="shortcuts"
+            aria-keyshortcuts="Shift+Slash"
+            title="Keyboard shortcuts (?)"
+          >
+            ?<span class="sr-only"> Keyboard shortcuts</span>
+          </button>
+        </div>
+      </header>
+
+      <p id="storage-status" class="notice" role="status"></p>
+
+      <main id="main" class="views">
+        <!-- ═══════════════════════════ DESK ═══════════════════════════ -->
+        <div class="view view--desk" id="view-desk">
+          <!-- Transport -->
+          <section class="rack transport" aria-labelledby="transport-title">
+            <h2 id="transport-title" class="sr-only">Transport</h2>
+            <div class="transport__keys" role="group" aria-label="Transport">
+              <button
+                id="play"
+                class="key key--transport key--play"
+                type="button"
+                aria-keyshortcuts="Space"
+              >
+                <span class="lamp" aria-hidden="true"></span>
+                <svg class="icon-play" viewBox="0 0 18 18" aria-hidden="true">
+                  <path d="M5 3.2v11.6L14.6 9z" fill="currentColor" />
+                </svg>
+                <svg class="icon-pause" viewBox="0 0 18 18" aria-hidden="true">
+                  <rect
+                    x="4"
+                    y="3.5"
+                    width="3.4"
+                    height="11"
+                    rx="1"
+                    fill="currentColor"
+                  />
+                  <rect
+                    x="10.6"
+                    y="3.5"
+                    width="3.4"
+                    height="11"
+                    rx="1"
+                    fill="currentColor"
+                  />
+                </svg>
+                <span class="when-off">Play</span
+                ><span class="when-on">Pause</span>
+              </button>
+            </div>
+
+            <div class="transport__record">
+              <div class="record-line">
+                <span class="legend" aria-hidden="true">On the platter</span>
+                <label class="sr-only" for="examples">Choose a record</label>
+                <select id="examples" class="select select--compact">
+                  <option value="0">Window seat, 1:17 am</option>
+                  <option value="1">Sunday paper</option>
+                  <option value="2">The last table</option>
+                  <option value="3">Empty platform</option>
+                  <option value="4">Three cups left</option>
+                  <option value="custom" disabled>
+                    Custom / edited Pressing
+                  </option>
+                </select>
+              </div>
+              <h1 id="title" class="title">Window seat, 1:17 am</h1>
+              <dl class="meta">
+                <div>
+                  <dt class="legend">Tempo</dt>
+                  <dd id="meta-tempo">72</dd>
+                </div>
+                <div>
+                  <dt class="legend">Key</dt>
+                  <dd id="meta-key">C minor</dd>
+                </div>
+                <div>
+                  <dt class="legend">Meter</dt>
+                  <dd id="meta-meter">4/4</dd>
+                </div>
+                <div>
+                  <dt class="legend">Loop</dt>
+                  <dd id="meta-bars">4 bars</dd>
+                </div>
+                <div>
+                  <dt class="legend"><label for="seed">Seed</label></dt>
+                  <dd>
+                    <input
+                      id="seed"
+                      class="inline-input"
+                      type="number"
+                      inputmode="numeric"
+                      min="0"
+                      max="4294967295"
+                      step="1"
+                      value="104729"
+                      aria-describedby="seed-help"
+                    />
+                    <span id="seed-help" class="sr-only"
+                      >Takes effect on the next Play. Locked while
+                      playing.</span
+                    >
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="transport__display display">
+              <p class="first-run">
+                <span class="lamp is-on" aria-hidden="true"></span>
+                Press Play to start the sound. Browsers wait for a click before
+                any audio.
+              </p>
+              <div class="display__top">
+                <output id="clock" class="display__clock">Ready</output>
+                <span class="legend" id="bars-legend">4-bar loop</span>
+              </div>
+              <div class="loopmap" id="loopmap" aria-hidden="true"></div>
+              <ol
+                id="bars"
+                class="bars"
+                data-density="roomy"
+                aria-label="Chords in the loop"
+              ></ol>
+              <div class="display__empty">
+                <p style="margin: 0 0 var(--sp-3)">
+                  No record on the platter. Choose one above, open your shelf,
+                  or drop a
+                  <span class="mono">.deadwax</span> file anywhere.
+                </p>
+                <button class="key key--quiet" type="button" data-goto="shelf">
+                  Open the shelf
+                </button>
+              </div>
+              <p
+                id="status"
+                class="display__status"
+                role="status"
+                aria-live="polite"
+              >
+                Everything is synthesised here, in your browser.
+              </p>
+            </div>
+          </section>
+
+          <!-- Drift -->
+          <section class="rack drift" aria-labelledby="drift-title">
+            <div class="rack__head">
+              <h2 id="drift-title" class="rack__title">Drift</h2>
+              <label class="toggle">
+                <input
+                  id="drift"
+                  type="checkbox"
+                  role="switch"
+                  aria-keyshortcuts="D"
+                />
+                <span class="sr-only">Drift</span>
+                <span class="toggle__track" aria-hidden="true"
+                  ><span class="toggle__lever"></span
+                ></span>
+                <span class="toggle__text" aria-hidden="true"></span>
+              </label>
+              <p id="drift-status" class="drift__status" aria-live="polite">
+                The original Pressing, with nowhere else to be.
+              </p>
+            </div>
+
+            <div class="drift__console">
+              <div class="drift__steer">
+                <div id="directions" class="rockers">
+                  <div
+                    class="rocker"
+                    role="group"
+                    aria-labelledby="rocker-colour"
+                  >
+                    <span class="rocker__name legend" id="rocker-colour"
+                      >Colour</span
+                    >
+                    <div class="rocker__body">
+                      <button
+                        type="button"
+                        class="rocker__side"
+                        data-direction="Darker"
+                        aria-pressed="false"
+                        aria-keyshortcuts="1"
+                      >
+                        <span class="lamp" aria-hidden="true"></span>Darker
+                      </button>
+                      <button
+                        type="button"
+                        class="rocker__side"
+                        data-direction="Brighter"
+                        aria-pressed="false"
+                        aria-keyshortcuts="2"
+                      >
+                        <span class="lamp" aria-hidden="true"></span>Brighter
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    class="rocker"
+                    role="group"
+                    aria-labelledby="rocker-activity"
+                  >
+                    <span class="rocker__name legend" id="rocker-activity"
+                      >Activity</span
+                    >
+                    <div class="rocker__body">
+                      <button
+                        type="button"
+                        class="rocker__side"
+                        data-direction="Busier"
+                        aria-pressed="false"
+                        aria-keyshortcuts="3"
+                      >
+                        <span class="lamp" aria-hidden="true"></span>Busier
+                      </button>
+                      <button
+                        type="button"
+                        class="rocker__side"
+                        data-direction="Sparser"
+                        aria-pressed="false"
+                        aria-keyshortcuts="4"
+                      >
+                        <span class="lamp" aria-hidden="true"></span>Sparser
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    class="rocker"
+                    role="group"
+                    aria-labelledby="rocker-feel"
+                  >
+                    <span class="rocker__name legend" id="rocker-feel"
+                      >Feel</span
+                    >
+                    <div class="rocker__body">
+                      <button
+                        type="button"
+                        class="rocker__side"
+                        data-direction="Looser"
+                        aria-pressed="false"
+                        aria-keyshortcuts="5"
+                      >
+                        <span class="lamp" aria-hidden="true"></span>Looser
+                      </button>
+                      <button
+                        type="button"
+                        class="rocker__side"
+                        data-direction="Tighter"
+                        aria-pressed="false"
+                        aria-keyshortcuts="6"
+                      >
+                        <span class="lamp" aria-hidden="true"></span>Tighter
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    class="rocker"
+                    role="group"
+                    aria-labelledby="rocker-atmosphere"
+                  >
+                    <span class="rocker__name legend" id="rocker-atmosphere"
+                      >Atmosphere</span
+                    >
+                    <div class="rocker__body">
+                      <button
+                        type="button"
+                        class="rocker__side"
+                        data-direction="Dreamier"
+                        aria-pressed="false"
+                        aria-keyshortcuts="7"
+                      >
+                        <span class="lamp" aria-hidden="true"></span>Dreamier
+                      </button>
+                      <button
+                        type="button"
+                        class="rocker__side"
+                        data-direction="Dustier"
+                        aria-pressed="false"
+                        aria-keyshortcuts="8"
+                      >
+                        <span class="lamp" aria-hidden="true"></span>Dustier
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="drift__actions">
+                  <button
+                    id="home"
+                    class="key"
+                    type="button"
+                    aria-keyshortcuts="H"
+                  >
+                    <svg viewBox="0 0 14 14" aria-hidden="true">
+                      <path
+                        d="M2 7 7 2.5 12 7M3.5 6v5.5h7V6"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                    Return home
+                  </button>
+                  <button
+                    id="hold"
+                    class="key"
+                    type="button"
+                    aria-pressed="false"
+                    aria-keyshortcuts="K"
+                  >
+                    <span class="lamp" aria-hidden="true"></span>Hold
+                  </button>
+                  <button
+                    id="capture"
+                    class="key"
+                    type="button"
+                    aria-keyshortcuts="C"
+                  >
+                    <svg viewBox="0 0 14 14" aria-hidden="true">
+                      <circle
+                        cx="7"
+                        cy="7"
+                        r="5.5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                      />
+                      <circle cx="7" cy="7" r="1.6" fill="currentColor" />
+                    </svg>
+                    Capture
+                  </button>
+                </div>
+              </div>
+
+              <div class="drift__gauge-col">
+                <figure
+                  id="distance"
+                  class="drift__gauge vu vu--gauge"
+                  role="meter"
+                  aria-labelledby="distance-label"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                  aria-valuetext="At home"
+                  style="--d: 0"
+                >
+                  <div class="vu__face">
+                    <span class="vu__needle"></span>
+                    <div class="vu__scale legend" aria-hidden="true">
+                      <span>Home</span><span>Far</span>
+                    </div>
+                  </div>
+                  <figcaption class="vu__legend">
+                    <span id="distance-label" class="legend"
+                      >Distance from home</span
+                    >
+                    <span
+                      id="distance-value"
+                      class="gauge__readout"
+                      aria-hidden="true"
+                      >0%</span
+                    >
+                  </figcaption>
+                </figure>
+                <div class="drift__wander">
+                  <div class="knob knob--lg" style="--v: 0.35">
+                    <div class="knob__dial" aria-hidden="true"></div>
+                    <span class="knob__cap" aria-hidden="true"></span>
+                    <input
+                      id="wander"
+                      class="knob__input"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value="0.35"
+                      aria-describedby="wander-help"
+                      aria-keyshortcuts="[ ]"
+                    />
+                    <label class="knob__name legend" for="wander">Wander</label>
+                    <output id="wander-value" class="knob__value" for="wander"
+                      >35%</output
+                    >
+                  </div>
+                  <p id="wander-help" class="hint">
+                    How far and how fast it roams. At zero, it moves only where
+                    you steer it.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filled by JS: one .vu per dimension, grouped. -->
+            <div id="dimensions" class="bridge"></div>
+          </section>
+
+          <!-- Mixer -->
+          <section class="rack mixer" aria-labelledby="mixer-title">
+            <div class="rack__head">
+              <h2 id="mixer-title" class="rack__title">Mixer</h2>
+            </div>
+            <div id="mutes" class="strips">
+              <div class="strip" role="group" aria-labelledby="strip-chords">
+                <span id="strip-chords" class="legend">Keys</span>
+                <input
+                  id="level-chords"
+                  class="fader"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.7"
+                  aria-label="Keys level"
+                />
+                <output
+                  id="level-value-chords"
+                  class="strip__value"
+                  for="level-chords"
+                  >70</output
+                >
+                <button
+                  id="mute-chords"
+                  class="mute"
+                  type="button"
+                  aria-pressed="false"
+                  aria-label="Mute keys"
+                >
+                  Mute
+                </button>
+              </div>
+              <div class="strip" role="group" aria-labelledby="strip-bass">
+                <span id="strip-bass" class="legend">Bass</span>
+                <input
+                  id="level-bass"
+                  class="fader"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.8"
+                  aria-label="Bass level"
+                />
+                <output
+                  id="level-value-bass"
+                  class="strip__value"
+                  for="level-bass"
+                  >80</output
+                >
+                <button
+                  id="mute-bass"
+                  class="mute"
+                  type="button"
+                  aria-pressed="false"
+                  aria-label="Mute bass"
+                >
+                  Mute
+                </button>
+              </div>
+              <div class="strip" role="group" aria-labelledby="strip-drums">
+                <span id="strip-drums" class="legend">Drums</span>
+                <input
+                  id="level-drums"
+                  class="fader"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.65"
+                  aria-label="Drums level"
+                />
+                <output
+                  id="level-value-drums"
+                  class="strip__value"
+                  for="level-drums"
+                  >65</output
+                >
+                <button
+                  id="mute-drums"
+                  class="mute"
+                  type="button"
+                  aria-pressed="false"
+                  aria-label="Mute drums"
+                >
+                  Mute
+                </button>
+              </div>
+              <div class="strip" role="group" aria-labelledby="strip-melody">
+                <span id="strip-melody" class="legend">Melody</span>
+                <input
+                  id="level-melody"
+                  class="fader"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.4"
+                  aria-label="Melody level"
+                />
+                <output
+                  id="level-value-melody"
+                  class="strip__value"
+                  for="level-melody"
+                  >40</output
+                >
+                <button
+                  id="mute-melody"
+                  class="mute"
+                  type="button"
+                  aria-pressed="false"
+                  aria-label="Mute melody"
+                >
+                  Mute
+                </button>
+              </div>
+              <div
+                class="strip strip--master"
+                role="group"
+                aria-labelledby="strip-master"
+              >
+                <span id="strip-master" class="legend">Master</span>
+                <input
+                  id="volume"
+                  class="fader"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.65"
+                  aria-label="Master volume"
+                />
+                <output id="volume-value" class="strip__value" for="volume"
+                  >65</output
+                >
+              </div>
+            </div>
+          </section>
+
+          <!-- Textures -->
+          <section class="rack textures" aria-labelledby="textures-title">
+            <div class="rack__head">
+              <h2 id="textures-title" class="rack__title">Room</h2>
+              <span class="rack__aside hint"
+                >Surface and space. These drift too.</span
+              >
+            </div>
+            <div id="textures" class="knob-row">
+              <div class="knob knob--sm">
+                <div class="knob__dial" aria-hidden="true"></div>
+                <span class="knob__cap" aria-hidden="true"></span
+                ><input
+                  id="texture-vinyl"
+                  class="knob__input"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.12"
+                /><label class="knob__name legend" for="texture-vinyl"
+                  >Crackle</label
+                ><output
+                  id="texture-value-vinyl"
+                  class="knob__value"
+                  for="texture-vinyl"
+                  >12%</output
+                >
+              </div>
+              <div class="knob knob--sm">
+                <div class="knob__dial" aria-hidden="true"></div>
+                <span class="knob__cap" aria-hidden="true"></span
+                ><input
+                  id="texture-surface"
+                  class="knob__input"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.04"
+                /><label class="knob__name legend" for="texture-surface"
+                  >Surface</label
+                ><output
+                  id="texture-value-surface"
+                  class="knob__value"
+                  for="texture-surface"
+                  >4%</output
+                >
+              </div>
+              <div class="knob knob--sm">
+                <div class="knob__dial" aria-hidden="true"></div>
+                <span class="knob__cap" aria-hidden="true"></span
+                ><input
+                  id="texture-tape"
+                  class="knob__input"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.05"
+                /><label class="knob__name legend" for="texture-tape"
+                  >Tape hiss</label
+                ><output
+                  id="texture-value-tape"
+                  class="knob__value"
+                  for="texture-tape"
+                  >5%</output
+                >
+              </div>
+              <div class="knob knob--sm">
+                <div class="knob__dial" aria-hidden="true"></div>
+                <span class="knob__cap" aria-hidden="true"></span
+                ><input
+                  id="texture-rumble"
+                  class="knob__input"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.06"
+                /><label class="knob__name legend" for="texture-rumble"
+                  >Rumble</label
+                ><output
+                  id="texture-value-rumble"
+                  class="knob__value"
+                  for="texture-rumble"
+                  >6%</output
+                >
+              </div>
+              <div class="knob knob--sm">
+                <div class="knob__dial" aria-hidden="true"></div>
+                <span class="knob__cap" aria-hidden="true"></span
+                ><input
+                  id="texture-rain"
+                  class="knob__input"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.2"
+                /><label class="knob__name legend" for="texture-rain"
+                  >Rain</label
+                ><output
+                  id="texture-value-rain"
+                  class="knob__value"
+                  for="texture-rain"
+                  >20%</output
+                >
+              </div>
+              <div class="knob knob--sm">
+                <div class="knob__dial" aria-hidden="true"></div>
+                <span class="knob__cap" aria-hidden="true"></span
+                ><input
+                  id="texture-room"
+                  class="knob__input"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.03"
+                /><label class="knob__name legend" for="texture-room"
+                  >Room tone</label
+                ><output
+                  id="texture-value-room"
+                  class="knob__value"
+                  for="texture-room"
+                  >3%</output
+                >
+              </div>
+              <div class="knob knob--sm">
+                <div class="knob__dial" aria-hidden="true"></div>
+                <span class="knob__cap" aria-hidden="true"></span
+                ><input
+                  id="texture-hum"
+                  class="knob__input"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.02"
+                /><label class="knob__name legend" for="texture-hum">Hum</label
+                ><output
+                  id="texture-value-hum"
+                  class="knob__value"
+                  for="texture-hum"
+                  >2%</output
+                >
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ═══════════════════════════ SCORE ═══════════════════════════ -->
+        <div class="view view--score" id="view-score">
+          <section class="rack score" aria-labelledby="score-title">
+            <div class="rack__head">
+              <h2 id="score-title" class="rack__title">Score</h2>
+              <span id="editor-chip" class="chip">✓ Valid</span>
+              <a class="rack__aside" href="FORMAT.md">Pressing format</a>
+            </div>
+            <div class="editor" id="editor-frame">
+              <div class="editor__gutter" aria-hidden="true">
+                <div class="editor__gutter-inner" id="editor-gutter"></div>
+              </div>
+              <div class="editor__surface">
+                <pre
+                  class="editor__tint"
+                  id="editor-tint"
+                  aria-hidden="true"
+                ></pre>
+                <textarea
+                  id="editor"
+                  class="editor__input"
+                  aria-label="Pressing source"
+                  aria-describedby="errors"
+                  spellcheck="false"
+                  autocapitalize="off"
+                  autocomplete="off"
+                  wrap="off"
+                ></textarea>
+              </div>
+            </div>
+            <div id="errors" class="errors" aria-live="polite"></div>
+            <div class="score__bar">
+              <button
+                id="apply"
+                class="key key--primary"
+                type="button"
+                aria-keyshortcuts="Control+Enter Meta+Enter"
+              >
+                Apply at next bar
+              </button>
+              <button id="download" class="key" type="button">
+                <svg viewBox="0 0 14 14" aria-hidden="true">
+                  <path
+                    d="M7 2v7M4 6.5 7 9.5l3-3M2.5 12h9"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                Export .deadwax
+              </button>
+              <span class="spacer"></span>
+              <p class="hint">Invalid text never replaces what’s playing.</p>
+            </div>
+          </section>
+        </div>
+
+        <!-- ═══════════════════════════ SHELF ═══════════════════════════ -->
+        <div class="view view--shelf" id="view-shelf">
+          <section class="rack shelf" aria-labelledby="shelf-title">
+            <div class="rack__head">
+              <h2 id="shelf-title" class="rack__title">Shelf</h2>
+              <span class="legend" id="shelf-count">3 records</span>
+              <button
+                id="new"
+                class="key rack__aside"
+                type="button"
+                aria-keyshortcuts="N"
+              >
+                <svg viewBox="0 0 14 14" aria-hidden="true">
+                  <path
+                    d="M7 2.5v9M2.5 7h9"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                New Pressing
+              </button>
+            </div>
+            <form class="save-row" id="save-form">
+              <label class="sr-only" for="save-name">Name on the sleeve</label>
+              <input
+                id="save-name"
+                class="input"
+                type="text"
+                placeholder="Name on the sleeve"
+                autocomplete="off"
+              />
+              <button id="save" class="key key--primary" type="submit">
+                Save current
+              </button>
+            </form>
+            <ul id="library" class="sleeves" aria-label="Saved Pressings"></ul>
+            <div class="empty" id="shelf-empty" hidden>
+              <svg viewBox="0 0 48 48" aria-hidden="true">
+                <rect
+                  x="6"
+                  y="6"
+                  width="36"
+                  height="36"
+                  rx="2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <circle
+                  cx="24"
+                  cy="24"
+                  r="11"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <circle cx="24" cy="24" r="2" fill="currentColor" />
+              </svg>
+              <p><strong>Nothing on the shelf yet.</strong></p>
+              <p>
+                Save the current Pressing, capture a drift you like, or bring
+                one in from a file or a Gist.
+              </p>
+            </div>
+          </section>
+
+          <section class="rack import" aria-labelledby="import-title">
+            <div class="rack__head" style="margin: 0">
+              <h2 id="import-title" class="rack__title">Bring one in</h2>
+            </div>
+            <div class="dropzone" id="dropzone">
+              <svg viewBox="0 0 32 32" aria-hidden="true">
+                <path
+                  d="M16 4v16M10 14l6 6 6-6M5 22v5h22v-5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <p style="margin: 0">
+                Drop a <span class="mono">.deadwax</span> file anywhere on the
+                page
+              </p>
+              <button id="upload" class="key" type="button">
+                Choose a file…
+              </button>
+              <input
+                type="file"
+                id="file"
+                accept=".deadwax,text/plain"
+                hidden
+              />
+              <p class="hint">
+                Plain text, up to 1 MB. It’s read here and never uploaded.
+              </p>
+            </div>
+
+            <div class="gist" id="gist-panel" data-state="idle">
+              <div class="field">
+                <label for="gist" class="legend">GitHub Gist URL or ID</label>
+                <div class="input-row">
+                  <input
+                    id="gist"
+                    class="input"
+                    type="text"
+                    inputmode="url"
+                    autocomplete="off"
+                    spellcheck="false"
+                    placeholder="gist.github.com/you/1a2b3c…"
+                  />
+                  <button id="import-gist" class="key" type="button">
+                    Fetch
+                  </button>
+                </div>
+              </div>
+              <p id="gist-message" class="gist__msg" role="status"></p>
+              <div id="gist-files" class="gist__files" hidden>
+                <div class="field">
+                  <label for="gist-choice" class="legend"
+                    >This Gist has several files</label
+                  >
+                  <select id="gist-choice" class="select"></select>
+                </div>
+                <button id="gist-load" class="key" type="button">
+                  Load file
+                </button>
+              </div>
+              <p class="hint">
+                Public and secret Gists work without signing in. GitHub allows
+                60 requests an hour per network. This is the only thing Dead Wax
+                ever fetches.
+              </p>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <footer class="foot">
+        <div class="foot__keys" aria-hidden="true">
+          <span><kbd>Space</kbd> play / pause</span>
+          <span><kbd>D</kbd> drift</span>
+          <span><kbd>H</kbd> home</span>
+          <span><kbd>?</kbd> all keys</span>
+        </div>
+        <div>
+          Synthesised in your browser. No tracking.
+          <a href="FORMAT.md">Format</a> ·
+          <a href="tests.html">Tests</a>
+        </div>
+      </footer>
+    </div>
+
+    <div class="drop-veil" aria-hidden="true">
+      <div>Drop the needle…</div>
+    </div>
+
+    <dialog id="shortcuts" class="sheet" aria-labelledby="shortcuts-title">
+      <div class="rack__head">
+        <h2 id="shortcuts-title" class="rack__title">Keys</h2>
+      </div>
+      <dl class="shortcut-list">
+        <dt><kbd>Space</kbd></dt>
+        <dd>Play / pause</dd>
+        <dt><kbd>D</kbd></dt>
+        <dd>Drift on / off</dd>
+        <dt><kbd>1</kbd>–<kbd>8</kbd></dt>
+        <dd>
+          Steer: darker, brighter, busier, sparser, looser, tighter, dreamier,
+          dustier
+        </dd>
+        <dt><kbd>[</kbd> <kbd>]</kbd></dt>
+        <dd>Wander less / more</dd>
+        <dt><kbd>H</kbd></dt>
+        <dd>Return home</dd>
+        <dt><kbd>K</kbd></dt>
+        <dd>Hold (keep this state)</dd>
+        <dt><kbd>C</kbd></dt>
+        <dd>Capture as a new Pressing</dd>
+        <dt><kbd>N</kbd></dt>
+        <dd>New Pressing</dd>
+        <dt><kbd>P</kbd> <kbd>E</kbd> <kbd>L</kbd></dt>
+        <dd>Desk, Score, Shelf</dd>
+        <dt><kbd>Ctrl</kbd>/<kbd>⌘</kbd> <kbd>Enter</kbd></dt>
+        <dd>Apply the score (in the editor)</dd>
+        <dt><kbd>?</kbd></dt>
+        <dd>This list</dd>
+      </dl>
+      <p class="hint" style="margin-bottom: var(--sp-4)">
+        Shortcuts pause while you’re typing. Space only plays when focus isn’t
+        on a button or field.
+      </p>
+      <form method="dialog">
+        <button class="key" type="submit">Close</button>
+      </form>
+    </dialog>
+
+    <!-- Prototype-only state switcher. Not part of the handoff. -->
+    <details class="proto" id="proto">
+      <summary>Prototype states</summary>
+      <div>
+        <b>Transport</b>
+        <button data-proto="first-run">First run</button>
+        <button data-proto="playing">Playing + drifting</button>
+        <button data-proto="stopped">Paused</button>
+        <button data-proto="empty">No Pressing</button>
+        <b>Loop length</b>
+        <button data-proto="bars-4">4 bars</button>
+        <button data-proto="bars-2">2</button>
+        <button data-proto="bars-8">8</button>
+        <button data-proto="bars-12">12 bars</button>
+        <button data-proto="bars-16">16</button>
+        <button data-proto="bars-24">24</button>
+        <button data-proto="bars-32">32 bars</button>
+        <button data-proto="bars-64">64 bars</button>
+        <b>Errors and storage</b>
+        <button data-proto="storage">Storage unavailable</button>
+        <button data-proto="editor-errors">Editor errors</button>
+        <button data-proto="drag">Drag-over veil</button>
+        <b>Shelf and Gist</b>
+        <button data-proto="shelf-empty">Empty shelf</button>
+        <button data-proto="gist-loading">Gist loading</button>
+        <button data-proto="gist-404">Gist 404</button>
+        <button data-proto="gist-limit">Rate limited</button>
+        <button data-proto="gist-choose">Several files</button>
+      </div>
+    </details>
+
+    <script>
+      // Prototype interactions with fake data. Wiring notes: components.md.
+      (() => {
+        const $ = (id) => document.getElementById(id);
+        const body = document.body;
+        const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+        // ── Fake Pressing data ────────────────────────────────────────────
+        const SOURCE = `deadwax 1
+title Window seat, 1:17 am
+tempo 72
+meter 4/4
+key C minor
+swing 0.18
+bars 4
+seed 104729
+
+chords Dm7b5:4 G7alt:4 Cm9:4 Abmaj7#11:4
+bass auto root-fifth
+melody -:2 F5:0.5 Eb5:0.5 D5:1 -:2 B4:1 Ab4:1 G4:3 -:1 Eb5:1 D5:1 C5:2
+kick X... ..g. x... ....
+rim .... x... .... x..g
+hats x.g. x.g. x.g. x.gg
+brushes .... .... g... ....
+
+instrument chords epiano
+instrument bass upright
+instrument melody vibes
+level chords 0.7
+level bass 0.8
+level melody 0.4
+level drums 0.65
+
+; surface and space
+texture vinyl 0.12
+texture tape 0.05
+texture rain 0.2
+
+drift rate 0.35
+drift tempo 58 100
+drift swing 0 0.4
+drift tone 0.1 0.9
+drift reverb 0.1 0.75
+drift rain 0 0.5`;
+
+        // Bars: each is a list of [chord, held?]. held = continues from before.
+        const LOOPS = {
+          4: [[["Dm7b5"]], [["G7alt"]], [["Cm9"]], [["Abmaj7#11"]]],
+        };
+        const cycle = [
+          "Dm9",
+          "G13",
+          "Cmaj9",
+          "Am9",
+          "Fmaj7#11",
+          "E7alt",
+          "Am9",
+          "D9",
+          "Gm9",
+          "C13",
+          "Fmaj9",
+          "Bb13",
+          "Ebmaj7",
+          "Ab7#11",
+          "Dm7b5",
+          "G7b9",
+        ];
+        for (const n of [2, 8, 12, 16, 24, 32, 64])
+          LOOPS[n] = Array.from({ length: n }, (_, i) => {
+            if (i % 7 === 5) return [[cycle[(i - 1) % 16], true]];
+            if (i % 5 === 3) return [[cycle[i % 16]], [cycle[(i + 3) % 16]]];
+            return [[cycle[i % 16]]];
+          });
+
+        // Dimension specs: [absolute min, absolute max, origin, lo, hi | null].
+        const DIMS = {
+          tempo: [45, 130, 72, 58, 100],
+          swing: [0, 0.48, 0.18, 0, 0.4],
+          humanise: [0, 1, 0.18, 0, 0.8],
+          busyness: [0, 1, 0.35, 0.05, 0.9],
+          embellish: [0, 1, 0.1, 0, 0.8],
+          rhythm: [0, 1, 0, 0, 0.7],
+          arrangement: [0, 1, 0, 0, 0.45],
+          density: [0, 1, 0.55, 0.1, 0.95],
+          register: [0, 1, 0.45, 0.2, 0.8],
+          substitution: [0, 1, 0, 0, 0.45],
+          timbre: [0, 1, 0, 0, 1],
+          tone: [0, 1, 0.48, 0.1, 0.9],
+          saturation: [0, 1, 0.25, 0.05, 0.8],
+          wow: [0, 1, 0.2, 0, 0.75],
+          crush: [0, 1, 0, null, null],
+          reverb: [0, 0.85, 0.24, 0.1, 0.75],
+          balance: [0, 1, 0.5, 0.2, 0.8],
+          vinyl: [0, 1, 0.12, 0, 0.5],
+          surface: [0, 1, 0.04, 0, 0.2],
+          tape: [0, 1, 0.05, 0, 0.4],
+          rumble: [0, 1, 0.06, 0, 0.2],
+          rain: [0, 1, 0.2, 0, 0.5],
+          room: [0, 1, 0.03, 0, 0.3],
+          hum: [0, 1, 0.02, null, null],
+        };
+        const GROUPS = {
+          Time: ["tempo", "swing", "humanise"],
+          Groove: ["busyness", "embellish", "rhythm", "arrangement"],
+          Harmony: ["density", "register", "substitution", "timbre"],
+          Sound: ["tone", "saturation", "wow", "crush", "reverb", "balance"],
+          Surface: [
+            "vinyl",
+            "surface",
+            "tape",
+            "rumble",
+            "rain",
+            "room",
+            "hum",
+          ],
+        };
+        const LABELS = {
+          busyness: "Busy",
+          embellish: "Embellish",
+          arrangement: "Arrange",
+          substitution: "Subst.",
+          saturation: "Drive",
+          humanise: "Humanise",
+          vinyl: "Crackle",
+          tape: "Hiss",
+          room: "Room",
+        };
+        const DIRECTIONS = {
+          Darker: { tone: -0.32, register: -0.14, tempo: -8 },
+          Brighter: { tone: 0.32, register: 0.15 },
+          Busier: {
+            busyness: 0.45,
+            embellish: 0.45,
+            density: 0.25,
+            rhythm: 0.4,
+          },
+          Sparser: {
+            busyness: -0.3,
+            density: -0.3,
+            arrangement: 0.35,
+            embellish: -0.1,
+          },
+          Looser: { swing: 0.18, humanise: 0.45, wow: 0.2 },
+          Tighter: { swing: -0.14, humanise: -0.18, wow: -0.15 },
+          Dreamier: {
+            reverb: 0.38,
+            timbre: 0.75,
+            tempo: -8,
+            arrangement: 0.15,
+          },
+          Dustier: {
+            vinyl: 0.3,
+            tape: 0.2,
+            saturation: 0.4,
+            tone: -0.2,
+            wow: 0.4,
+            substitution: 0.3,
+          },
+        };
+
+        // ── Helpers (also suggested for the real app) ────────────────────
+        const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+        const pretty = (s) =>
+          s
+            .replace(/^([A-G])b/, "$1♭")
+            .replace(/b(5|9|13)/g, "♭$1")
+            .replace(/#/g, "♯");
+        const status = (t) => ($("status").textContent = t);
+        const driftStatus = (t) => ($("drift-status").textContent = t);
+
+        // ── Build the meter bridge ───────────────────────────────────────
+        for (const [group, keys] of Object.entries(GROUPS)) {
+          const fs = document.createElement("div");
+          fs.className = "bridge__group";
+          fs.setAttribute("role", "group");
+          fs.setAttribute("aria-labelledby", "group-" + group.toLowerCase());
+          fs.innerHTML = `<span class="bridge__name legend" id="group-${group.toLowerCase()}">${group}</span><div class="bridge__meters"></div>`;
+          for (const k of keys) {
+            const locked = DIMS[k][3] === null;
+            const label = LABELS[k] || k[0].toUpperCase() + k.slice(1);
+            fs.lastElementChild.insertAdjacentHTML(
+              "beforeend",
+              `<div class="vu${locked ? " is-locked" : ""}" id="dim-${k}" role="meter" aria-label="${label}" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" aria-valuetext="${locked ? "Fixed at home" : "At home"}" style="--d:0">
+                <div class="vu__face" aria-hidden="true"><span class="vu__needle"></span><span class="vu__peak"></span></div>
+                <div class="vu__legend" aria-hidden="true"><span class="vu__name legend">${label}</span><span class="vu__value">${locked ? "fixed" : "0"}</span></div>
+              </div>`,
+            );
+          }
+          $("dimensions").append(fs);
+        }
+
+        // ── Drift simulation ─────────────────────────────────────────────
+        const state = {
+          current: {},
+          velocity: {},
+          target: {},
+          direction: null,
+          home: false,
+          hold: false,
+          drift: false,
+        };
+        function resetDrift() {
+          for (const k in DIMS) {
+            state.current[k] = state.target[k] = DIMS[k][2];
+            state.velocity[k] = 0;
+          }
+          state.direction = null;
+          state.home = false;
+        }
+        resetDrift();
+
+        function stepDrift() {
+          if (state.hold || (!state.drift && !state.home)) return;
+          const wander = +$("wander").value;
+          for (const k in DIMS) {
+            const [A, B, o, lo, hi] = DIMS[k];
+            if (lo === null) continue;
+            const range = B - A;
+            if (state.home) state.target[k] = o;
+            else if (state.direction)
+              state.target[k] = clamp(
+                o +
+                  (DIRECTIONS[state.direction][k] || 0) *
+                    (k === "tempo" ? 1 : 1),
+                lo,
+                hi,
+              );
+            else
+              state.target[k] = clamp(
+                state.target[k] + (Math.random() - 0.5) * wander * range * 0.35,
+                lo,
+                hi,
+              );
+            const noise = state.home
+              ? 0
+              : (Math.random() - 0.5) * wander * range * 0.06;
+            state.velocity[k] =
+              state.velocity[k] * 0.55 +
+              (state.target[k] - state.current[k]) * 0.22 +
+              noise;
+            state.current[k] = clamp(
+              state.current[k] + state.velocity[k],
+              lo,
+              hi,
+            );
+          }
+          if (state.home && distance() < 0.01) {
+            state.home = false;
+            driftStatus("Home. The Pressing as written.");
+          }
+        }
+
+        // Signed deviation, −1 … 1, relative to the permitted range.
+        function deviation(k) {
+          const [, , o, lo, hi] = DIMS[k];
+          if (lo === null) return 0;
+          const c = state.current[k];
+          return c >= o
+            ? hi > o
+              ? (c - o) / (hi - o)
+              : 0
+            : o > lo
+              ? (c - o) / (o - lo)
+              : 0;
+        }
+        function distance() {
+          const ks = Object.keys(DIMS).filter((k) => DIMS[k][3] !== null);
+          return Math.sqrt(
+            ks.reduce((n, k) => n + deviation(k) ** 2, 0) / ks.length,
+          );
+        }
+
+        function renderMeters() {
+          for (const k in DIMS) {
+            const el = $("dim-" + k);
+            if (el.classList.contains("is-locked")) continue;
+            const [A, B, o] = DIMS[k];
+            const d = deviation(k);
+            const delta = state.current[k] - o;
+            const shown =
+              k === "tempo"
+                ? Math.round(delta)
+                : Math.round((delta / (B - A)) * 100);
+            const text =
+              shown === 0 ? "0" : (shown > 0 ? "+" : "−") + Math.abs(shown);
+            const label = el.getAttribute("aria-label");
+            el.style.setProperty("--d", d.toFixed(3));
+            el.classList.toggle("is-limit", Math.abs(d) > 0.97);
+            el.querySelector(".vu__value").textContent = text;
+            el.setAttribute("aria-valuenow", Math.round(d * 100));
+            el.setAttribute(
+              "aria-valuetext",
+              Math.abs(d) < 0.02
+                ? "At home"
+                : k === "tempo"
+                  ? `${state.current[k].toFixed(0)} BPM, ${Math.abs(delta).toFixed(0)} ${delta > 0 ? "faster" : "slower"} than home`
+                  : `${Math.abs(Math.round(d * 100))}% of the way to its ${d > 0 ? "upper" : "lower"} limit`,
+            );
+          }
+          const dist = distance();
+          const pct = Math.round(dist * 100);
+          $("distance").style.setProperty("--d", dist.toFixed(3));
+          $("distance").setAttribute("aria-valuenow", pct);
+          $("distance").setAttribute(
+            "aria-valuetext",
+            pct < 2 ? "At home" : `${pct}% from home`,
+          );
+          $("distance-value").textContent = pct + "%";
+        }
+
+        // ── Bars, loop map and clock ─────────────────────────────────────
+        let loop = LOOPS[4];
+        function drawBars() {
+          const n = loop.length;
+          const bars = $("bars");
+          // Rows of 4 bars, or 8 when the loop divides by 8 and there's room.
+          bars.dataset.row = n < 4 ? String(n) : "4";
+          bars.toggleAttribute("data-eight", n % 8 === 0);
+          bars.toggleAttribute("data-long", n > 8);
+          bars.style.setProperty("--beats", 4);
+          bars.innerHTML = loop
+            .map((chords, i) => {
+              const text = chords
+                .map(
+                  ([c, held]) =>
+                    `<span${held ? ' class="is-held"' : ""}>${pretty(c)}</span>`,
+                )
+                .join('<span class="sep" aria-hidden="true">/</span>');
+              const names = chords.map(([c]) => pretty(c)).join(" / ");
+              return `<li class="bar"><button type="button" class="bar__btn" data-bar="${i}" tabindex="${i === 0 ? 0 : -1}" aria-label="Bar ${i + 1}, ${names}"><span class="bar__n">${i + 1}</span><span class="bar__chord">${text}</span><span class="bar__sweep"></span></button></li>`;
+            })
+            .join("");
+          $("loopmap").innerHTML = "<i></i>".repeat(n);
+          $("meta-bars").textContent = n + " bars";
+          $("bars-legend").textContent = n + "-bar loop";
+        }
+        drawBars();
+
+        // Bars are one tab stop (roving tabindex): Tab in, arrows to move,
+        // Enter/Space or tap to jump.
+        $("bars").addEventListener("click", (e) => {
+          const b = e.target.closest(".bar__btn");
+          if (b) jumpTo(+b.dataset.bar);
+        });
+        $("bars").addEventListener("keydown", (e) => {
+          const b = e.target.closest(".bar__btn");
+          if (!b) return;
+          const i = +b.dataset.bar,
+            n = loop.length,
+            cols = getComputedStyle($("bars")).gridTemplateColumns.split(
+              " ",
+            ).length;
+          const to = {
+            ArrowRight: i + 1,
+            ArrowLeft: i - 1,
+            ArrowDown: i + cols,
+            ArrowUp: i - cols,
+            Home: 0,
+            End: n - 1,
+          }[e.key];
+          if (to === undefined) return;
+          e.preventDefault();
+          const next =
+            $("bars").children[Math.max(0, Math.min(n - 1, to))]
+              ?.firstElementChild;
+          b.tabIndex = -1;
+          next.tabIndex = 0;
+          next.focus();
+          keepInView(next.parentElement);
+        });
+
+        let bar = -1,
+          loopCount = 0,
+          timer = null;
+        // Playhead: `bar` is the current bar; `barStart`/`barDur` give the
+        // position inside it. Pause keeps both, so Play resumes mid-bar.
+        let barStart = 0,
+          barDur = 0,
+          resumeFrac = 0,
+          cued = null; // bar index queued by a tap; lands on the next beat
+
+        function setActive(i, frac = 0) {
+          const cells = $("bars").children,
+            marks = $("loopmap").children;
+          for (let j = 0; j < cells.length; j++) {
+            const on = j === i;
+            const btn = cells[j].firstElementChild;
+            cells[j].classList.toggle("is-active", on);
+            on
+              ? btn.setAttribute("aria-current", "true")
+              : btn.removeAttribute("aria-current");
+            cells[j].classList.toggle("is-cued", j === cued);
+            marks[j].classList.toggle("is-active", on);
+            marks[j].classList.toggle("is-past", j < i);
+          }
+          if (cells[i]) {
+            // Restart the sweep from `frac` of the way through the bar.
+            const sweep = cells[i].querySelector(".bar__sweep");
+            sweep.style.setProperty("--from", frac.toFixed(3));
+            sweep.style.display = "none";
+            sweep.offsetWidth;
+            sweep.style.display = "";
+            keepInView(cells[i]);
+          }
+        }
+        function keepInView(cell) {
+          const box = $("bars");
+          const top = cell.offsetTop - box.offsetTop;
+          if (
+            top < box.scrollTop ||
+            top + cell.offsetHeight > box.scrollTop + box.clientHeight
+          )
+            box.scrollTo({
+              top: top - 4,
+              behavior: reduceMotion.matches ? "auto" : "smooth",
+            });
+        }
+        function updateClock() {
+          $("clock").textContent =
+            body.dataset.audio === "on"
+              ? `${state.current.tempo.toFixed(1)} BPM · bar ${bar + 1}/${loop.length} · loop ${loopCount + 1}`
+              : `Paused · bar ${bar + 1}/${loop.length}`;
+        }
+        // Advance to the next bar (or to `cued`), then schedule the next one.
+        // `frac` > 0 when resuming mid-bar.
+        function tick(frac = 0) {
+          if (frac === 0) {
+            if (cued !== null) {
+              bar = cued;
+              cued = null;
+            } else if (++bar >= loop.length) {
+              bar = 0;
+              loopCount++;
+            }
+            stepDrift();
+            renderMeters();
+          }
+          barDur = (60 / state.current.tempo) * 4 * 1000;
+          barStart = performance.now() - frac * barDur;
+          $("bars").style.setProperty(
+            "--bar-dur",
+            (barDur / 1000).toFixed(2) + "s",
+          );
+          setActive(bar, frac);
+          updateClock();
+          timer = setTimeout(tick, barDur * (1 - frac));
+        }
+        // Tap a bar: while playing, it's cued for the next bar line (so the
+        // phrase never breaks); while paused, it moves the playhead there.
+        function jumpTo(i) {
+          if (i === bar && body.dataset.audio === "on") {
+            // Tapping the playing bar cancels a pending cue.
+            if (cued !== null) {
+              cued = null;
+              setActive(bar, (performance.now() - barStart) / barDur);
+              status("Cue cancelled.");
+            }
+            return;
+          }
+          if (body.dataset.audio !== "on") {
+            bar = i;
+            resumeFrac = 0;
+            fresh = false;
+            setActive(bar);
+            updateClock();
+            status(`Needle moved to bar ${i + 1}. Play starts there.`);
+            return;
+          }
+          // Cue it: tick() picks it up at the next bar line.
+          cued = i;
+          setActive(bar, (performance.now() - barStart) / barDur);
+          status(`Bar ${i + 1} is next.`);
+        }
+
+        // One key: Play (needle drop) ⇄ Pause (tape stop). Pausing keeps the
+        // drifted state and the playhead; Play carries on from that point.
+        let fresh = true;
+        function play() {
+          if (body.dataset.audio === "on" || body.dataset.pressing === "none")
+            return;
+          delete body.dataset.firstRun;
+          body.dataset.audio = "on";
+          $("power-text").textContent = "On air";
+          $("seed").disabled = true;
+          if (fresh) {
+            resetDrift();
+            renderMeters();
+            loopCount = 0;
+            bar = -1;
+            fresh = false;
+            status("Needle down.");
+            tick();
+          } else {
+            status(`Needle down at bar ${bar + 1}.`);
+            tick(resumeFrac);
+          }
+        }
+        function pause() {
+          if (body.dataset.audio !== "on") return;
+          clearTimeout(timer);
+          resumeFrac = Math.min(0.999, (performance.now() - barStart) / barDur);
+          cued = null;
+          body.dataset.audio = "off";
+          $("power-text").textContent = "Paused";
+          $("seed").disabled = false;
+          setActive(bar, resumeFrac);
+          updateClock();
+          status(
+            "Tape slowing to a stop. Play carries on from here; Return home resets.",
+          );
+        }
+        const togglePlay = () =>
+          body.dataset.audio === "on" ? pause() : play();
+        $("play").onclick = togglePlay;
+
+        // ── Drift controls ───────────────────────────────────────────────
+        $("drift").onchange = () => {
+          state.drift = $("drift").checked;
+          driftStatus(
+            state.drift
+              ? "Wandering within this Pressing’s permitted dimensions."
+              : "Drift paused here. Return home to restore the original.",
+          );
+        };
+        const directionButtons = [
+          ...document.querySelectorAll("[data-direction]"),
+        ];
+        for (const b of directionButtons)
+          b.onclick = () => {
+            if (body.dataset.audio !== "on")
+              return status("Press Play before steering the record.");
+            const name = b.dataset.direction;
+            const same = state.direction === name;
+            state.direction = same ? null : name;
+            state.home = false;
+            state.hold = false;
+            state.drift = $("drift").checked = true;
+            $("hold").setAttribute("aria-pressed", "false");
+            for (const x of directionButtons)
+              x.setAttribute("aria-pressed", String(!same && x === b));
+            driftStatus(
+              same
+                ? "Free wandering again."
+                : `Heading ${name.toLowerCase()}. It arrives a little each bar.`,
+            );
+          };
+        $("home").onclick = () => {
+          if (body.dataset.audio !== "on") {
+            // Paused: snap home now, and the next Play is a fresh session
+            // from bar 1.
+            fresh = true;
+            resumeFrac = 0;
+            setActive(-1);
+            $("clock").textContent = "Ready";
+            resetDrift();
+            renderMeters();
+          }
+          state.home = body.dataset.audio === "on";
+          state.direction = null;
+          state.hold = false;
+          $("hold").setAttribute("aria-pressed", "false");
+          for (const x of directionButtons)
+            x.setAttribute("aria-pressed", "false");
+          driftStatus(
+            body.dataset.audio === "on"
+              ? "Coming home. Give it a loop or two."
+              : "Already home.",
+          );
+        };
+        $("hold").onclick = () => {
+          if (body.dataset.audio !== "on")
+            return status("Press Play before holding a state.");
+          state.hold = !state.hold;
+          $("hold").setAttribute("aria-pressed", String(state.hold));
+          driftStatus(
+            state.hold
+              ? "Holding here. The groove keeps turning."
+              : "Released. The journey continues.",
+          );
+        };
+        // Capture never overwrites: it makes a new, untitled-but-named
+        // Pressing on the shelf and puts it on the platter. The original
+        // stays on the shelf untouched.
+        $("capture").onclick = () => {
+          const name = `${$("title").textContent.replace(/ · take \d+$/, "")} · take ${++takes}`;
+          addSleeve(
+            name,
+            "72 BPM · C minor · 4/4 · 4 bars · captured just now",
+            true,
+          );
+          $("title").textContent = name;
+          state.drift = $("drift").checked = false;
+          driftStatus("This take is now home. Drift is off.");
+          status(
+            `Captured “${name}” as a new Pressing on your shelf. The original is untouched.`,
+          );
+        };
+        let takes = 0;
+
+        // ── Knobs and faders ─────────────────────────────────────────────
+        for (const knob of document.querySelectorAll(".knob")) {
+          const input = knob.querySelector(".knob__input");
+          const out = knob.querySelector("output");
+          const sync = () => {
+            const v = (input.value - input.min) / (input.max - input.min);
+            knob.style.setProperty("--v", v);
+            out.textContent = Math.round(input.value * 100) + "%";
+          };
+          input.addEventListener("input", sync);
+          sync();
+          // Enhancement: drag up/right to increase, without jumping on click.
+          input.addEventListener("pointerdown", (e) => {
+            e.preventDefault();
+            input.focus();
+            const x0 = e.clientX,
+              y0 = e.clientY,
+              v0 = +input.value,
+              span = input.max - input.min;
+            input.setPointerCapture(e.pointerId);
+            const move = (ev) => {
+              input.value = clamp(
+                v0 + ((y0 - ev.clientY + ev.clientX - x0) / 180) * span,
+                +input.min,
+                +input.max,
+              );
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            };
+            const up = () => {
+              input.removeEventListener("pointermove", move);
+              input.dispatchEvent(new Event("change", { bubbles: true }));
+            };
+            input.addEventListener("pointermove", move);
+            input.addEventListener("pointerup", up, { once: true });
+            input.addEventListener("pointercancel", up, { once: true });
+          });
+        }
+        for (const f of document.querySelectorAll(".fader")) {
+          const out = document.querySelector(`output[for="${f.id}"]`);
+          f.addEventListener(
+            "input",
+            () => (out.textContent = Math.round(f.value * 100)),
+          );
+        }
+        for (const m of document.querySelectorAll(".mute"))
+          m.onclick = () =>
+            m.setAttribute(
+              "aria-pressed",
+              String(m.getAttribute("aria-pressed") !== "true"),
+            );
+
+        // ── Views ────────────────────────────────────────────────────────
+        function setView(v) {
+          body.dataset.view = v;
+          for (const t of document.querySelectorAll(".tab"))
+            t.dataset.view === v
+              ? t.setAttribute("aria-current", "page")
+              : t.removeAttribute("aria-current");
+          if (v === "score") syncEditor();
+        }
+        for (const t of document.querySelectorAll(".tab"))
+          t.onclick = () => setView(t.dataset.view);
+        for (const b of document.querySelectorAll("[data-goto]"))
+          b.onclick = () => setView(b.dataset.goto);
+
+        // ── Editor: cheap tint, gutter and fake diagnostics ──────────────
+        const editor = $("editor");
+        editor.value = SOURCE;
+        const KNOWN = [
+          "deadwax",
+          "title",
+          "tempo",
+          "meter",
+          "key",
+          "swing",
+          "bars",
+          "seed",
+          "chords",
+          "chord-notes",
+          "bass",
+          "melody",
+          "kick",
+          "snare",
+          "rim",
+          "hats",
+          "brushes",
+          "perc",
+          "instrument",
+          "level",
+          "mute",
+          "texture",
+          "drift",
+          "dimension",
+        ];
+        const GRIDS = ["kick", "snare", "rim", "hats", "brushes", "perc"];
+        const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+        function diagnose(lines) {
+          const errs = [];
+          lines.forEach((line, i) => {
+            const code = line.replace(/(^|\s);.*$/, "");
+            const m = code.match(/^(\s*)(\S+)/);
+            if (!m) return;
+            const word = m[2],
+              col = m[1].length + 1;
+            if (!KNOWN.includes(word))
+              errs.push({
+                line: i + 1,
+                column: col,
+                length: word.length,
+                message: `Unknown directive “${word}”.`,
+              });
+            else if (word === "tempo") {
+              const v = code.slice(col + 5).trim();
+              if (!(+v >= 45 && +v <= 130))
+                errs.push({
+                  line: i + 1,
+                  column: code.indexOf(v) + 1,
+                  length: v.length || 1,
+                  message: "Tempo must be a number from 45 to 130.",
+                });
+            } else if (GRIDS.includes(word)) {
+              const rest = code.slice(col - 1 + word.length);
+              const bad = rest.search(/[^ .xXg|]/);
+              if (bad >= 0)
+                errs.push({
+                  line: i + 1,
+                  column: col + word.length + bad,
+                  length: 1,
+                  message: `“${rest[bad]}” isn’t a drum mark. Use . x X or g.`,
+                });
+            }
+          });
+          if (lines[0]?.trim() !== "deadwax 1")
+            errs.unshift({
+              line: 1,
+              column: 1,
+              length: (lines[0] || "").length || 1,
+              message: "The first line must be exactly “deadwax 1”.",
+            });
+          return errs;
+        }
+
+        function tintLine(line, err) {
+          // Error token first, so it can be underlined precisely.
+          const comment = line.search(/(^|\s);/);
+          let code = comment >= 0 ? line.slice(0, comment) : line;
+          const rest = comment >= 0 ? line.slice(comment) : "";
+          const parts = code.split(/(\s+)/);
+          const word = parts.find((p) => p.trim());
+          let html = "",
+            pos = 0,
+            seenWord = false;
+          for (const p of parts) {
+            let cls = "";
+            if (!p.trim()) cls = "";
+            else if (!seenWord) {
+              cls = "t-kw";
+              seenWord = true;
+            } else if (GRIDS.includes(word)) cls = "grid";
+            else if (/^-?\d+(\.\d+)?$/.test(p)) cls = "t-num";
+            else if (
+              [
+                "instrument",
+                "level",
+                "texture",
+                "drift",
+                "dimension",
+                "mute",
+              ].includes(word)
+            )
+              cls = "t-name";
+            else if (["chords", "chord-notes", "bass", "melody"].includes(word))
+              cls = "seq";
+            let inner = esc(p);
+            if (cls === "grid")
+              inner = [...p]
+                .map((c) =>
+                  c === "X" || c === "x"
+                    ? `<span class="t-hit">${c}</span>`
+                    : c === "g"
+                      ? `<span class="t-ghost">g</span>`
+                      : `<span class="t-rest">${esc(c)}</span>`,
+                )
+                .join("");
+            else if (cls === "seq")
+              inner = esc(p)
+                .replace(/^(-)(?=:)/, '<span class="t-rest">-</span>')
+                .replace(/(:[\d.]+)$/, '<span class="t-dur">$1</span>');
+            if (
+              err &&
+              pos <= err.column - 1 &&
+              err.column - 1 < pos + p.length &&
+              p.trim()
+            )
+              inner = `<span class="t-error">${inner}</span>`;
+            html +=
+              cls && cls !== "grid" && cls !== "seq"
+                ? `<span class="${cls}">${inner}</span>`
+                : inner;
+            pos += p.length;
+          }
+          if (rest) html += `<span class="t-comment">${esc(rest)}</span>`;
+          return err
+            ? `<span class="t-line-error">${html || " "}</span>`
+            : html;
+        }
+
+        function syncEditor() {
+          const lines = editor.value.split("\n");
+          const errs = diagnose(lines);
+          const byLine = new Map(errs.map((e) => [e.line, e]));
+          $("editor-tint").innerHTML =
+            lines.map((l, i) => tintLine(l, byLine.get(i + 1))).join("\n") +
+            "\n";
+          $("editor-gutter").innerHTML = lines
+            .map((_, i) =>
+              byLine.has(i + 1)
+                ? `<span class="is-error">! ${i + 1}</span>`
+                : i + 1,
+            )
+            .join("\n");
+          $("editor-frame").classList.add("is-tinted");
+          editor.setAttribute("aria-invalid", String(!!errs.length));
+          const chip = $("editor-chip");
+          chip.className = errs.length ? "chip chip--error" : "chip";
+          chip.textContent = errs.length
+            ? `✕ ${errs.length} ${errs.length === 1 ? "problem" : "problems"}`
+            : "✓ Valid";
+          $("errors").replaceChildren(
+            ...errs.map((e) => {
+              const b = document.createElement("button");
+              b.type = "button";
+              b.className = "error";
+              b.innerHTML = `<span class="error__pos">Line ${e.line}, col ${e.column}</span><span>${esc(e.message)}</span>`;
+              b.onclick = () => {
+                const start =
+                  lines
+                    .slice(0, e.line - 1)
+                    .reduce((n, l) => n + l.length + 1, 0) +
+                  e.column -
+                  1;
+                editor.focus();
+                editor.setSelectionRange(start, start + e.length);
+              };
+              return b;
+            }),
+          );
+          syncScroll();
+          return errs;
+        }
+        function syncScroll() {
+          $("editor-tint").style.transform =
+            `translate(${-editor.scrollLeft}px, ${-editor.scrollTop}px)`;
+          $("editor-gutter").style.transform =
+            `translateY(${-editor.scrollTop}px)`;
+        }
+        let editTimer;
+        editor.addEventListener("input", () => {
+          // Re-tint immediately (cheap), diagnose on the same pass.
+          clearTimeout(editTimer);
+          editTimer = setTimeout(syncEditor, 60);
+        });
+        editor.addEventListener("scroll", syncScroll);
+        syncEditor();
+
+        // New Pressing: a minimal valid template, opened in the Score view.
+        // It isn't saved until the listener saves it; Apply puts it on the platter.
+        const TEMPLATE = `deadwax 1
+title Untitled pressing
+tempo 76
+meter 4/4
+key D dorian
+swing 0.16
+bars 4
+
+; Four bars, a chord each. Durations are in quarter notes.
+chords Dm9:4 G13:4 Dm9:4 Em7:2 A7alt:2
+bass auto root-fifth
+kick X... ..x. x... ....
+rim .... x... .... x...
+hats x.x. x.x. x.x. x.xg
+
+drift rate 0.3
+drift tone 0.2 0.8
+drift busyness 0.1 0.7
+`;
+        $("new").onclick = () => {
+          editor.value = TEMPLATE;
+          setView("score");
+          syncEditor();
+          editor.focus();
+          editor.setSelectionRange(6 + 10, 6 + 10 + 18);
+          status(
+            "A blank Pressing is in the score. Apply to hear it; save it to keep it.",
+          );
+        };
+
+        $("apply").onclick = () => {
+          const errs = syncEditor();
+          status(
+            errs.length
+              ? "Not applied. Fix the marked lines; the last good Pressing keeps playing."
+              : "Pressing queued for the next bar.",
+          );
+          if (errs.length) $("errors").firstElementChild?.focus();
+        };
+        $("download").onclick = () => {
+          if (syncEditor().length)
+            return status("Fix the marked lines before exporting.");
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(
+            new Blob([editor.value], { type: "text/plain" }),
+          );
+          a.download = "window-seat-1-17-am.deadwax";
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+          status("Exported the exact editor text.");
+        };
+
+        // ── Shelf ────────────────────────────────────────────────────────
+        const hue = (s) =>
+          [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
+        function sleeveHTML(name, meta, current) {
+          return `<li class="sleeve${current ? " is-current" : ""}" data-name="${esc(name)}" style="--hue:${hue(name)}">
+            <span class="sleeve__spine" aria-hidden="true"></span>
+            <div class="sleeve__body"><h3 class="sleeve__title">${esc(name)}</h3><p class="sleeve__meta">${meta}</p></div>
+            <div class="sleeve__actions" role="group" aria-label="${esc(name)}">
+              <button class="key key--quiet" type="button" data-action="load">Load</button>
+              <button class="key key--quiet" type="button" data-action="rename">Rename</button>
+              <button class="key key--quiet" type="button" data-action="duplicate">Duplicate</button>
+              <button class="key key--quiet" type="button" data-action="export">Export</button>
+              <button class="key key--quiet key--danger" type="button" data-action="delete">Delete</button>
+            </div>
+          </li>`;
+        }
+        function addSleeve(name, meta, current = false) {
+          if (current)
+            for (const x of $("library").children)
+              x.classList.remove("is-current");
+          $("library").insertAdjacentHTML(
+            "afterbegin",
+            sleeveHTML(name, meta, current),
+          );
+          renderShelf();
+        }
+        function renderShelf() {
+          const n = $("library").children.length;
+          $("shelf-empty").hidden = n > 0;
+          $("library").hidden = n === 0;
+          $("shelf-count").textContent = n === 1 ? "1 record" : `${n} records`;
+        }
+        $("library").innerHTML = [
+          sleeveHTML(
+            "Window seat, 1:17 am",
+            "72 BPM · C minor · 4/4 · 4 bars · saved 12 Nov",
+            true,
+          ),
+          sleeveHTML(
+            "Window seat, a bit dustier",
+            "64 BPM · C minor · 4/4 · 4 bars · captured 13 Nov",
+          ),
+          sleeveHTML(
+            "Night bus, 24 stops",
+            "68 BPM · F major · 4/4 · 32 bars · from Gist 9 Nov",
+          ),
+        ].join("");
+        renderShelf();
+
+        $("library").addEventListener("click", (e) => {
+          const b = e.target.closest("button");
+          if (!b) return;
+          const li = b.closest(".sleeve");
+          const name = li.dataset.name;
+          const actions = li.querySelector(".sleeve__actions");
+          const restore = () => {
+            li.querySelector(".sleeve__rename, .sleeve__confirm")?.remove();
+            actions.hidden = false;
+          };
+          switch (b.dataset.action) {
+            case "load":
+              for (const s of $("library").children)
+                s.classList.toggle("is-current", s === li);
+              $("title").textContent = name;
+              status(`“${name}” is on the platter.`);
+              break;
+            case "rename": {
+              actions.hidden = true;
+              li.insertAdjacentHTML(
+                "beforeend",
+                `<form class="sleeve__rename"><label class="sr-only" for="rn">New name for ${esc(name)}</label><input id="rn" class="input" value="${esc(name)}" /><button class="key key--primary" type="submit">Rename</button><button class="key key--quiet" type="button" data-action="cancel">Cancel</button></form>`,
+              );
+              const input = li.querySelector("#rn");
+              input.select();
+              li.querySelector("form").onsubmit = (ev) => {
+                ev.preventDefault();
+                const v = input.value.trim();
+                if (v) {
+                  li.dataset.name = v;
+                  li.querySelector(".sleeve__title").textContent = v;
+                  actions.setAttribute("aria-label", v);
+                }
+                restore();
+                b.focus();
+              };
+              break;
+            }
+            case "duplicate":
+              li.insertAdjacentHTML(
+                "afterend",
+                sleeveHTML(
+                  name + " (copy)",
+                  li.querySelector(".sleeve__meta").textContent,
+                ),
+              );
+              renderShelf();
+              status(`Duplicated “${name}”.`);
+              break;
+            case "export":
+              status(`Exported “${name}” as a .deadwax file.`);
+              break;
+            case "delete":
+              actions.hidden = true;
+              li.insertAdjacentHTML(
+                "beforeend",
+                `<div class="sleeve__confirm" role="alert"><p>Take “${esc(name)}” off the shelf? This can’t be undone.</p><button class="key key--quiet key--danger" type="button" data-action="confirm-delete">Delete</button><button class="key key--quiet" type="button" data-action="cancel">Keep it</button></div>`,
+              );
+              li.querySelector('[data-action="cancel"]').focus();
+              break;
+            case "confirm-delete": {
+              const next = li.nextElementSibling || li.previousElementSibling;
+              li.remove();
+              renderShelf();
+              (next?.querySelector("button") || $("save-name")).focus();
+              status(`Removed “${name}” from the shelf.`);
+              break;
+            }
+            case "cancel":
+              restore();
+              li.querySelector(`[data-action]`).focus();
+              break;
+          }
+        });
+        $("save-form").onsubmit = (e) => {
+          e.preventDefault();
+          addSleeve(
+            $("save-name").value.trim() || $("title").textContent,
+            "72 BPM · C minor · 4/4 · 4 bars · saved just now",
+          );
+          $("save-name").value = "";
+          status("Saved to your shelf.");
+        };
+
+        // ── Import: file, drag and drop, Gist ────────────────────────────
+        $("upload").onclick = () => $("file").click();
+        $("file").onchange = () => {
+          if ($("file").files[0])
+            status(`Read “${$("file").files[0].name}”. It’s in the score now.`);
+          $("file").value = "";
+        };
+        let dragDepth = 0;
+        addEventListener("dragenter", (e) => {
+          e.preventDefault();
+          dragDepth++;
+          body.classList.add("is-dragging");
+        });
+        addEventListener("dragover", (e) => e.preventDefault());
+        addEventListener("dragleave", () => {
+          if (--dragDepth <= 0) body.classList.remove("is-dragging");
+        });
+        addEventListener("drop", (e) => {
+          e.preventDefault();
+          dragDepth = 0;
+          body.classList.remove("is-dragging");
+          const f = e.dataTransfer.files[0];
+          if (f) status(`Read “${f.name}”. It’s in the score now.`);
+        });
+
+        function gistState(s, msg) {
+          $("gist-panel").dataset.state = s;
+          $("gist-message").textContent = msg || "";
+          $("gist-files").hidden = s !== "choose";
+          $("import-gist").disabled = s === "loading";
+          $("gist").setAttribute("aria-invalid", String(s === "error"));
+        }
+        const GIST_MSG = {
+          loading: "Asking GitHub for the Gist…",
+          error:
+            "Gist not found (404). Check the ID, and that the Gist is public or secret, not deleted.",
+          limited:
+            "GitHub’s limit of 60 requests an hour has been reached. Try again after 2:40 pm, or download the file and drop it here.",
+          choose: "This Gist has several files. Choose one to load.",
+          done: "Loaded “night-bus.deadwax” from the Gist. It’s on the platter, unplayed.",
+        };
+        $("import-gist").onclick = () => {
+          const v = $("gist").value.trim();
+          if (!v)
+            return gistState(
+              "error",
+              "Enter a Gist URL (gist.github.com/…) or its hexadecimal ID.",
+            );
+          gistState("loading", GIST_MSG.loading);
+          setTimeout(() => {
+            if (/404|missing/.test(v)) gistState("error", GIST_MSG.error);
+            else if (/limit/.test(v)) gistState("limited", GIST_MSG.limited);
+            else if (/multi/.test(v)) showChoice();
+            else gistState("done", GIST_MSG.done);
+          }, 1400);
+        };
+        function showChoice() {
+          $("gist-choice").innerHTML = [
+            "night-bus.deadwax",
+            "night-bus-alt.deadwax",
+            "README.md",
+          ]
+            .map((f, i) => `<option value="${i}">${f}</option>`)
+            .join("");
+          gistState("choose", GIST_MSG.choose);
+        }
+        $("gist-load").onclick = () =>
+          gistState(
+            "done",
+            `Loaded “${$("gist-choice").selectedOptions[0].text}”.`,
+          );
+
+        // ── Keyboard shortcuts ───────────────────────────────────────────
+        $("shortcuts-open").onclick = () => $("shortcuts").showModal();
+        document.addEventListener("keydown", (e) => {
+          const t = e.target;
+          if (t === editor && e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            return $("apply").click();
+          }
+          if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
+          if (
+            t.closest(
+              "input:not([type=range]):not([type=checkbox]), textarea, select, [contenteditable], dialog",
+            )
+          )
+            return;
+          if (e.key === " ") {
+            if (t.closest("button, input, a, summary, label")) return; // let Space activate the focused control
+            e.preventDefault();
+            return togglePlay();
+          }
+          const k = e.key.toLowerCase();
+          const nudge = (by) => {
+            const w = $("wander");
+            w.value = clamp(+w.value + by, 0, 1);
+            w.dispatchEvent(new Event("input", { bubbles: true }));
+            status(`Wander ${Math.round(w.value * 100)}%.`);
+          };
+          const map = {
+            d: () => $("drift").click(),
+            h: () => $("home").click(),
+            k: () => $("hold").click(),
+            c: () => $("capture").click(),
+            p: () => setView("desk"),
+            e: () => setView("score"),
+            l: () => setView("shelf"),
+            n: () => $("new").click(),
+            "?": () => $("shortcuts").showModal(),
+            "[": () => nudge(-0.05),
+            "]": () => nudge(0.05),
+          };
+          if (/^[1-8]$/.test(k))
+            map[k] = () => directionButtons[+k - 1].click();
+          if (map[k]) {
+            e.preventDefault();
+            map[k]();
+          }
+        });
+
+        // ── Prototype state switcher ─────────────────────────────────────
+        $("proto").addEventListener("click", (e) => {
+          const s = e.target.dataset.proto;
+          if (!s) return;
+          const reset = () => {
+            if (body.dataset.pressing === "none") {
+              delete body.dataset.pressing;
+              $("title").textContent =
+                loop.length === 4
+                  ? "Window seat, 1:17 am"
+                  : `Night bus, ${loop.length} stops`;
+              $("meta-tempo").textContent = "72";
+              $("meta-key").textContent = "C minor";
+              $("meta-meter").textContent = "4/4";
+              $("meta-bars").textContent = loop.length + " bars";
+            }
+            $("play").disabled = false;
+          };
+          if (s.startsWith("bars-")) {
+            const was = body.dataset.audio;
+            pause();
+            fresh = true;
+            resumeFrac = 0;
+            loop = LOOPS[s.slice(5)];
+            $("title").textContent =
+              loop.length === 4
+                ? "Window seat, 1:17 am"
+                : `Night bus, ${loop.length} stops`;
+            drawBars();
+            if (was === "on") play();
+            return setView("desk");
+          }
+          switch (s) {
+            case "first-run":
+              reset();
+              pause();
+              fresh = true;
+              resumeFrac = 0;
+              setActive(-1);
+              $("power-text").textContent = "Standby";
+              $("clock").textContent = "Ready";
+              body.dataset.firstRun = "";
+              status("Everything is synthesised here, in your browser.");
+              setView("desk");
+              break;
+            case "playing":
+              reset();
+              play();
+              $("drift").checked = state.drift = true;
+              $("wander").value = 0.6;
+              $("wander").dispatchEvent(new Event("input"));
+              directionButtons[0].click();
+              setView("desk");
+              break;
+            case "stopped":
+              reset();
+              pause();
+              setView("desk");
+              break;
+            case "empty":
+              pause();
+              body.dataset.pressing = "none";
+              delete body.dataset.firstRun;
+              $("title").textContent = "Nothing on the platter";
+              for (const id of [
+                "meta-tempo",
+                "meta-key",
+                "meta-meter",
+                "meta-bars",
+              ])
+                $(id).textContent = "—";
+              $("play").disabled = true;
+              status("Choose a record to begin.");
+              setView("desk");
+              break;
+            case "storage":
+              $("storage-status").textContent = $("storage-status").textContent
+                ? ""
+                : "This browser isn’t letting Dead Wax save, so the shelf lasts only until you close the tab. You can still play, edit and export files.";
+              break;
+            case "editor-errors":
+              editor.value = SOURCE.replace("tempo 72", "tempo 172")
+                .replace("hats x.g. x.g.", "hats x.g. x.q.")
+                .replace("swing 0.18", "swng 0.18");
+              setView("score");
+              syncEditor();
+              break;
+            case "drag":
+              body.classList.add("is-dragging");
+              setTimeout(() => body.classList.remove("is-dragging"), 2500);
+              break;
+            case "shelf-empty":
+              $("library").innerHTML = "";
+              renderShelf();
+              setView("shelf");
+              break;
+            case "gist-loading":
+              setView("shelf");
+              $("gist").value = "1a2b3c4d5e6f7a8b9c0d";
+              gistState("loading", GIST_MSG.loading);
+              break;
+            case "gist-404":
+              setView("shelf");
+              $("gist").value = "missing";
+              gistState("error", GIST_MSG.error);
+              break;
+            case "gist-limit":
+              setView("shelf");
+              $("gist").value = "1a2b3c4d5e6f7a8b9c0d";
+              gistState("limited", GIST_MSG.limited);
+              break;
+            case "gist-choose":
+              setView("shelf");
+              $("gist").value = "multi";
+              showChoice();
+              break;
+          }
+        });
+
+        renderMeters();
+      })();
+    </script>
+  </body>
+</html>

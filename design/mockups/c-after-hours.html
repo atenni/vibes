@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Direction C · After Hours — Dead Wax mockup</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0d1112;
+        --chassis: #151b1c;
+        --panel: #1b2223;
+        --inset: #0a0d0e;
+        --line: #2b3536;
+        --ink: #e4ded0;
+        --muted: #95a09c;
+        --glow: #f2b35b;
+        --glow-ink: #241606;
+        --face: #f1dfb8;
+        --face-ink: #2b2113;
+        --needle: #b5321f;
+        --home: #6f9c8b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        font:
+          400 16px/1.45 "Barlow Semi Condensed",
+          system-ui,
+          sans-serif;
+        background:
+          radial-gradient(
+            70% 50% at 50% -10%,
+            color-mix(in oklab, var(--glow) 12%, transparent),
+            transparent
+          ),
+          var(--bg);
+      }
+      .legend {
+        font: 500 0.72rem/1 "Barlow Semi Condensed";
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .mono {
+        font-family: "Martian Mono", ui-monospace, monospace;
+        font-weight: 300;
+      }
+      main {
+        max-width: 1200px;
+        margin: auto;
+        padding: 24px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+      .wordmark {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font: 300 1.7rem/1 "Barlow Semi Condensed";
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+      }
+      nav {
+        margin-left: auto;
+        display: flex;
+        background: var(--inset);
+        border-radius: 8px;
+        padding: 3px;
+      }
+      nav button {
+        font: 500 0.8rem "Barlow Semi Condensed";
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        background: none;
+        color: var(--muted);
+        border: 0;
+        border-radius: 6px;
+        padding: 6px 14px;
+      }
+      nav button[aria-current] {
+        background: var(--panel);
+        color: var(--ink);
+        box-shadow: 0 1px 0 #fff1 inset;
+      }
+      .rack {
+        background: var(--chassis);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow:
+          0 1px 0 #ffffff0d inset,
+          0 20px 40px -30px #000;
+      }
+      .rack + .rack {
+        margin-top: 16px;
+      }
+      .top {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 24px;
+        align-items: center;
+      }
+      .play {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        border: 1px solid var(--line);
+        background: radial-gradient(
+          circle at 50% 35%,
+          var(--panel),
+          var(--inset)
+        );
+        display: grid;
+        place-items: center;
+        color: var(--glow);
+        box-shadow:
+          0 0 0 4px var(--inset),
+          0 0 22px -4px color-mix(in oklab, var(--glow) 60%, transparent);
+      }
+      h1 {
+        font: 400 2rem/1.1 "Barlow Semi Condensed";
+        margin: 4px 0 6px;
+      }
+      .meta {
+        display: flex;
+        gap: 22px;
+      }
+      .meta b {
+        font: 300 0.95rem "Martian Mono";
+        color: var(--ink);
+        display: block;
+        margin-top: 4px;
+      }
+      .display {
+        background: var(--inset);
+        border-radius: 8px;
+        padding: 12px 14px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        min-width: 460px;
+        box-shadow: inset 0 2px 8px #0006;
+      }
+      .cell {
+        display: grid;
+        gap: 6px;
+      }
+      .cell .leds {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 3px;
+      }
+      .cell .leds i {
+        height: 6px;
+        border-radius: 2px;
+        background: var(--line);
+      }
+      .cell .leds i.lit {
+        background: var(--glow);
+        box-shadow: 0 0 8px var(--glow);
+      }
+      .cell b {
+        font: 400 0.95rem "Martian Mono";
+        color: var(--muted);
+      }
+      .cell.on b {
+        color: var(--glow);
+      }
+      .two {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr;
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .two .rack {
+        margin: 0;
+      }
+      .meters {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 10px;
+      }
+      .vu {
+        background: var(--face);
+        border-radius: 6px;
+        padding: 6px 6px 4px;
+        color: var(--face-ink);
+        box-shadow:
+          inset 0 0 0 1px #0002,
+          inset 0 -10px 18px -10px
+            color-mix(in oklab, var(--glow) 40%, transparent);
+      }
+      .vu svg {
+        display: block;
+        width: 100%;
+      }
+      .vu span {
+        display: flex;
+        justify-content: space-between;
+        font: 500 0.66rem "Barlow Semi Condensed";
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .big {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+      .head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .head h2 {
+        font: 500 0.95rem "Barlow Semi Condensed";
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        margin: 0;
+      }
+      .lamp {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        margin-left: auto;
+      }
+      .lamp i {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--glow);
+        box-shadow: 0 0 10px var(--glow);
+      }
+      .dirs {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        margin-top: 14px;
+      }
+      .dirs button,
+      .keys button {
+        font: 500 0.78rem "Barlow Semi Condensed";
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink);
+        background: linear-gradient(var(--panel), var(--chassis));
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 9px 0;
+        box-shadow: 0 1px 0 #ffffff12 inset;
+      }
+      .dirs button[aria-pressed="true"] {
+        box-shadow: inset 0 -3px 0 var(--glow);
+        color: var(--glow);
+      }
+      .keys {
+        display: flex;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .keys button {
+        flex: 1;
+      }
+      .knob {
+        width: 74px;
+        height: 74px;
+        border-radius: 50%;
+        background: conic-gradient(
+          from 225deg,
+          var(--glow) 0 95deg,
+          var(--line) 95deg 270deg,
+          transparent 270deg
+        );
+        display: grid;
+        place-items: center;
+      }
+      .knob i {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 50% 30%,
+          var(--panel),
+          var(--inset)
+        );
+        position: relative;
+        box-shadow: 0 3px 6px #0008;
+      }
+      .knob i::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 6px;
+        width: 2px;
+        height: 14px;
+        background: var(--ink);
+        transform-origin: 0 23px;
+        transform: rotate(-40deg);
+      }
+      .channels {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+      }
+      .ch {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+      }
+      .ch .slot {
+        width: 6px;
+        height: 96px;
+        background: var(--inset);
+        border-radius: 3px;
+        position: relative;
+      }
+      .ch .slot b {
+        position: absolute;
+        left: -12px;
+        width: 30px;
+        height: 16px;
+        border-radius: 3px;
+        background: linear-gradient(#cfc8b8, #8d877a);
+        box-shadow: 0 2px 4px #0008;
+      }
+      .ch .slot b::after {
+        content: "";
+        position: absolute;
+        left: 3px;
+        right: 3px;
+        top: 7px;
+        height: 2px;
+        background: var(--inset);
+      }
+      .ch button {
+        font: 500 0.66rem "Barlow Semi Condensed";
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: var(--inset);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 2px 8px;
+      }
+      .ch button[aria-pressed="true"] {
+        color: var(--glow-ink);
+        background: var(--glow);
+      }
+      footer {
+        margin-top: 14px;
+        display: flex;
+        justify-content: space-between;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="wordmark">
+          <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+            <path
+              d="M8 44 A26 26 0 0 1 56 44"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+            />
+            <path
+              d="M32 50 L46 22"
+              stroke="var(--glow)"
+              stroke-width="3.5"
+              stroke-linecap="round"
+            />
+            <circle cx="32" cy="50" r="5" fill="currentColor" />
+          </svg>
+          Dead Wax
+        </div>
+        <nav aria-label="Views">
+          <button aria-current="page">Desk</button><button>Score</button
+          ><button>Shelf</button>
+        </nav>
+      </header>
+
+      <div class="rack top">
+        <button class="play" aria-label="Stop">
+          <svg width="20" height="20">
+            <rect
+              x="3"
+              y="3"
+              width="14"
+              height="14"
+              rx="2"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
+        <div>
+          <div class="legend">Now playing · loop 3</div>
+          <h1>Window seat, 1:17 am</h1>
+          <div class="meta">
+            <span class="legend">Tempo<b>72</b></span
+            ><span class="legend">Key<b>C min</b></span
+            ><span class="legend">Meter<b>4/4</b></span
+            ><span class="legend">Seed<b>104729</b></span>
+          </div>
+        </div>
+        <div class="display" aria-label="Bar 2 of 4, beat 3, chord G7alt">
+          <div class="cell">
+            <div class="leds"><i></i><i></i><i></i><i></i></div>
+            <b>Dm7♭5</b>
+          </div>
+          <div class="cell on">
+            <div class="leds">
+              <i class="lit"></i><i class="lit"></i><i class="lit"></i><i></i>
+            </div>
+            <b>G7alt</b>
+          </div>
+          <div class="cell">
+            <div class="leds"><i></i><i></i><i></i><i></i></div>
+            <b>Cm9</b>
+          </div>
+          <div class="cell">
+            <div class="leds"><i></i><i></i><i></i><i></i></div>
+            <b>A♭maj7♯11</b>
+          </div>
+        </div>
+      </div>
+
+      <div class="two">
+        <section class="rack">
+          <div class="head">
+            <h2>Drift</h2>
+            <span class="legend">Each needle rests at home, centre</span
+            ><span class="lamp legend"><i></i>On</span>
+          </div>
+          <div class="meters" id="meters"></div>
+          <div class="dirs">
+            <button aria-pressed="true">Darker</button><button>Brighter</button
+            ><button>Busier</button><button>Sparser</button>
+            <button>Looser</button><button>Tighter</button
+            ><button>Dreamier</button><button>Dustier</button>
+          </div>
+        </section>
+        <section class="rack">
+          <div class="head"><h2>Distance from home</h2></div>
+          <div class="vu" style="padding: 10px 14px 8px">
+            <svg id="bigvu" viewBox="0 0 200 104"></svg
+            ><span
+              ><span>Home</span><span class="mono">23%</span
+              ><span>Far</span></span
+            >
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 16px;
+              align-items: center;
+              margin-top: 14px;
+            "
+          >
+            <div class="knob"><i></i></div>
+            <div>
+              <div class="legend">Wander</div>
+              <div class="mono" style="font-size: 1.3rem">35%</div>
+            </div>
+          </div>
+          <div class="keys">
+            <button>⌂ Home</button><button>Hold</button><button>Capture</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="rack">
+        <div class="channels">
+          <div class="ch">
+            <span class="legend">Keys</span>
+            <div class="slot"><b style="top: 24px"></b></div>
+            <span class="mono">70</span
+            ><button aria-pressed="false">Mute</button>
+          </div>
+          <div class="ch">
+            <span class="legend">Bass</span>
+            <div class="slot"><b style="top: 14px"></b></div>
+            <span class="mono">80</span
+            ><button aria-pressed="false">Mute</button>
+          </div>
+          <div class="ch">
+            <span class="legend">Drums</span>
+            <div class="slot"><b style="top: 30px"></b></div>
+            <span class="mono">65</span
+            ><button aria-pressed="false">Mute</button>
+          </div>
+          <div class="ch">
+            <span class="legend">Melody</span>
+            <div class="slot"><b style="top: 56px"></b></div>
+            <span class="mono">40</span
+            ><button aria-pressed="true">Muted</button>
+          </div>
+          <div
+            class="ch"
+            style="
+              border-color: color-mix(in oklab, var(--glow) 40%, var(--line));
+            "
+          >
+            <span class="legend">Master</span>
+            <div class="slot"><b style="top: 30px"></b></div>
+            <span class="mono">65</span>
+          </div>
+        </div>
+      </div>
+      <footer>
+        <span class="legend">Room · crackle 12 · hiss 5 · rain 20 · room 3</span
+        ><span class="legend">Space play · D drift · H home · ? keys</span>
+      </footer>
+    </main>
+    <script>
+      const vu = (val, w = 100, h = 56) => {
+        const cx = w / 2,
+          cy = h - 4,
+          r = h - 12,
+          a = val * 0.9;
+        let s = `<path d="M${cx - r * Math.sin(0.9)} ${cy - r * Math.cos(0.9)} A${r} ${r} 0 0 1 ${cx + r * Math.sin(0.9)} ${cy - r * Math.cos(0.9)}" fill="none" stroke="currentColor" stroke-width="1"/>`;
+        for (let t = -4; t <= 4; t++) {
+          const b = (t / 4) * 0.9,
+            l = t === 0 ? 9 : 5;
+          s += `<line x1="${cx + r * Math.sin(b)}" y1="${cy - r * Math.cos(b)}" x2="${cx + (r - l) * Math.sin(b)}" y2="${cy - (r - l) * Math.cos(b)}" stroke="${t === 0 ? "var(--home)" : "currentColor"}" stroke-width="${t === 0 ? 2 : 1}"/>`;
+        }
+        s += `<line x1="${cx}" y1="${cy}" x2="${cx + (r + 3) * Math.sin(a)}" y2="${cy - (r + 3) * Math.cos(a)}" stroke="var(--needle)" stroke-width="1.6" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="3" fill="currentColor"/>`;
+        return `<svg viewBox="0 0 ${w} ${h}">${s}</svg>`;
+      };
+      const dims = [
+        ["Tempo", 0.3, "+6"],
+        ["Swing", 0.25, "+.05"],
+        ["Busy", -0.35, "−12"],
+        ["Embel.", 0.2, "+8"],
+        ["Tone", -0.55, "−21"],
+        ["Satur.", 0.25, "+10"],
+        ["Wow", 0.22, "+9"],
+        ["Reverb", 0.45, "+18"],
+        ["Density", 0.1, "+4"],
+        ["Rain", 0.35, "+14"],
+        ["Crackle", 0.28, "+11"],
+        ["Room", 0.05, "+2"],
+      ];
+      document.getElementById("meters").innerHTML = dims
+        .map(
+          ([n, v, t]) =>
+            `<div class="vu">${vu(v)}<span><span>${n}</span><span>${t}</span></span></div>`,
+        )
+        .join("");
+      // big one-sided meter
+      const big = document.getElementById("bigvu");
+      const cx = 100,
+        cy = 100,
+        r = 86;
+      let s = "";
+      for (let t = 0; t <= 10; t++) {
+        const b = -1 + (t / 10) * 2;
+        s += `<line x1="${cx + r * Math.sin(b)}" y1="${cy - r * Math.cos(b)}" x2="${cx + (r - (t % 5 ? 7 : 13)) * Math.sin(b)}" y2="${cy - (r - (t % 5 ? 7 : 13)) * Math.cos(b)}" stroke="currentColor" stroke-width="${t % 5 ? 1 : 2}"/>`;
+      }
+      s += `<path d="M${cx + r * Math.sin(0.4)} ${cy - r * Math.cos(0.4)} A${r} ${r} 0 0 1 ${cx + r * Math.sin(1)} ${cy - r * Math.cos(1)}" fill="none" stroke="var(--needle)" stroke-width="4"/>`;
+      const a = -1 + 0.23 * 2;
+      s += `<line x1="${cx}" y1="${cy}" x2="${cx + (r + 2) * Math.sin(a)}" y2="${cy - (r + 2) * Math.cos(a)}" stroke="var(--needle)" stroke-width="2" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="6" fill="currentColor"/>`;
+      big.innerHTML = s;
+    </script>
+  </body>
+</html>
