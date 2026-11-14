@@ -32,5 +32,7 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-pre-commit-${{
             steps.runtimes.outputs.python }}-${{ steps.runtimes.outputs.node
             }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Test Dead Wax parser and planner
+        run: node deadwax/test.cjs
       - name: Run pre-commit hooks
         run: uvx pre-commit run --all-files --show-diff-on-failure

@@ -1,0 +1,2724 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src https://api.github.com; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="theme-color" content="#eeece5" />
+    <meta
+      name="description"
+      content="A small, self-contained lo-fi jazz studio. Write a Pressing, let it wander, bring it home."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23272926'/%3E%3Ccircle cx='32' cy='32' r='10' fill='%23c1754f'/%3E%3C/svg%3E"
+    />
+    <title>Dead Wax — a small listening room</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #eeece5;
+        --ink: #292c28;
+        --muted: #656b62;
+        --line: #cccfc3;
+        --accent: #965032;
+        --panel: #f8f7f1;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      main {
+        max-width: 1120px;
+        margin: auto;
+        padding: 38px 28px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 24px;
+      }
+      h1 {
+        font:
+          500 clamp(2.7rem, 7vw, 4.6rem)/1 Georgia,
+          serif;
+        letter-spacing: -0.055em;
+        margin: 5px 0 12px;
+      }
+      h2 {
+        font:
+          500 1.5rem Georgia,
+          serif;
+        margin: 0 0 18px;
+      }
+      .eyebrow,
+      .smallcaps {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.17em;
+      }
+      p {
+        line-height: 1.6;
+      }
+      header p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .record {
+        width: 94px;
+        height: 94px;
+        border-radius: 50%;
+        background: repeating-radial-gradient(
+          circle,
+          #30342e 0 2px,
+          #41453d 3px,
+          #30342e 4px
+        );
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+      }
+      .record:after {
+        content: "DW";
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: #c28b68;
+        font: 11px Georgia;
+        color: #282d26;
+      }
+      .playing .record {
+        animation: spin 6s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+      button,
+      select,
+      input[type="text"],
+      input[type="number"] {
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: var(--panel);
+        color: var(--ink);
+        padding: 9px 12px;
+        max-width: 100%;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: var(--accent);
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      button.primary {
+        background: var(--ink);
+        color: var(--panel);
+        border-color: var(--ink);
+      }
+      button[aria-pressed="true"] {
+        border-color: var(--accent);
+        background: #e8d9cb;
+        color: #713c26;
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+      input[type="range"] {
+        accent-color: var(--accent);
+        width: 100%;
+        min-width: 70px;
+      }
+      label {
+        font-size: 0.8rem;
+        color: var(--muted);
+        display: block;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .between {
+        justify-content: space-between;
+      }
+      .transport {
+        padding: 24px 0 18px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .transport button {
+        min-width: 95px;
+      }
+      .transport .volume {
+        margin-left: auto;
+        width: 135px;
+      }
+      .readout {
+        font-variant-numeric: tabular-nums;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+      #title {
+        font: 1.7rem Georgia;
+        margin: 10px 0 6px;
+      }
+      #bars {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding: 12px 0 22px;
+      }
+      #bars span {
+        border-top: 2px solid var(--line);
+        min-width: 68px;
+        flex: 1;
+        padding: 10px 6px;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      #bars span.active {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: #e7e3d8;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 24px;
+      }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 24px;
+        min-width: 0;
+      }
+      .directions {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        margin: 18px 0;
+      }
+      .directions button {
+        font-size: 0.76rem;
+        padding: 9px 3px;
+      }
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .controls label output {
+        float: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+      .dimensions {
+        margin: 20px 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 16px;
+      }
+      .dimension {
+        font-size: 0.7rem;
+        color: var(--muted);
+      }
+      .dimension .track {
+        height: 4px;
+        background: #e1e3da;
+        position: relative;
+        margin: 6px 0;
+      }
+      .dimension i {
+        position: absolute;
+        top: -2px;
+        height: 8px;
+        width: 2px;
+        background: #7a8272;
+      }
+      .dimension b {
+        position: absolute;
+        top: -2px;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+      .dimension output {
+        float: right;
+        font-variant-numeric: tabular-nums;
+      }
+      details {
+        margin-top: 20px;
+        border-top: 1px solid var(--line);
+        padding-top: 16px;
+      }
+      summary {
+        cursor: pointer;
+        font-size: 0.85rem;
+      }
+      textarea {
+        width: 100%;
+        height: 390px;
+        resize: vertical;
+        background: #f0f1e9;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 14px;
+        font:
+          12px/1.65 ui-monospace,
+          SFMono-Regular,
+          monospace;
+        color: var(--ink);
+        tab-size: 2;
+        margin: 14px 0 6px;
+        white-space: pre;
+        overflow: auto;
+      }
+      #errors {
+        color: #a33527;
+        font:
+          12px/1.7 ui-monospace,
+          monospace;
+        white-space: pre-wrap;
+      }
+      #errors button {
+        display: block;
+        color: inherit;
+        text-align: left;
+        border: 0;
+        background: none;
+        padding: 4px 0;
+      }
+      #status {
+        min-height: 1.5em;
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin: 12px 0;
+      }
+      #storage-status {
+        color: #92512c;
+      }
+      footer {
+        margin-top: 30px;
+        border-top: 1px solid var(--line);
+        padding-top: 16px;
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+      a {
+        color: var(--accent);
+        text-underline-offset: 3px;
+      }
+      .full {
+        width: 100%;
+      }
+      .seed {
+        max-width: 110px !important;
+        font-family: monospace !important;
+      }
+      .drop {
+        outline: 3px dashed var(--accent);
+      }
+      #gist-files {
+        margin-top: 10px;
+      }
+      .hint {
+        font-size: 0.75rem;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+      @media (max-width: 760px) {
+        main {
+          padding: 24px 16px;
+        }
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .panel {
+          padding: 20px;
+        }
+        .record {
+          width: 70px;
+          height: 70px;
+        }
+        .transport .volume {
+          width: 100px;
+        }
+        .dimensions {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .playing .record {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <div class="eyebrow">Procedural sound · no samples · no cloud</div>
+          <h1>Dead Wax</h1>
+          <p>A small listening room. A record that never quite repeats.</p>
+        </div>
+        <div class="record" aria-hidden="true"></div>
+      </header>
+      <div class="transport">
+        <button id="play" class="primary">Play</button
+        ><button id="stop" disabled>Stop</button
+        ><label class="row"
+          ><input id="repeat" type="checkbox" checked />Loop</label
+        ><span id="clock" class="readout">Stopped</span
+        ><label class="volume"
+          >Master
+          <input
+            id="volume"
+            aria-label="Master volume"
+            type="range"
+            min="0"
+            max="1"
+            step=".01"
+            value=".65"
+        /></label>
+      </div>
+      <div class="row between">
+        <div>
+          <div class="smallcaps">On the turntable</div>
+          <div id="title"></div>
+        </div>
+        <label
+          >Pressing<select id="examples" aria-label="Example Pressing"></select
+        ></label>
+      </div>
+      <div id="bars" aria-label="Current chord and bar"></div>
+      <div class="layout">
+        <section class="panel">
+          <div class="row between">
+            <h2>Let it wander</h2>
+            <label class="row"><input type="checkbox" id="drift" />Drift</label>
+          </div>
+          <div class="controls">
+            <label
+              >Wander <output id="wander-value">35%</output
+              ><input
+                id="wander"
+                type="range"
+                min="0"
+                max="1"
+                step=".01"
+                value=".35" /></label
+            ><label
+              >Session seed<input
+                type="number"
+                id="seed"
+                class="seed"
+                min="0"
+                max="4294967295"
+                step="1"
+                value="104729"
+            /></label>
+          </div>
+          <div id="directions" class="directions"></div>
+          <div class="row">
+            <button id="home">Return home</button
+            ><button id="hold" aria-pressed="false">Hold</button
+            ><button id="capture">Capture ↗</button>
+          </div>
+          <p id="drift-status" class="hint">
+            The original Pressing, with nowhere else to be.
+          </p>
+          <div id="dimensions" class="dimensions"></div>
+          <p class="hint">
+            Dots are the present; ticks are home. Directions set a destination,
+            not an instant change. Seed + the same bar-timed steering reproduces
+            a session. Play always starts at home.
+          </p>
+        </section>
+        <section class="panel">
+          <h2>The listening desk</h2>
+          <div id="mutes" class="row"></div>
+          <details open>
+            <summary>Surface &amp; space</summary>
+            <div id="textures" class="controls" style="margin-top: 16px"></div>
+          </details>
+          <details>
+            <summary>Pressing editor &amp; files</summary>
+            <p class="hint">
+              Edit, then apply at the next bar.
+              <a href="FORMAT.md">Format reference</a> ·
+              <a href="tests.html">Run tests</a>. Drop a .deadwax file anywhere.
+            </p>
+            <textarea
+              id="editor"
+              aria-label="Pressing source"
+              spellcheck="false"
+              autocapitalize="off"
+            ></textarea>
+            <div id="errors" aria-live="polite"></div>
+            <div class="row">
+              <button id="apply">Apply</button
+              ><button id="download">Export .deadwax</button
+              ><button id="upload">Upload</button
+              ><input
+                type="file"
+                id="file"
+                accept=".deadwax,text/plain"
+                hidden
+              />
+            </div>
+            <p class="hint">
+              Export saves the editor text. Capture materialises the current
+              sound into a new, editable Pressing, with Drift off.
+            </p>
+          </details>
+          <details>
+            <summary>Your shelf</summary>
+            <div class="row" style="margin-top: 14px">
+              <input
+                id="save-name"
+                type="text"
+                placeholder="Name on the sleeve"
+                aria-label="Library name"
+              /><button id="save">Save</button>
+            </div>
+            <div class="row" style="margin-top: 10px">
+              <select id="library" aria-label="Saved Pressings"></select
+              ><button id="load">Load</button>
+            </div>
+            <p id="storage-status" class="hint"></p>
+          </details>
+          <details>
+            <summary>Import from GitHub Gist</summary>
+            <p class="hint">
+              The only network feature. Public or unlisted gists; no sign-in.
+              GitHub allows 60 unauthenticated requests per hour.
+            </p>
+            <div class="row">
+              <input
+                id="gist"
+                type="text"
+                placeholder="Gist URL or ID"
+                aria-label="Gist URL or ID"
+              /><button id="import-gist">Import</button>
+            </div>
+            <div id="gist-files" hidden>
+              <label>Choose a file<select id="gist-choice"></select></label
+              ><button id="gist-load">Load selected file</button>
+            </div>
+          </details>
+        </section>
+      </div>
+      <p id="status" role="status" aria-live="polite">
+        Everything is synthesised here, in your browser.
+      </p>
+      <footer class="row between">
+        <span>DEAD WAX / 01 &nbsp; · &nbsp; Take your time.</span
+        ><span>No tracking. No external assets. Headphones welcome.</span>
+      </footer>
+    </main>
+    <script id="deadwax-core">
+      /* Pure score/parser/planner core. Also exercised directly by the Node test runner. */
+      "use strict";
+      /**
+       * @typedef {{line: number, column: number, message: string}} ParseError
+       * @typedef {Record<string, number>} Dimensions
+       * @typedef {{at: number, duration: number, notes?: number[], symbol?: string}} ScoreEvent
+       * @typedef {object} Pressing
+       * @property {number} version
+       * @property {string} title
+       * @property {number} tempo
+       * @property {string} meter
+       * @property {string} key
+       * @property {number} swing
+       * @property {number} bars
+       * @property {number} beats Quarter notes per bar.
+       * @property {number} steps Sixteenths per bar.
+       * @property {number} seed
+       * @property {Record<string, string>} parts
+       * @property {Record<string, number>} levels
+       * @property {string[]} muted
+       * @property {Dimensions} values
+       * @property {ScoreEvent[]} chords
+       * @property {ScoreEvent[]} chordNotes
+       * @property {string | ScoreEvent[]} bass
+       * @property {ScoreEvent[]} melody
+       * @property {Record<string, string[]>} drums
+       * @property {{rate: number, limits: Record<string, [number, number]>}} drift
+       * @typedef {{origin: Dimensions, current: Dimensions, velocity: Dimensions,
+       * target: Dimensions, home: boolean, hold: boolean}} DriftState
+       */
+      const DW = (() => {
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v)),
+          copy = (v) => JSON.parse(JSON.stringify(v)),
+          pc = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+        const instruments = ["epiano", "felt", "upright", "vibes", "pad"];
+        const voices = ["kick", "snare", "rim", "hats", "brushes", "perc"];
+        const textures = [
+          "vinyl",
+          "surface",
+          "tape",
+          "rumble",
+          "rain",
+          "room",
+          "hum",
+        ];
+        const specs = {
+          tempo: [45, 130, 76],
+          swing: [0, 0.48, 0.16],
+          humanise: [0, 1, 0.18],
+          busyness: [0, 1, 0.35],
+          embellish: [0, 1, 0.1],
+          density: [0, 1, 0.55],
+          register: [0, 1, 0.45],
+          substitution: [0, 1, 0],
+          rhythm: [0, 1, 0],
+          timbre: [0, 1, 0],
+          tone: [0, 1, 0.48],
+          saturation: [0, 1, 0.25],
+          wow: [0, 1, 0.2],
+          crush: [0, 1, 0],
+          reverb: [0, 0.85, 0.24],
+          balance: [0, 1, 0.5],
+          arrangement: [0, 1, 0],
+          ...Object.fromEntries(
+            textures.map((k) => [
+              k,
+              [0, 1, k === "vinyl" ? 0.12 : k === "tape" ? 0.05 : 0],
+            ]),
+          ),
+        };
+        function rng(seed) {
+          let a = Number(seed) >>> 0;
+          const r = () => {
+            a = (a + 0x6d2b79f5) >>> 0;
+            let t = a;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+          };
+          r.state = () => a;
+          return r;
+        }
+        function note(s) {
+          const m = /^([A-G])([#b]?)([0-8])$/.exec(s);
+          return m
+            ? 12 * (+m[3] + 1) +
+                pc[m[1]] +
+                (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0)
+            : null;
+        }
+        const noteName = (n) =>
+          ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"][
+            ((n % 12) + 12) % 12
+          ] +
+          (Math.floor(n / 12) - 1);
+        function chord(s) {
+          const m =
+            /^([A-G])([#b]?)(maj7|maj9|maj13|m7b5|mmaj7|m13|m11|m9|m7|m6|m|13|11|9|7|6|dim7|dim|aug|sus2|sus4|7sus4|7alt|alt|add9)?((?:[#b](?:5|9|11|13))*)(?:\/([A-G])([#b]?))?$/.exec(
+              s,
+            );
+          if (!m) return null;
+          const root =
+              (pc[m[1]] + (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0) + 12) % 12,
+            q = m[3] || "",
+            minor = q.startsWith("m") && !q.startsWith("maj");
+          let ints = [0, minor || q.startsWith("dim") ? 3 : 4, 7];
+          if (q.includes("sus")) ints[1] = q === "sus2" ? 2 : 5;
+          if (q === "aug") ints[2] = 8;
+          if (q.startsWith("dim") || q === "m7b5") ints[2] = 6;
+          if (/7|9|11|13|alt/.test(q))
+            ints.push(
+              q.startsWith("maj") || q === "mmaj7" ? 11 : q === "dim7" ? 9 : 10,
+            );
+          if (q === "6" || q === "m6") ints.push(9);
+          if (/9|11|13/.test(q)) ints.push(14);
+          if (/11|13/.test(q)) ints.push(17);
+          if (/13/.test(q)) ints.push(21);
+          if (q.includes("alt")) ints = [0, 4, 10, 13, 15, 20];
+          for (const a of m[4].matchAll(/([#b])(5|9|11|13)/g)) {
+            const base = { 5: 7, 9: 14, 11: 17, 13: 21 }[a[2]];
+            ints = ints.filter((i) => i !== base);
+            ints.push(base + (a[1] === "#" ? 1 : -1));
+          }
+          const bass = m[5]
+            ? (pc[m[5]] + (m[6] === "#" ? 1 : m[6] === "b" ? -1 : 0) + 12) % 12
+            : root;
+          return {
+            symbol: s,
+            root,
+            bass,
+            ints: [...new Set(ints)].sort((a, b) => a - b),
+            minor,
+            dominant: !minor && !q.startsWith("maj") && ints.includes(10),
+          };
+        }
+        /** @param {string} text @returns {{song: Pressing, errors: ParseError[]}} */
+        function parse(text) {
+          const errors = [],
+            rows = String(text).split(/\r?\n/),
+            s = {
+              version: 1,
+              title: "Untitled",
+              tempo: 76,
+              meter: "4/4",
+              key: "C minor",
+              swing: 0.16,
+              bars: 4,
+              seed: 104729,
+              parts: { chords: "epiano", bass: "upright", melody: "vibes" },
+              levels: { chords: 0.7, bass: 0.8, melody: 0.45, drums: 0.65 },
+              muted: [],
+              values: Object.fromEntries(
+                Object.entries(specs).map(([k, v]) => [k, v[2]]),
+              ),
+              chords: [],
+              chordNotes: [],
+              bass: "auto roots",
+              melody: [],
+              drums: {},
+              drift: { rate: 0.35, limits: {} },
+            };
+          const seen = new Set(),
+            locations = {};
+          let first = true;
+          const err = (line, column, message) =>
+            errors.push({ line, column, message });
+          const num = (t, a, b, line, col) => {
+            const n = Number(t);
+            if (t === "" || !Number.isFinite(n) || n < a || n > b) {
+              err(
+                line,
+                col,
+                `Expected a number from ${a} to ${b}; got “${t}”.`,
+              );
+              return a;
+            }
+            return n;
+          };
+          rows.forEach((raw, i) => {
+            const ln = i + 1,
+              line = raw.replace(/\s+;.*$/, "").trim();
+            if (!line || line.startsWith(";")) return;
+            const ts = [...raw.replace(/\s+;.*$/, "").matchAll(/\S+/g)].map(
+              (m) => ({ v: m[0], c: m.index + 1 }),
+            );
+            const w = ts.map((t) => t.v),
+              k = w[0],
+              v = w.slice(1).join(" "),
+              col = ts[1]?.c || raw.length + 1;
+            locations[k] = ln;
+            if (first) {
+              first = false;
+              if (line !== "deadwax 1")
+                err(ln, ts[0].c, "First content line must be deadwax 1.");
+              else {
+                seen.add(k);
+                return;
+              }
+            }
+            if (
+              seen.has(k) &&
+              ![
+                "instrument",
+                "level",
+                "texture",
+                "dimension",
+                "drift",
+              ].includes(k)
+            )
+              err(ln, ts[0].c, `Duplicate ${k} line.`);
+            seen.add(k);
+            const count = (n) => {
+              if (w.length !== n + 1)
+                err(ln, col, `${k} needs ${n} value${n === 1 ? "" : "s"}.`);
+            };
+            if (k === "title") {
+              if (!v) err(ln, col, "A title is required.");
+              s.title = v;
+            } else if (["tempo", "swing", "bars", "seed"].includes(k)) {
+              count(1);
+              const bounds = {
+                tempo: [45, 130],
+                swing: [0, 0.48],
+                bars: [1, 64],
+                seed: [0, 4294967295],
+              }[k];
+              s[k] = num(v, ...bounds, ln, col);
+              if (["bars", "seed"].includes(k) && !Number.isInteger(s[k]))
+                err(ln, col, `${k} must be an integer.`);
+              s.values[k] = s[k];
+            } else if (k === "meter") {
+              count(1);
+              if (!/^(?:[1-9]|1[0-2])\/(?:4|8)$/.test(v))
+                err(
+                  ln,
+                  col,
+                  "Use a meter such as 4/4, 3/4 or 6/8 (1–12 over 4 or 8).",
+                );
+              else s.meter = v;
+            } else if (k === "key") {
+              if (!/^[A-G][#b]? (major|minor|dorian|mixolydian)$/.test(v))
+                err(ln, col, "Use a key such as Eb major or D dorian.");
+              s.key = v;
+            } else if (k === "instrument") {
+              count(2);
+              if (!Object.hasOwn(s.parts, w[1]))
+                err(ln, col, "Part must be chords, bass or melody.");
+              else if (!instruments.includes(w[2]))
+                err(
+                  ln,
+                  ts[2]?.c || col,
+                  `Unknown instrument. Choose ${instruments.join(", ")}.`,
+                );
+              else s.parts[w[1]] = w[2];
+            } else if (k === "level") {
+              count(2);
+              if (!Object.hasOwn(s.levels, w[1]))
+                err(ln, col, "Unknown mix part.");
+              else s.levels[w[1]] = num(w[2], 0, 1, ln, ts[2]?.c || col);
+            } else if (k === "mute") {
+              s.muted = w.slice(1);
+              for (const p of s.muted)
+                if (!Object.hasOwn(s.levels, p))
+                  err(ln, col, `Unknown muted part “${p}”.`);
+            } else if (k === "texture" || k === "dimension") {
+              count(2);
+              if (
+                !(
+                  k === "texture"
+                    ? textures
+                    : Object.keys(specs).filter(
+                        (x) => !["tempo", "swing", ...textures].includes(x),
+                      )
+                ).includes(w[1])
+              )
+                err(ln, col, `Unknown ${k} “${w[1]}”.`);
+              else
+                s.values[w[1]] = num(
+                  w[2],
+                  specs[w[1]][0],
+                  specs[w[1]][1],
+                  ln,
+                  ts[2]?.c || col,
+                );
+            } else if (k === "drift") {
+              if (w[1] === "rate") {
+                count(2);
+                s.drift.rate = num(w[2], 0, 1, ln, ts[2]?.c || col);
+              } else if (Object.hasOwn(specs, w[1])) {
+                count(3);
+                const a = num(
+                    w[2],
+                    ...specs[w[1]].slice(0, 2),
+                    ln,
+                    ts[2]?.c || col,
+                  ),
+                  b = num(
+                    w[3],
+                    ...specs[w[1]].slice(0, 2),
+                    ln,
+                    ts[3]?.c || col,
+                  );
+                if (a > b) err(ln, col, "Drift minimum exceeds maximum.");
+                s.drift.limits[w[1]] = [a, b];
+              } else
+                err(
+                  ln,
+                  col,
+                  "Unknown drift dimension (or use drift rate 0.35).",
+                );
+            } else if (
+              ["chords", "chord-notes", "bass", "melody"].includes(k)
+            ) {
+              if (k === "bass" && /^auto (roots|walking|root-fifth)$/.test(v)) {
+                s.bass = v;
+                return;
+              }
+              const events = [];
+              let at = 0;
+              for (const t of ts.slice(1)) {
+                const m = /^(.+):([0-9]+(?:\.[0-9]+)?)$/.exec(t.v);
+                if (!m) {
+                  err(
+                    ln,
+                    t.c,
+                    "Expected value:duration, e.g. Dm9:4 or D2:0.5.",
+                  );
+                  continue;
+                }
+                const duration = num(
+                  m[2],
+                  0.25,
+                  768,
+                  ln,
+                  t.c + m[1].length + 1,
+                );
+                if ((duration * 4) % 1)
+                  err(
+                    ln,
+                    t.c,
+                    "Durations must be multiples of 0.25 quarter notes.",
+                  );
+                const val = m[1];
+                if (k === "chords") {
+                  if (!chord(val))
+                    err(ln, t.c, `Unknown chord symbol “${val}”.`);
+                  events.push({ at, duration, symbol: val });
+                } else {
+                  const notes = val === "-" ? [] : val.split("+").map(note);
+                  if (notes.some((n) => n === null))
+                    err(
+                      ln,
+                      t.c,
+                      `Invalid note “${val}”; use C4, F#3, Bb2 or - for rest.`,
+                    );
+                  events.push({ at, duration, notes });
+                }
+                at += duration;
+              }
+              s[k === "chord-notes" ? "chordNotes" : k] = events;
+            } else if (voices.includes(k)) {
+              const grids = v.split("|").map((x) => x.replace(/\s/g, ""));
+              if (grids.some((x) => !x))
+                err(
+                  ln,
+                  col,
+                  "Empty drum bar. Omit leading and trailing pipes.",
+                );
+              for (const t of ts.slice(1)) {
+                const bad = /[^.xXg|]/.exec(t.v);
+                if (bad)
+                  err(
+                    ln,
+                    t.c + bad.index,
+                    "Drum steps use . x X g (rest, hit, accent, ghost).",
+                  );
+              }
+              s.drums[k] = grids;
+            } else err(ln, ts[0].c, `Unknown directive “${k}”.`);
+          });
+          for (const k of [
+            "deadwax",
+            "title",
+            "tempo",
+            "meter",
+            "key",
+            "swing",
+            "bars",
+            "chords",
+          ])
+            if (!seen.has(k)) err(1, 1, `Missing required ${k} line.`);
+          const [top, bottom] = s.meter.split("/").map(Number);
+          s.beats = (top * 4) / bottom;
+          s.steps = s.beats * 4;
+          const total = s.beats * s.bars;
+          if (
+            Math.abs(s.chords.reduce((n, e) => n + e.duration, 0) - total) >
+            0.001
+          )
+            err(
+              locations.chords || 1,
+              1,
+              `Chord durations must total ${total} quarter notes (${s.bars} bars).`,
+            );
+          for (const k of ["bass", "melody", "chordNotes"])
+            if (Array.isArray(s[k]) && s[k].length) {
+              const length = s[k].reduce((n, e) => n + e.duration, 0);
+              if ((total / length) % 1)
+                err(
+                  locations[k === "chordNotes" ? "chord-notes" : k] || 1,
+                  1,
+                  `${k} length must divide the ${total}-quarter-note loop exactly.`,
+                );
+              if (
+                k === "chordNotes" &&
+                (s[k].length !== s.chords.length ||
+                  s[k].some((e, i) => e.duration !== s.chords[i]?.duration))
+              )
+                err(
+                  locations["chord-notes"],
+                  1,
+                  "chord-notes must align one-to-one with chords.",
+                );
+            }
+          for (const [k, grids] of Object.entries(s.drums)) {
+            if (s.bars % grids.length)
+              err(
+                locations[k],
+                1,
+                `Number of ${k} grid bars must divide loop length.`,
+              );
+            if (grids.some((g) => g.length !== s.steps))
+              err(
+                locations[k],
+                1,
+                `${k}: each bar needs ${s.steps} sixteenth-note steps in ${s.meter}.`,
+              );
+          }
+          for (const [k, [a, b]] of Object.entries(s.drift.limits))
+            if (s.values[k] < a || s.values[k] > b)
+              err(1, 1, `${k} origin must be inside its drift limits.`);
+          s.values.tempo = s.tempo;
+          s.values.swing = s.swing;
+          delete s.values.bars;
+          delete s.values.seed;
+          return {
+            song: s,
+            errors: errors.sort(
+              (a, b) => a.line - b.line || a.column - b.column,
+            ),
+          };
+        }
+        const fmt = (n) => String(Math.round(n * 1000000) / 1000000);
+        const sequence = (es) =>
+          es
+            .map(
+              (e) =>
+                `${e.symbol || e.notes.map(noteName).join("+") || "-"}:${fmt(e.duration)}`,
+            )
+            .join(" ");
+        /** @param {Pressing} s @returns {string} */
+        function serialize(s) {
+          return [
+            "deadwax 1",
+            `title ${s.title.replace(/[\r\n]/g, " ")}`,
+            `tempo ${fmt(s.tempo)}`,
+            `meter ${s.meter}`,
+            `key ${s.key}`,
+            `swing ${fmt(s.swing)}`,
+            `bars ${s.bars}`,
+            `seed ${s.seed}`,
+            "",
+            ...Object.entries(s.parts).map(([k, v]) => `instrument ${k} ${v}`),
+            ...Object.entries(s.levels).map(([k, v]) => `level ${k} ${fmt(v)}`),
+            ...(s.muted.length ? [`mute ${s.muted.join(" ")}`] : []),
+            "",
+            `chords ${sequence(s.chords)}`,
+            ...(s.chordNotes.length
+              ? [`chord-notes ${sequence(s.chordNotes)}`]
+              : []),
+            `bass ${typeof s.bass === "string" ? s.bass : sequence(s.bass)}`,
+            ...(s.melody.length ? [`melody ${sequence(s.melody)}`] : []),
+            ...Object.entries(s.drums).map(([k, v]) => `${k} ${v.join(" | ")}`),
+            "",
+            ...Object.entries(s.values)
+              .filter(([k]) => !["tempo", "swing", ...textures].includes(k))
+              .map(([k, v]) => `dimension ${k} ${fmt(v)}`),
+            ...textures.map((k) => `texture ${k} ${fmt(s.values[k])}`),
+            "",
+            `drift rate ${fmt(s.drift.rate)}`,
+            ...Object.entries(s.drift.limits).map(
+              ([k, v]) => `drift ${k} ${v.map(fmt).join(" ")}`,
+            ),
+            "",
+          ].join("\n");
+        }
+        function voicing(c, previous, state, r) {
+          const centre = 54 + Math.round(state.register * 18),
+            count = state.density < 0.25 ? 2 : state.density < 0.65 ? 4 : 5;
+          let pool = c.ints.filter((n) => n !== 0);
+          if (pool.length < 3)
+            pool = [...new Set([...pool, c.minor ? 10 : 11, 14])];
+          const third = pool.find((i) => [3, 4, 5].includes(i)) ?? pool[0];
+          const seventh = pool.find((i) => i >= 9 && i <= 11) ?? pool[1];
+          const extended = [
+            ...new Set([
+              ...pool,
+              ...(c.dominant
+                ? [14, 21]
+                : c.minor
+                  ? [14, 17, 21]
+                  : [14, 18, 21]),
+            ]),
+          ];
+          const shapes = [
+            {
+              kind: "rootless",
+              ints: [third, seventh, ...pool.filter((i) => i > 11), ...pool],
+            },
+            { kind: "shell", ints: [third, seventh] },
+            { kind: "drop2", ints: pool },
+            {
+              kind: "upper",
+              ints: [third, seventh, ...extended.filter((i) => i > 11)],
+            },
+          ];
+          // Search genuine stacks of fourths in a chord-compatible extended pitch set.
+          const allowed = new Set([0, ...extended].map((i) => i % 12));
+          for (const first of extended) {
+            const stack = [first];
+            while (stack.length < count && allowed.has((stack.at(-1) + 5) % 12))
+              stack.push(stack.at(-1) + 5);
+            if (stack.length >= Math.min(3, count))
+              shapes.push({ kind: "quartal", ints: stack });
+          }
+          let best = null,
+            cost = Infinity;
+          for (const shape of shapes) {
+            const ints = [...new Set(shape.ints)].slice(
+              0,
+              shape.kind === "shell" ? Math.min(count, 2) : count,
+            );
+            const bias = r() * 3;
+            for (let inv = 0; inv < ints.length; inv++) {
+              let ns = ints
+                .map((i) => {
+                  let n = 48 + c.root + i;
+                  while (n < centre - 9) n += 12;
+                  while (n > centre + 10) n -= 12;
+                  return n;
+                })
+                .sort((a, b) => a - b);
+              for (let j = 0; j < inv; j++) ns[j] += 12;
+              ns.sort((a, b) => a - b);
+              if (shape.kind === "drop2" && ns.length >= 4)
+                ns[ns.length - 2] -= 12;
+              ns = [...new Set(ns)].sort((a, b) => a - b);
+              if (ns[0] < 46 || ns.at(-1) > 86) continue;
+              const movement =
+                ns.reduce(
+                  (v, n, i) => v + Math.abs(n - (previous[i] ?? centre)),
+                  0,
+                ) / ns.length;
+              const score =
+                movement +
+                Math.abs(ns.reduce((a, b) => a + b, 0) / ns.length - centre) *
+                  0.7 +
+                bias +
+                (count - ns.length) * 0.5;
+              if (score < cost) {
+                cost = score;
+                best = ns;
+              }
+            }
+          }
+          return best || [60 + c.root, 64 + c.root, 70 + c.root];
+        }
+        function origin(s) {
+          return copy(s.values);
+        }
+        /** @param {Pressing} s @returns {DriftState} */
+        function driftState(s) {
+          return {
+            origin: origin(s),
+            current: origin(s),
+            velocity: Object.fromEntries(Object.keys(specs).map((k) => [k, 0])),
+            target: origin(s),
+            home: false,
+            hold: false,
+          };
+        }
+        const directions = {
+          Darker: { tone: -0.32, register: -0.14, tempo: -8 },
+          Brighter: { tone: 0.32, register: 0.15 },
+          Busier: {
+            busyness: 0.45,
+            embellish: 0.45,
+            density: 0.25,
+            rhythm: 0.4,
+          },
+          Sparser: {
+            busyness: -0.3,
+            density: -0.3,
+            arrangement: 0.35,
+            embellish: -0.1,
+          },
+          Looser: { swing: 0.18, humanise: 0.45, wow: 0.2 },
+          Tighter: { swing: -0.14, humanise: -0.18, wow: -0.15 },
+          Dreamier: {
+            reverb: 0.38,
+            timbre: 0.75,
+            tempo: -8,
+            arrangement: 0.15,
+          },
+          Dustier: {
+            vinyl: 0.3,
+            tape: 0.2,
+            saturation: 0.4,
+            tone: -0.2,
+            wow: 0.4,
+            substitution: 0.3,
+          },
+        };
+        function steer(d, s, name) {
+          d.home = name === "Home";
+          d.hold = false;
+          for (const k in specs) {
+            const [lo, hi] = s.drift.limits[k] || [d.origin[k], d.origin[k]];
+            d.target[k] = clamp(
+              d.origin[k] + (directions[name]?.[k] || 0),
+              lo,
+              hi,
+            );
+            if (d.home) d.target[k] = d.origin[k];
+          }
+        }
+        function advance(d, s, r, wander, enabled) {
+          if (d.hold || (!enabled && !d.home)) return;
+          for (const k in specs) {
+            const [lo, hi] = s.drift.limits[k] || [d.origin[k], d.origin[k]],
+              span = hi - lo;
+            if (d.home) {
+              d.current[k] +=
+                (d.origin[k] - d.current[k]) *
+                (1 - Math.pow(0.015, 1 / Math.min(8, s.bars * 2)));
+              d.velocity[k] = 0;
+              if (Math.abs(d.current[k] - d.origin[k]) < span * 0.004 + 0.00001)
+                d.current[k] = d.origin[k];
+              continue;
+            }
+            const noise = (r() + r() + r() - 1.5) * span * 0.14 * wander;
+            d.velocity[k] =
+              d.velocity[k] * 0.7 +
+              (d.target[k] - d.current[k]) * (0.008 + 0.025 * wander) * wander +
+              noise;
+            d.current[k] = clamp(d.current[k] + d.velocity[k], lo, hi);
+          }
+        }
+        function atSequence(es, beat) {
+          if (!es.length) return [];
+          const length = es.reduce((n, e) => n + e.duration, 0),
+            phase = beat % length;
+          return es.filter((e) => Math.abs(e.at - phase) < 0.0001);
+        }
+        function chordAt(s, beat) {
+          return (
+            s.chords.find((e) => beat >= e.at && beat < e.at + e.duration) ||
+            s.chords[0]
+          );
+        }
+        /* Each bar is an immutable, captureable list of events, in quarter-note units. */
+        /**
+         * @param {Pressing} s
+         * @param {Dimensions} state
+         * @param {() => number} r Seeded musical random stream.
+         * @param {number} bar Zero-based position in the loop.
+         * @param {number[]} previous Previous keyboard voicing.
+         */
+        function planBar(s, state, r, bar, previous = []) {
+          const events = [],
+            start = bar * s.beats,
+            parts = { ...s.parts };
+          if (state.timbre > 0.35)
+            parts.chords = state.timbre > 0.72 ? "pad" : "felt";
+          const grids = Object.fromEntries(
+            voices.map((v) => [v, Array(s.steps).fill(".")]),
+          );
+          let last = previous;
+          const drop =
+              state.arrangement > 0.05 && r() < state.arrangement * 0.4,
+            deltaBus = state.busyness - s.values.busyness,
+            deltaEmb = state.embellish - s.values.embellish;
+          for (let step = 0; step < s.steps; step++) {
+            const beat = start + step / 4,
+              base = chordAt(s, beat);
+            let c = chord(base.symbol);
+            const chordStart = Math.abs(base.at - beat) < 0.001;
+            const rehit =
+              state.rhythm > 0.25 && step === Math.floor(s.steps / 2);
+            if (chordStart || step === 0 || rehit) {
+              let sym = base.symbol;
+              if (c.dominant && r() < state.substitution) {
+                const root = (c.root + 6) % 12;
+                sym = noteName(root + 60).replace(/\d/g, "") + "9";
+                c = chord(sym);
+              }
+              const ix = s.chords.indexOf(base);
+              const ns = s.chordNotes.length
+                ? s.chordNotes[ix].notes
+                : voicing(c, last, state, r);
+              last = ns;
+              const duration = Math.min(
+                base.at + base.duration - beat,
+                s.beats - step / 4,
+                rehit ? 1 : 100,
+              );
+              events.push({
+                part: "chords",
+                step,
+                duration,
+                notes: drop ? [] : ns,
+                symbol: sym,
+                velocity: 0.65,
+              });
+            }
+            if (typeof s.bass === "string") {
+              const mode = s.bass.split(" ")[1],
+                spacing = mode === "roots" ? 8 : 4;
+              if (step % spacing === 0) {
+                let n = 36 + c.bass;
+                while (n > 47) n -= 12;
+                if (mode === "root-fifth" && step % 8 === 4) n += 7;
+                if (mode === "walking") {
+                  const tones = [0, c.minor ? 3 : 4, 7, 10];
+                  n = 36 + c.root + tones[(step / 4) % 4];
+                  if (step >= s.steps - 4) {
+                    let next =
+                      chord(
+                        chordAt(s, (start + s.beats) % (s.beats * s.bars))
+                          .symbol,
+                      ).bass + 36;
+                    while (next > 47) next -= 12;
+                    n = next - 1;
+                  }
+                }
+                events.push({
+                  part: "bass",
+                  step,
+                  duration: Math.min(spacing / 4, s.beats - step / 4) * 0.85,
+                  notes: [n],
+                  velocity: 0.8,
+                });
+              }
+            } else
+              for (const e of atSequence(s.bass, beat))
+                if (e.notes.length)
+                  events.push({ ...e, part: "bass", step, velocity: 0.8 });
+            for (const e of atSequence(s.melody, beat))
+              if (e.notes.length && !drop) {
+                events.push({ ...e, part: "melody", step, velocity: 0.5 });
+                if (
+                  deltaEmb > 0.05 &&
+                  r() < deltaEmb * 0.6 &&
+                  step + 1 < s.steps
+                )
+                  events.push({
+                    part: "melody",
+                    step: step + 1,
+                    duration: 0.25,
+                    notes: [e.notes[0] + (r() < 0.5 ? -1 : 1)],
+                    velocity: 0.23,
+                  });
+              }
+            if (
+              !s.melody.length &&
+              deltaEmb > 0.1 &&
+              step % 2 === 0 &&
+              r() < deltaEmb * 0.28 &&
+              !drop
+            )
+              events.push({
+                part: "melody",
+                step,
+                duration: 0.4,
+                notes: [
+                  60 +
+                    c.root +
+                    c.ints[1 + Math.floor(r() * (c.ints.length - 1))],
+                ],
+                velocity: 0.35,
+              });
+            for (const v of voices) {
+              let mark = s.drums[v]?.[bar % s.drums[v].length]?.[step] || ".";
+              if (
+                deltaBus < 0 &&
+                mark !== "." &&
+                r() < -deltaBus * 0.85 &&
+                mark !== "X"
+              )
+                mark = ".";
+              if (
+                deltaBus > 0 &&
+                mark === "." &&
+                r() < deltaBus * (v === "hats" ? 0.28 : 0.08)
+              )
+                mark = "g";
+              grids[v][step] = mark;
+              if (mark !== ".")
+                events.push({
+                  part: "drums",
+                  voice: v,
+                  step,
+                  duration: 0.25,
+                  velocity: { X: 1, x: 0.68, g: 0.24 }[mark],
+                });
+            }
+          }
+          events.sort((a, b) => a.step - b.step);
+          return { bar, events, grids, parts, state: copy(state), last };
+        }
+        /* Freeze actual notes/grids into a score. No new generative choices on replay. */
+        function capture(s, bars, state, seed) {
+          const out = copy(s);
+          out.title = s.title + " — capture";
+          out.seed = seed;
+          out.tempo = state.tempo;
+          out.swing = state.swing;
+          out.values = copy(state);
+          out.drift.limits = {};
+          out.chords = [];
+          out.chordNotes = [];
+          out.bass = [];
+          out.melody = [];
+          out.parts = { ...bars[0].parts };
+          out.values.timbre = 0;
+          out.values.arrangement = 0;
+          out.values.substitution = 0;
+          out.values.rhythm = 0;
+          out.drums = Object.fromEntries(
+            voices.map((v) => [v, bars.map((b) => b.grids[v].join(""))]),
+          );
+          const notesFor = (part) => {
+            const es = bars
+              .flatMap((b) =>
+                b.events
+                  .filter((e) => e.part === part)
+                  .map((e) => ({ ...e, at: b.bar * s.beats + e.step / 4 })),
+              )
+              .sort((a, b) => a.at - b.at);
+            const result = [];
+            let pos = 0;
+            for (let i = 0; i < es.length; i++) {
+              const e = es[i];
+              if (e.at < pos - 0.001) continue;
+              if (e.at > pos)
+                result.push({ at: pos, duration: e.at - pos, notes: [] });
+              const end = Math.min(
+                es[i + 1]?.at ?? s.bars * s.beats,
+                e.at + Math.max(0.25, Math.round(e.duration * 4) / 4),
+                s.bars * s.beats,
+              );
+              result.push({ at: e.at, duration: end - e.at, notes: e.notes });
+              pos = end;
+            }
+            if (pos < s.beats * s.bars)
+              result.push({
+                at: pos,
+                duration: s.beats * s.bars - pos,
+                notes: [],
+              });
+            return result;
+          };
+          const ce = bars.flatMap((b) =>
+            b.events
+              .filter((e) => e.part === "chords")
+              .map((e) => ({ ...e, at: b.bar * s.beats + e.step / 4 })),
+          );
+          if (!ce.length)
+            ce.push({ at: 0, symbol: s.chords[0].symbol, notes: [] });
+          if (ce[0].at > 0)
+            ce.unshift({ at: 0, symbol: s.chords[0].symbol, notes: [] });
+          ce.forEach((e, i) => {
+            const duration = (ce[i + 1]?.at ?? s.bars * s.beats) - e.at;
+            out.chords.push({ at: e.at, duration, symbol: e.symbol });
+            out.chordNotes.push({ at: e.at, duration, notes: e.notes });
+          });
+          out.bass = notesFor("bass");
+          out.melody = notesFor("melody");
+          return out;
+        }
+        return {
+          clamp,
+          copy,
+          rng,
+          note,
+          noteName,
+          chord,
+          parse,
+          serialize,
+          voicing,
+          specs,
+          textures,
+          voices,
+          instruments,
+          origin,
+          driftState,
+          directions,
+          steer,
+          advance,
+          planBar,
+          capture,
+        };
+      })();
+      globalThis.DeadWax = DW;
+    </script>
+    <script id="deadwax-examples">
+      const EXAMPLES = [
+        {
+          file: "01-window-seat.deadwax",
+          text: "deadwax 1\ntitle Window seat, 1:17 am\ntempo 72\nmeter 4/4\nkey C minor\nswing 0.18\nbars 4\nseed 104729\n\nchords Dm7b5:4 G7alt:4 Cm9:4 Abmaj7#11:4\nbass auto root-fifth\nmelody -:2 F5:0.5 Eb5:0.5 D5:1 -:2 B4:1 Ab4:1 G4:3 -:1 Eb5:1 D5:1 C5:2\nkick X... ..g. x... ....\nrim .... x... .... x..g\nhats x.g. x.g. x.g. x.gg\nbrushes .... .... g... ....\n\ninstrument chords epiano\ninstrument bass upright\ninstrument melody vibes\nlevel chords 0.7\nlevel bass 0.8\nlevel melody 0.4\nlevel drums 0.65\n\ntexture vinyl 0.12\ntexture surface 0.04\ntexture tape 0.05\ntexture rumble 0.06\ntexture rain 0.2\ntexture room 0.03\ntexture hum 0.02\n\ndrift rate 0.35\ndrift tempo 58 100\ndrift swing 0 0.4\ndrift humanise 0 0.8\ndrift busyness 0.05 0.9\ndrift embellish 0 0.8\ndrift density 0.1 0.95\ndrift register 0.2 0.8\ndrift substitution 0 0.45\ndrift rhythm 0 0.7\ndrift timbre 0 1\ndrift tone 0.1 0.9\ndrift saturation 0.05 0.8\ndrift wow 0 0.75\ndrift reverb 0.1 0.75\ndrift balance 0.2 0.8\ndrift arrangement 0 0.45\ndrift vinyl 0 0.5\ndrift tape 0 0.4\ndrift surface 0 0.2\ndrift rumble 0 0.2\ndrift rain 0 0.5\ndrift room 0 0.3\ndrift hum 0 0.2\n",
+        },
+        {
+          file: "02-sunday-paper.deadwax",
+          text: "deadwax 1\ntitle Sunday paper\ntempo 86\nmeter 4/4\nkey F major\nswing 0.12\nbars 4\nseed 271828\n\nchords Gm9:4 C13:4 Fmaj9:4 Dm9:2 Db9:2\nbass auto walking\nmelody A4:1 C5:1 D5:1 -:1 E5:1 D5:0.5 C5:0.5 -:2 A4:2 G4:1 F4:1 -:2 E4:1 F4:1\nkick X... .... x.g. ....\nsnare .... x..g .... x...\nhats x.xg x.x. x.xg x.x.\nperc .... ..g. .... ..g.\n\ninstrument chords felt\ninstrument bass upright\ninstrument melody vibes\nlevel chords 0.7\nlevel bass 0.8\nlevel melody 0.4\nlevel drums 0.65\n\ntexture vinyl 0.12\ntexture surface 0.04\ntexture tape 0.05\ntexture rumble 0.06\ntexture rain 0\ntexture room 0.03\ntexture hum 0.02\n\ndrift rate 0.35\ndrift tempo 65 105\ndrift swing 0 0.4\ndrift humanise 0 0.8\ndrift busyness 0.05 0.9\ndrift embellish 0 0.8\ndrift density 0.1 0.95\ndrift register 0.2 0.8\ndrift substitution 0 0.45\ndrift rhythm 0 0.7\ndrift timbre 0 1\ndrift tone 0.1 0.9\ndrift saturation 0.05 0.8\ndrift wow 0 0.75\ndrift reverb 0.1 0.75\ndrift balance 0.2 0.8\ndrift arrangement 0 0.45\ndrift vinyl 0 0.5\ndrift tape 0 0.4\ndrift surface 0 0.2\ndrift rumble 0 0.2\ndrift rain 0 0.5\ndrift room 0 0.3\ndrift hum 0 0.2\n",
+        },
+        {
+          file: "03-last-table.deadwax",
+          text: "deadwax 1\ntitle The last table\ntempo 80\nmeter 4/4\nkey D minor\nswing 0.26\nbars 4\nseed 161803\n\nchords Em7b5:4 A7b9:4 Dm9:4 Bb13:2 A7alt:2\nbass auto walking\nmelody -:1 A4:1 G4:1 F4:1 E4:2 C#5:1 -:1 D5:2 A4:1 F4:1 E4:1 D4:1 C#4:1 -:1\nkick X... .... x... ..g.\nrim .... X... ...g X...\nhats x.gx x.g. x.gx x.g.\nbrushes .... g... .... g...\n\ninstrument chords epiano\ninstrument bass upright\ninstrument melody epiano\nlevel chords 0.7\nlevel bass 0.8\nlevel melody 0.4\nlevel drums 0.65\n\ntexture vinyl 0.12\ntexture surface 0.04\ntexture tape 0.05\ntexture rumble 0.06\ntexture rain 0\ntexture room 0.03\ntexture hum 0.02\n\ndrift rate 0.35\ndrift tempo 58 100\ndrift swing 0 0.4\ndrift humanise 0 0.8\ndrift busyness 0.05 0.9\ndrift embellish 0 0.8\ndrift density 0.1 0.95\ndrift register 0.2 0.8\ndrift substitution 0 0.45\ndrift rhythm 0 0.7\ndrift timbre 0 1\ndrift tone 0.1 0.9\ndrift saturation 0.05 0.8\ndrift wow 0 0.75\ndrift reverb 0.1 0.75\ndrift balance 0.2 0.8\ndrift arrangement 0 0.45\ndrift vinyl 0 0.5\ndrift tape 0 0.4\ndrift surface 0 0.2\ndrift rumble 0 0.2\ndrift rain 0 0.5\ndrift room 0 0.3\ndrift hum 0 0.2\n",
+        },
+        {
+          file: "04-empty-platform.deadwax",
+          text: "deadwax 1\ntitle Empty platform\ntempo 60\nmeter 4/4\nkey Eb major\nswing 0.04\nbars 4\nseed 314159\n\nchords Ebmaj7#11:8 Abmaj9/Eb:8\nbass Eb2:8 Bb1:4 Eb2:4\nmelody Bb4:4 -:4 F5:4 -:4\nkick X... .... .... .... | .... .... .... ....\nbrushes .... .... g... ....\n\ninstrument chords pad\ninstrument bass upright\ninstrument melody vibes\nlevel chords 0.7\nlevel bass 0.8\nlevel melody 0.4\nlevel drums 0.65\n\ntexture vinyl 0.12\ntexture surface 0.04\ntexture tape 0.05\ntexture rumble 0.06\ntexture rain 0\ntexture room 0.12\ntexture hum 0.02\n\ndrift rate 0.35\ndrift tempo 58 100\ndrift swing 0 0.4\ndrift humanise 0 0.8\ndrift busyness 0.05 0.9\ndrift embellish 0 0.8\ndrift density 0.1 0.95\ndrift register 0.2 0.8\ndrift substitution 0 0.45\ndrift rhythm 0 0.7\ndrift timbre 0 1\ndrift tone 0.1 0.9\ndrift saturation 0.05 0.8\ndrift wow 0 0.75\ndrift reverb 0.1 0.75\ndrift balance 0.2 0.8\ndrift arrangement 0 0.45\ndrift vinyl 0 0.5\ndrift tape 0 0.4\ndrift surface 0 0.2\ndrift rumble 0 0.2\ndrift rain 0 0.5\ndrift room 0 0.3\ndrift hum 0 0.2\n\ndimension reverb 0.62\ndimension density 0.3\n",
+        },
+        {
+          file: "05-three-cups.deadwax",
+          text: "deadwax 1\ntitle Three cups left\ntempo 78\nmeter 3/4\nkey Bb major\nswing 0.1\nbars 4\nseed 57721\n\nchords Cm9:3 F13:3 Bbmaj9:3 Gm9:1.5 C9/E:1.5\nbass auto roots\nmelody G4:1 Bb4:1 D5:1 C5:2 A4:1 F4:2 -:1 D4:1 F4:1 G4:1\nkick X... .... ....\nrim .... x... ..g.\nhats x.g. x.g. x.g.\n\ninstrument chords vibes\ninstrument bass upright\ninstrument melody felt\nlevel chords 0.7\nlevel bass 0.8\nlevel melody 0.4\nlevel drums 0.65\n\ntexture vinyl 0.12\ntexture surface 0.04\ntexture tape 0.05\ntexture rumble 0.06\ntexture rain 0\ntexture room 0.03\ntexture hum 0.02\n\ndrift rate 0.35\ndrift tempo 58 100\ndrift swing 0 0.4\ndrift humanise 0 0.8\ndrift busyness 0.05 0.9\ndrift embellish 0 0.8\ndrift density 0.1 0.95\ndrift register 0.2 0.8\ndrift substitution 0 0.45\ndrift rhythm 0 0.7\ndrift timbre 0 1\ndrift tone 0.1 0.9\ndrift saturation 0.05 0.8\ndrift wow 0 0.75\ndrift reverb 0.1 0.75\ndrift balance 0.2 0.8\ndrift arrangement 0 0.45\ndrift vinyl 0 0.5\ndrift tape 0 0.4\ndrift surface 0 0.2\ndrift rumble 0 0.2\ndrift rain 0 0.5\ndrift room 0 0.3\ndrift hum 0 0.2\n",
+        },
+      ];
+    </script>
+    <script id="deadwax-audio">
+      globalThis.DeadWaxExamples = EXAMPLES;
+      /* All sources, including room/record effects, are made here. No sampled assets. */
+      class AudioRack {
+        constructor(seed, volume) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const c = this.ctx;
+          this.random = DW.rng(seed ^ 0xa5a5a5a5);
+          this.active = new Set();
+          this.loops = [];
+          this.disposed = false;
+          const gain = (v = 1) => {
+            const g = c.createGain();
+            g.gain.value = v;
+            return g;
+          };
+          this.master = gain(volume);
+          this.master.connect(c.destination);
+          this.input = gain(0.63);
+          this.duck = gain();
+          this.tone = c.createBiquadFilter();
+          this.tone.type = "lowpass";
+          this.tone.frequency.value = 4200;
+          this.tone.Q.value = 0.5;
+          this.sat = c.createWaveShaper();
+          this.sat.oversample = "2x";
+          this.delay = c.createDelay(0.1);
+          this.delay.delayTime.value = 0.018;
+          this.input
+            .connect(this.duck)
+            .connect(this.tone)
+            .connect(this.sat)
+            .connect(this.delay);
+          this.dry = gain(0.87);
+          this.delay.connect(this.dry).connect(this.master);
+          this.reverb = c.createConvolver();
+          this.wet = gain(0.2);
+          this.delay
+            .connect(this.reverb)
+            .connect(this.wet)
+            .connect(this.master);
+          const impulse = c.createBuffer(2, c.sampleRate * 2.6, c.sampleRate);
+          for (let ch = 0; ch < 2; ch++) {
+            const a = impulse.getChannelData(ch);
+            for (let i = 0; i < a.length; i++)
+              a[i] =
+                (this.random() * 2 - 1) *
+                Math.pow(1 - i / a.length, 3) *
+                (i < c.sampleRate * 0.018 ? 0 : 1);
+          }
+          this.reverb.buffer = impulse;
+          this.modDepth = [];
+          for (const hz of [0.31, 5.7]) {
+            const o = c.createOscillator(),
+              g = gain(0.0004);
+            o.frequency.value = hz;
+            o.connect(g).connect(this.delay.delayTime);
+            o.start();
+            this.loops.push(o);
+            this.modDepth.push(g);
+          }
+          this.noise = c.createBuffer(1, c.sampleRate * 3, c.sampleRate);
+          const data = this.noise.getChannelData(0);
+          for (let i = 0; i < data.length; i++) data[i] = this.random() * 2 - 1;
+          this.buses = {};
+          for (const p of ["chords", "bass", "melody", "drums"]) {
+            this.buses[p] = gain();
+            this.buses[p].connect(this.input);
+          }
+          this.textureGains = {};
+          for (const name of DW.textures) {
+            const g = gain(0);
+            g.connect(this.input);
+            this.textureGains[name] = g;
+            if (name === "vinyl") continue;
+            if (name === "hum" || name === "rumble") {
+              for (const hz of name === "hum" ? [50, 100, 150] : [28, 36]) {
+                const o = c.createOscillator(),
+                  amp = gain(name === "hum" ? 0.035 : 0.1);
+                o.frequency.value = hz;
+                o.connect(amp).connect(g);
+                o.start();
+                this.loops.push(o);
+              }
+            } else {
+              const n = c.createBufferSource();
+              n.buffer = this.noise;
+              n.loop = true;
+              n.playbackRate.value =
+                name === "rain" ? 0.73 : name === "room" ? 0.46 : 1;
+              const f = c.createBiquadFilter(),
+                amp = gain(
+                  { surface: 0.025, tape: 0.022, rain: 0.11, room: 0.07 }[name],
+                );
+              f.type =
+                name === "room"
+                  ? "lowpass"
+                  : name === "rain"
+                    ? "bandpass"
+                    : "highpass";
+              f.frequency.value = {
+                surface: 1700,
+                tape: 3600,
+                rain: 2200,
+                room: 420,
+              }[name];
+              f.Q.value = 0.35;
+              n.connect(f).connect(amp).connect(g);
+              n.start(0, this.random() * 2);
+              this.loops.push(n);
+            }
+          }
+          this.setColour(
+            DW.origin(DW.parse(EXAMPLES[0].text).song),
+            c.currentTime,
+          );
+        }
+        track(source, nodes, end) {
+          this.active.add(source);
+          source.onended = () => {
+            this.active.delete(source);
+            source.disconnect();
+            nodes.forEach((n) => n.disconnect());
+          };
+          source.stop(end);
+          return source;
+        }
+        envelope(t, d, level, attack = 0.005) {
+          const g = this.ctx.createGain(),
+            p = g.gain;
+          p.setValueAtTime(0, t);
+          p.linearRampToValueAtTime(Math.max(0.00001, level), t + attack);
+          p.exponentialRampToValueAtTime(
+            0.00001,
+            t + Math.max(attack + 0.02, d),
+          );
+          return g;
+        }
+        toneHit(freq, t, d, level, type, dest, fall = null) {
+          const o = this.ctx.createOscillator(),
+            g = this.envelope(t, d, level);
+          o.type = type;
+          o.frequency.setValueAtTime(freq, t);
+          if (fall)
+            o.frequency.exponentialRampToValueAtTime(
+              fall,
+              t + Math.min(d, 0.15),
+            );
+          o.connect(g).connect(dest);
+          o.start(t);
+          this.track(o, [g], t + d + 0.03);
+        }
+        noiseHit(t, d, level, freq, type, dest) {
+          const n = this.ctx.createBufferSource(),
+            f = this.ctx.createBiquadFilter(),
+            g = this.envelope(t, d, level);
+          n.buffer = this.noise;
+          f.type = type;
+          f.frequency.value = freq;
+          f.Q.value = 0.65;
+          n.connect(f).connect(g).connect(dest);
+          n.start(t, this.random() * 1.5);
+          this.track(n, [f, g], t + d + 0.03);
+        }
+        instrument(name, notes, t, d, v, part) {
+          const c = this.ctx,
+            dest = this.buses[part];
+          for (const midi of notes) {
+            const f = 440 * 2 ** ((midi - 69) / 12);
+            const level = v / (notes.length > 2 ? Math.sqrt(notes.length) : 1);
+            if (name === "epiano") {
+              const o = c.createOscillator(),
+                mod = c.createOscillator(),
+                mg = this.envelope(t, Math.min(d + 0.25, 1.5), f * 1.3),
+                g = this.envelope(t, Math.min(d + 0.5, 3), level * 0.15, 0.006);
+              o.frequency.value = f;
+              mod.frequency.value = f * 3.003;
+              mod.connect(mg).connect(o.frequency);
+              o.connect(g).connect(dest);
+              o.start(t);
+              mod.start(t);
+              this.track(o, [g], t + Math.min(d + 0.55, 3.1));
+              this.track(mod, [mg], t + Math.min(d + 0.55, 3.1));
+              this.toneHit(f * 2, t, 0.2, level * 0.018, "sine", dest);
+            } else if (name === "felt") {
+              for (const [ratio, amp] of [
+                [1, 0.15],
+                [2, 0.035],
+                [3, 0.012],
+              ])
+                this.toneHit(
+                  f * ratio,
+                  t,
+                  Math.min(d + 0.2, 2) / Math.sqrt(ratio),
+                  level * amp,
+                  "sine",
+                  dest,
+                );
+              this.noiseHit(t, 0.035, level * 0.018, 650, "lowpass", dest);
+            } else if (name === "upright") {
+              this.toneHit(
+                f,
+                t,
+                Math.min(d + 0.12, 1.8),
+                level * 0.24,
+                "triangle",
+                dest,
+              );
+              this.toneHit(f * 2, t, 0.22, level * 0.035, "sine", dest);
+              this.noiseHit(t, 0.045, level * 0.06, 650, "lowpass", dest);
+            } else if (name === "vibes") {
+              this.toneHit(
+                f,
+                t,
+                Math.min(d + 0.8, 3.5),
+                level * 0.13,
+                "sine",
+                dest,
+              );
+              this.toneHit(
+                f * 3.99,
+                t,
+                Math.min(d + 0.1, 0.7),
+                level * 0.032,
+                "sine",
+                dest,
+              );
+            } else {
+              for (const cents of [-5, 5]) {
+                const o = c.createOscillator(),
+                  g = this.envelope(t, Math.min(d + 0.8, 5), level * 0.07, 0.2),
+                  filter = c.createBiquadFilter();
+                o.type = "triangle";
+                o.frequency.value = f;
+                o.detune.value = cents;
+                filter.frequency.value = 1400;
+                o.connect(filter).connect(g).connect(dest);
+                o.start(t);
+                this.track(o, [filter, g], t + Math.min(d + 0.9, 5.1));
+              }
+            }
+          }
+        }
+        drum(voice, t, v) {
+          const dest = this.buses.drums;
+          if (voice === "kick") {
+            this.toneHit(135, t, 0.32, v * 0.6, "sine", dest, 43);
+            this.noiseHit(t, 0.03, v * 0.045, 1200, "lowpass", dest);
+            const p = this.duck.gain;
+            p.cancelScheduledValues(t);
+            p.setValueAtTime(1, t);
+            p.linearRampToValueAtTime(0.76, t + 0.012);
+            p.exponentialRampToValueAtTime(1, t + 0.23);
+          } else if (voice === "snare") {
+            this.noiseHit(t, 0.18, v * 0.17, 1900, "highpass", dest);
+            this.toneHit(180, t, 0.09, v * 0.1, "triangle", dest);
+          } else if (voice === "rim") {
+            this.toneHit(790, t, 0.028, v * 0.17, "triangle", dest);
+            this.toneHit(1740, t, 0.018, v * 0.08, "sine", dest);
+          } else if (voice === "hats")
+            this.noiseHit(t, 0.065, v * 0.075, 6500, "highpass", dest);
+          else if (voice === "brushes")
+            this.noiseHit(t, 0.38, v * 0.1, 2900, "bandpass", dest);
+          else this.toneHit(470, t, 0.09, v * 0.1, "sine", dest, 260);
+        }
+        setColour(s, t) {
+          const glide = (p, v) => p.setTargetAtTime(v, t, 0.3);
+          glide(this.tone.frequency, 900 + Math.pow(s.tone, 1.6) * 10500);
+          glide(this.wet.gain, s.reverb * 0.6);
+          glide(this.dry.gain, 1 - s.reverb * 0.23);
+          this.modDepth.forEach((g, i) =>
+            glide(g.gain, s.wow * (i ? 0.00032 : 0.0028)),
+          );
+          const amount = Math.round(s.saturation * 20),
+            bits = s.crush > 0 ? Math.round(16 - s.crush * 11) : 24,
+            key = amount + ":" + bits;
+          if (this.satAmount !== key) {
+            this.satAmount = key;
+            const drive = 1 + amount * 0.16,
+              a = new Float32Array(16384),
+              steps = 2 ** bits;
+            for (let i = 0; i < a.length; i++) {
+              const x = (i * 2) / (a.length - 1) - 1,
+                y = Math.tanh(x * drive) / Math.tanh(drive);
+              a[i] = Math.round(y * steps) / steps;
+            }
+            this.sat.curve = a;
+          }
+          for (const k of DW.textures) glide(this.textureGains[k].gain, s[k]);
+        }
+        mix(song, s, muted, t) {
+          for (const p in this.buses) {
+            const balance =
+              p === "bass"
+                ? 1.3 - s.balance * 0.6
+                : p === "melody"
+                  ? 0.7 + s.balance * 0.6
+                  : 1;
+            this.buses[p].gain.setTargetAtTime(
+              muted.has(p) ? 0 : song.levels[p] * balance,
+              t,
+              0.035,
+            );
+          }
+        }
+        surface(t, stepDuration, s) {
+          if (this.random() < s.vinyl * 0.45) {
+            this.noiseHit(
+              t + this.random() * stepDuration,
+              0.006 + this.random() * 0.018,
+              0.035 + this.random() * 0.08,
+              1400 + this.random() * 4000,
+              "bandpass",
+              this.textureGains.vinyl,
+            );
+          }
+          if (s.rain > 0 && this.random() < 0.16)
+            this.noiseHit(
+              t,
+              0.07,
+              this.random() * 0.02,
+              2600,
+              "bandpass",
+              this.textureGains.rain,
+            );
+        }
+        needle() {
+          const t = this.ctx.currentTime + 0.02;
+          this.noiseHit(t, 0.19, 0.18, 900, "lowpass", this.input);
+          this.toneHit(65, t, 0.16, 0.13, "sine", this.input, 30);
+        }
+        runout(t) {
+          this.noiseHit(t, 0.012, 0.05, 1300, "bandpass", this.input);
+        }
+        tapeStop() {
+          const t = this.ctx.currentTime;
+          for (const source of this.active) {
+            if (source.frequency) {
+              source.frequency.cancelScheduledValues(t);
+              source.frequency.setTargetAtTime(12, t, 0.22);
+            }
+            if (source.playbackRate)
+              source.playbackRate.setTargetAtTime(0.08, t, 0.22);
+          }
+          this.input.gain.setTargetAtTime(0.0001, t, 0.24);
+        }
+        async dispose() {
+          if (this.disposed) return;
+          this.disposed = true;
+          this.loops.forEach((o) => {
+            try {
+              o.stop();
+            } catch {}
+          });
+          await this.ctx.close();
+        }
+      }
+      class Transport {
+        constructor(song, settings, onBar, onEnd) {
+          this.song = song;
+          this.settings = settings;
+          this.onBar = onBar;
+          this.onEnd = onEnd;
+          this.drift = DW.driftState(song);
+          this.random = DW.rng(settings.seed);
+          this.human = DW.rng(settings.seed ^ 0x1b873593);
+          this.bar = 0;
+          this.loop = 0;
+          this.step = 0;
+          this.previous = [];
+          this.bars = [];
+          this.running = false;
+          this.dead = false;
+          this.visual = [];
+        }
+        async start() {
+          this.rack = new AudioRack(this.settings.seed, this.settings.volume);
+          await this.rack.ctx.resume();
+          this.rack.needle();
+          this.next = this.rack.ctx.currentTime + 0.3;
+          this.running = true;
+          this.tick();
+        }
+        tick() {
+          if (!this.running) return;
+          const c = this.rack.ctx;
+          if (c.state === "closed") return;
+          // After a suspended/background tab, preserve music rather than firing late notes in a burst.
+          if (this.next < c.currentTime - 0.2) this.next = c.currentTime + 0.04;
+          const horizon = document.hidden ? 1.25 : 0.14;
+          while (this.next < c.currentTime + horizon) {
+            if (this.dead) {
+              this.rack.runout(this.next);
+              this.next += 1.8;
+              continue;
+            }
+            if (this.step === 0) {
+              if (this.pending) {
+                this.song = this.pending;
+                this.pending = null;
+                this.drift = DW.driftState(this.song);
+                this.random = DW.rng(this.song.seed);
+                this.human = DW.rng(this.song.seed ^ 0x1b873593);
+                this.bar = 0;
+                this.previous = [];
+                this.bars = [];
+              }
+              DW.advance(
+                this.drift,
+                this.song,
+                this.random,
+                this.settings.wander,
+                this.settings.drift,
+              );
+              this.plan = DW.planBar(
+                this.song,
+                this.drift.current,
+                this.random,
+                this.bar,
+                this.previous,
+              );
+              this.previous = this.plan.last;
+              this.bars[this.bar] = this.plan;
+              this.rack.setColour(this.drift.current, this.next);
+              this.rack.mix(
+                this.song,
+                this.drift.current,
+                this.settings.muted,
+                this.next,
+              );
+              this.visual.push({
+                time: this.next,
+                bar: this.bar,
+                loop: this.loop,
+                plan: this.plan,
+              });
+            }
+            const state = this.plan.state;
+            this.tempo =
+              this.tempo === undefined
+                ? state.tempo
+                : this.tempo + (state.tempo - this.tempo) * 0.1;
+            const dt = 60 / this.tempo / 4;
+            this.rack.setColour(state, this.next);
+            this.rack.mix(this.song, state, this.settings.muted, this.next);
+            for (const e of this.plan.events.filter(
+              (e) => e.step === this.step,
+            )) {
+              const swing = this.step % 2 ? state.swing * dt : 0,
+                human = (this.human() - 0.5) * state.humanise * 0.032;
+              const t = Math.max(
+                  c.currentTime + 0.005,
+                  this.next + swing + human,
+                ),
+                duration = (e.duration * 60) / this.tempo;
+              if (e.part === "drums") this.rack.drum(e.voice, t, e.velocity);
+              else
+                this.rack.instrument(
+                  this.plan.parts[e.part],
+                  e.notes,
+                  t,
+                  duration,
+                  e.velocity,
+                  e.part,
+                );
+            }
+            this.rack.surface(this.next, dt, state);
+            this.next += dt;
+            this.step++;
+            if (this.step >= this.song.steps) {
+              this.step = 0;
+              this.bar++;
+              if (this.bar >= this.song.bars) {
+                this.bar = 0;
+                this.loop++;
+                if (!this.settings.repeat) {
+                  this.dead = true;
+                  this.visual.push({ time: this.next, end: true });
+                }
+              }
+            }
+          }
+          while (this.visual[0]?.time <= c.currentTime) {
+            const v = this.visual.shift();
+            if (v.end) this.onEnd();
+            else this.onBar(v);
+          }
+          this.timer = setTimeout(() => this.tick(), 25);
+        }
+        snapshot() {
+          const state = DW.copy(this.drift.current),
+            r = DW.rng(this.random.state()),
+            bars = [];
+          let last = [];
+          for (let i = 0; i < this.song.bars; i++) {
+            const b = DW.planBar(this.song, state, r, i, last);
+            last = b.last;
+            bars.push(b);
+          }
+          return DW.capture(this.song, bars, state, this.settings.seed);
+        }
+        stop() {
+          this.running = false;
+          clearTimeout(this.timer);
+          this.rack.tapeStop();
+          setTimeout(() => this.rack.dispose(), 1100);
+        }
+      }
+    </script>
+    <script id="deadwax-ui">
+      (() => {
+        const $ = (id) => document.getElementById(id),
+          status = (message) => ($("status").textContent = message);
+        let song = DW.parse(EXAMPLES[0].text).song,
+          transport = null,
+          starting = false,
+          lastApplied = "",
+          editTimer,
+          library = Object.create(null),
+          gistFiles = [];
+        const settings = {
+          seed: song.seed,
+          volume: 0.65,
+          wander: song.drift.rate,
+          drift: false,
+          repeat: true,
+          muted: new Set(song.muted),
+        };
+        const storage = {
+          read(key, fallback) {
+            try {
+              const text = localStorage.getItem(key);
+              return text ? JSON.parse(text) : fallback;
+            } catch {
+              $("storage-status").textContent =
+                "Storage is unavailable or unreadable. You can still play, upload and export.";
+              return fallback;
+            }
+          },
+          write(key, value) {
+            try {
+              localStorage.setItem(key, JSON.stringify(value));
+              return true;
+            } catch {
+              $("storage-status").textContent =
+                "Could not save: storage is unavailable or full. Export a file to keep your work.";
+              return false;
+            }
+          },
+        };
+        const saved = storage.read("deadwax.session.v1", null),
+          shelf = storage.read("deadwax.library.v1", {});
+        if (shelf && typeof shelf === "object" && !Array.isArray(shelf))
+          for (const [name, text] of Object.entries(shelf))
+            if (typeof text === "string") library[name] = text;
+        function persist() {
+          storage.write("deadwax.session.v1", {
+            text: $("editor").value,
+            settings: { ...settings, muted: [...settings.muted] },
+          });
+        }
+        function showErrors(errors) {
+          if (errors.length) $("editor").closest("details").open = true;
+          $("errors").replaceChildren();
+          $("editor").setAttribute("aria-invalid", String(!!errors.length));
+          for (const e of errors) {
+            const b = document.createElement("button");
+            b.textContent = `Line ${e.line}, column ${e.column}: ${e.message}`;
+            b.onclick = () => {
+              const lines = $("editor").value.split("\n"),
+                start =
+                  lines
+                    .slice(0, e.line - 1)
+                    .reduce((n, l) => n + l.length + 1, 0) +
+                  e.column -
+                  1;
+              $("editor").focus();
+              $("editor").setSelectionRange(start, start + 1);
+            };
+            $("errors").append(b);
+          }
+        }
+        function readEditor() {
+          const parsed = DW.parse($("editor").value);
+          showErrors(parsed.errors);
+          return parsed.errors.length ? null : parsed.song;
+        }
+        function dimensions(state = song.values, origin = song.values) {
+          for (const k in DW.specs) {
+            const [a, b] = DW.specs[k],
+              el = $("dim-" + k);
+            el.querySelector("output").textContent =
+              k === "tempo"
+                ? state[k].toFixed(1)
+                : Math.round(state[k] * 100) + "%";
+            el.querySelector("b").style.left =
+              DW.clamp(((state[k] - a) / (b - a)) * 100, 0, 100) + "%";
+            el.querySelector("i").style.left =
+              DW.clamp(((origin[k] - a) / (b - a)) * 100, 0, 100) + "%";
+          }
+        }
+        function drawBars() {
+          const container = $("bars");
+          container.replaceChildren();
+          for (let i = 0; i < song.bars; i++) {
+            const span = document.createElement("span");
+            span.textContent =
+              i +
+              1 +
+              " · " +
+              [
+                ...new Set(
+                  song.chords
+                    .filter(
+                      (e) =>
+                        e.at < (i + 1) * song.beats &&
+                        e.at + e.duration > i * song.beats,
+                    )
+                    .map((e) => e.symbol),
+                ),
+              ].join(" / ");
+            container.append(span);
+          }
+        }
+        function renderSong() {
+          const exampleIndex = EXAMPLES.findIndex(
+            (e) => e.text === lastApplied,
+          );
+          $("examples").value =
+            exampleIndex >= 0 ? String(exampleIndex) : "custom";
+          $("title").textContent = song.title;
+          drawBars();
+          $("seed").value = settings.seed;
+          $("wander").value = settings.wander;
+          $("wander-value").textContent =
+            Math.round(settings.wander * 100) + "%";
+          $("drift").checked = settings.drift;
+          $("repeat").checked = settings.repeat;
+          for (const p of ["chords", "bass", "melody", "drums"])
+            $("mute-" + p).setAttribute(
+              "aria-pressed",
+              String(settings.muted.has(p)),
+            );
+          for (const k of DW.textures) {
+            $("texture-" + k).value = song.values[k];
+            $("texture-value-" + k).textContent =
+              Math.round(song.values[k] * 100) + "%";
+          }
+          dimensions();
+        }
+        function applyText(text, { queue = true, reset = true } = {}) {
+          const parsed = DW.parse(text);
+          $("editor").value = text;
+          showErrors(parsed.errors);
+          if (parsed.errors.length) {
+            persist();
+            status(
+              "Not applied — fix the marked lines. The last valid Pressing can keep playing.",
+            );
+            return false;
+          }
+          song = parsed.song;
+          lastApplied = text;
+          if (reset) {
+            settings.seed = song.seed;
+            settings.wander = song.drift.rate;
+            settings.muted = new Set(song.muted);
+            settings.drift = false;
+            $("hold").setAttribute("aria-pressed", "false");
+            $("drift-status").textContent =
+              "The original Pressing, with nowhere else to be.";
+          }
+          if (transport && queue) {
+            transport.pending = song;
+            status("Pressing queued for the next bar.");
+          } else status("Pressing ready.");
+          renderSong();
+          persist();
+          return true;
+        }
+        function mayReplace() {
+          return (
+            $("editor").value === lastApplied ||
+            confirm(
+              "Replace your unapplied editor changes? Export them first if you want to keep them.",
+            )
+          );
+        }
+        function patchDirective(key, value) {
+          const lines = $("editor").value.split("\n"),
+            prefix = key + " ";
+          const i = lines.findIndex((line) =>
+            line.trimStart().startsWith(prefix),
+          );
+          if (i >= 0) lines[i] = key + " " + value;
+          else lines.push(key + " " + value);
+          $("editor").value = lines.join("\n");
+          persist();
+        }
+        for (const k in DW.specs) {
+          const el = document.createElement("div");
+          el.className = "dimension";
+          el.id = "dim-" + k;
+          const label = document.createElement("span");
+          label.textContent = k;
+          const out = document.createElement("output");
+          const track = document.createElement("div");
+          track.className = "track";
+          track.append(
+            document.createElement("i"),
+            document.createElement("b"),
+          );
+          el.append(label, out, track);
+          $("dimensions").append(el);
+        }
+        for (const name in DW.directions) {
+          const b = document.createElement("button");
+          b.textContent = name;
+          b.setAttribute("aria-pressed", "false");
+          b.onclick = () => {
+            if (!transport || transport.dead) {
+              status("Press Play before steering the record.");
+              return;
+            }
+            settings.drift = true;
+            $("drift").checked = true;
+            DW.steer(transport.drift, song, name);
+            $("hold").setAttribute("aria-pressed", "false");
+            for (const el of $("directions").children)
+              el.setAttribute("aria-pressed", String(el === b));
+            $("drift-status").textContent =
+              "Heading " +
+              name.toLowerCase() +
+              ". Changes arrive a little at a time.";
+            persist();
+          };
+          $("directions").append(b);
+        }
+        for (const p of ["chords", "bass", "melody", "drums"]) {
+          const b = document.createElement("button");
+          b.id = "mute-" + p;
+          b.textContent = p[0].toUpperCase() + p.slice(1);
+          b.title = "Mute " + p;
+          b.setAttribute("aria-label", "Mute " + p);
+          b.setAttribute("aria-pressed", "false");
+          b.onclick = () => {
+            settings.muted.has(p)
+              ? settings.muted.delete(p)
+              : settings.muted.add(p);
+            song.muted = [...settings.muted];
+            b.setAttribute("aria-pressed", String(settings.muted.has(p)));
+            const wasClean = $("editor").value === lastApplied;
+            const lines = $("editor")
+              .value.split("\n")
+              .filter((l) => !/^\s*mute\b/.test(l));
+            if (song.muted.length) lines.push("mute " + song.muted.join(" "));
+            $("editor").value = lines.join("\n");
+            if (wasClean) lastApplied = $("editor").value;
+            persist();
+          };
+          $("mutes").append(b);
+        }
+        for (const k of DW.textures) {
+          const l = document.createElement("label");
+          l.textContent = {
+            vinyl: "Vinyl / pops",
+            surface: "Surface hiss",
+            tape: "Tape hiss",
+            rumble: "Turntable rumble",
+            rain: "Rain",
+            room: "Room tone",
+            hum: "Distant hum",
+          }[k];
+          const o = document.createElement("output");
+          o.id = "texture-value-" + k;
+          const input = document.createElement("input");
+          input.id = "texture-" + k;
+          input.type = "range";
+          input.min = 0;
+          input.max = 1;
+          input.step = 0.01;
+          input.setAttribute("aria-label", l.textContent);
+          input.oninput = () => {
+            const v = +input.value,
+              wasClean = $("editor").value === lastApplied;
+            song.values[k] = v;
+            o.textContent = Math.round(v * 100) + "%";
+            if (transport) {
+              const d = transport.drift;
+              d.origin[k] = v;
+              d.current[k] = v;
+              d.target[k] = v;
+              d.velocity[k] = 0;
+            }
+            const lim = song.drift.limits[k];
+            if (lim) {
+              lim[0] = Math.min(lim[0], v);
+              lim[1] = Math.max(lim[1], v);
+              patchDirective("drift " + k, lim.join(" "));
+            }
+            patchDirective("texture " + k, v);
+            if (wasClean) lastApplied = $("editor").value;
+            persist();
+          };
+          l.append(o, input);
+          $("textures").append(l);
+        }
+        EXAMPLES.forEach((e, i) => {
+          $("examples").add(new Option(DW.parse(e.text).song.title, String(i)));
+        });
+        const customOption = new Option("Custom / edited Pressing", "custom");
+        customOption.disabled = true;
+        $("examples").add(customOption);
+        $("examples").onchange = () => {
+          if (mayReplace()) applyText(EXAMPLES[+$("examples").value].text);
+          else renderSong();
+        };
+        $("editor").oninput = () => {
+          clearTimeout(editTimer);
+          editTimer = setTimeout(() => {
+            showErrors(DW.parse($("editor").value).errors);
+            persist();
+          }, 220);
+        };
+        $("apply").onclick = () => applyText($("editor").value);
+        $("play").onclick = async () => {
+          if (starting || transport) return;
+          if (!$("seed").checkValidity()) {
+            status("Seed must be an integer between 0 and 4294967295.");
+            return;
+          }
+          const parsed = readEditor();
+          if (!parsed) {
+            status("Fix the Pressing before playing.");
+            return;
+          }
+          song = parsed;
+          lastApplied = $("editor").value;
+          settings.seed = +$("seed").value || 0;
+          starting = true;
+          $("play").disabled = true;
+          $("seed").disabled = true;
+          try {
+            transport = new Transport(
+              song,
+              settings,
+              (v) => {
+                const spans = $("bars").children;
+                for (let i = 0; i < spans.length; i++)
+                  spans[i].classList.toggle("active", i === v.bar);
+                $("clock").textContent =
+                  `${v.plan.state.tempo.toFixed(1)} BPM · bar ${v.bar + 1}/${song.bars} · loop ${v.loop + 1}`;
+                dimensions(v.plan.state, transport.drift.origin);
+              },
+              () => {
+                $("clock").textContent = "Dead wax · run-out groove";
+                $("drift-status").textContent =
+                  "The side has finished. The groove goes on. Stop to lift the needle.";
+              },
+            );
+            await transport.start();
+            document.body.classList.add("playing");
+            $("stop").disabled = false;
+            status(
+              "Playing. Stop slows the tape; Loop off ends in the run-out groove.",
+            );
+            persist();
+          } catch (e) {
+            if (transport?.rack) transport.rack.dispose();
+            transport = null;
+            $("play").disabled = false;
+            $("seed").disabled = false;
+            status("Audio could not start: " + e.message);
+          } finally {
+            starting = false;
+          }
+        };
+        function stop() {
+          if (!transport) return;
+          transport.stop();
+          transport = null;
+          document.body.classList.remove("playing");
+          $("play").disabled = false;
+          $("seed").disabled = false;
+          $("stop").disabled = true;
+          $("clock").textContent = "Stopped";
+          for (const el of $("bars").children) el.classList.remove("active");
+          status("Tape slowing down. Play starts a fresh session at home.");
+        }
+        $("stop").onclick = stop;
+        $("volume").oninput = () => {
+          settings.volume = +$("volume").value;
+          if (transport)
+            transport.rack.master.gain.setTargetAtTime(
+              settings.volume,
+              transport.rack.ctx.currentTime,
+              0.025,
+            );
+          persist();
+        };
+        $("repeat").onchange = () => {
+          settings.repeat = $("repeat").checked;
+          persist();
+        };
+        $("seed").onchange = () => {
+          if (!$("seed").checkValidity()) {
+            status("Seed must be an integer between 0 and 4294967295.");
+            return;
+          }
+          settings.seed = +$("seed").value;
+          song.seed = settings.seed;
+          const clean = $("editor").value === lastApplied;
+          patchDirective("seed", settings.seed);
+          if (clean) lastApplied = $("editor").value;
+          status("Seed saved. It takes effect on the next Play.");
+        };
+        $("wander").oninput = () => {
+          settings.wander = +$("wander").value;
+          $("wander-value").textContent =
+            Math.round(settings.wander * 100) + "%";
+          const clean = $("editor").value === lastApplied;
+          song.drift.rate = settings.wander;
+          patchDirective("drift rate", settings.wander);
+          if (clean) lastApplied = $("editor").value;
+          persist();
+        };
+        $("drift").onchange = () => {
+          settings.drift = $("drift").checked;
+          if (settings.drift && transport) transport.drift.home = false;
+          $("drift-status").textContent = settings.drift
+            ? "Wandering within this Pressing’s permitted dimensions."
+            : "Drift paused at the present state. Return home to restore the original.";
+          persist();
+        };
+        $("home").onclick = () => {
+          if (!transport) {
+            dimensions();
+            status("Already home.");
+            return;
+          }
+          DW.steer(transport.drift, song, "Home");
+          $("hold").setAttribute("aria-pressed", "false");
+          for (const b of $("directions").children)
+            b.setAttribute("aria-pressed", "false");
+          $("drift-status").textContent = "Coming home. Give it a loop or two.";
+        };
+        $("hold").onclick = () => {
+          if (!transport) {
+            status("Press Play before holding a state.");
+            return;
+          }
+          const d = transport.drift;
+          d.hold = !d.hold;
+          $("hold").setAttribute("aria-pressed", String(d.hold));
+          $("drift-status").textContent = d.hold
+            ? "Holding these dimensions. The groove keeps turning."
+            : "Released. The journey continues.";
+        };
+        $("capture").onclick = () => {
+          if (!mayReplace()) return;
+          const captured = transport ? transport.snapshot() : DW.copy(song);
+          captured.muted = [...settings.muted];
+          if (!transport) captured.title += " — capture";
+          applyText(DW.serialize(captured));
+          status(
+            "Captured as a new Pressing with explicit notes and grids. Drift is off. Export or save it to your shelf.",
+          );
+        };
+        function download(text) {
+          const blob = new Blob([text], { type: "text/plain;charset=utf-8" }),
+            url = URL.createObjectURL(blob),
+            a = document.createElement("a");
+          a.href = url;
+          a.download =
+            (DW.parse(text).song.title || "untitled")
+              .replace(/[^a-z0-9]+/gi, "-")
+              .replace(/^-|-$/g, "")
+              .toLowerCase() + ".deadwax";
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+        $("download").onclick = () => {
+          if (!readEditor()) {
+            status("Fix parse errors before exporting.");
+            return;
+          }
+          download($("editor").value);
+          status("Exported the exact editor text.");
+        };
+        async function loadFile(file) {
+          if (!file) return;
+          if (file.size > 1024 * 1024) {
+            status(
+              "That file is too large. Pressings must be smaller than 1 MB.",
+            );
+            return;
+          }
+          if (!mayReplace()) return;
+          try {
+            applyText(await file.text());
+          } catch (e) {
+            status("Could not read file: " + e.message);
+          }
+        }
+        $("upload").onclick = () => $("file").click();
+        $("file").onchange = async () => {
+          await loadFile($("file").files[0]);
+          $("file").value = "";
+        };
+        window.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          document.body.classList.add("drop");
+        });
+        window.addEventListener("dragleave", (e) => {
+          if (!e.relatedTarget) document.body.classList.remove("drop");
+        });
+        window.addEventListener("drop", (e) => {
+          e.preventDefault();
+          document.body.classList.remove("drop");
+          loadFile(e.dataTransfer.files[0]);
+        });
+        function renderLibrary() {
+          $("library").replaceChildren();
+          for (const name of Object.keys(library).sort())
+            $("library").add(new Option(name, name));
+          $("load").disabled = !Object.keys(library).length;
+        }
+        $("save").onclick = () => {
+          const edited = readEditor();
+          if (!edited) return;
+          const name = $("save-name").value.trim() || edited.title;
+          if (
+            Object.hasOwn(library, name) &&
+            !confirm("Replace the saved Pressing “" + name + "”?")
+          )
+            return;
+          library[name] = $("editor").value;
+          const ok = storage.write("deadwax.library.v1", library);
+          renderLibrary();
+          $("library").value = name;
+          status(
+            ok
+              ? "Saved to your shelf."
+              : "Kept on this shelf for this page session only. Export to keep a copy.",
+          );
+        };
+        $("load").onclick = () => {
+          if (mayReplace() && Object.hasOwn(library, $("library").value))
+            applyText(library[$("library").value]);
+        };
+        function gistId(value) {
+          const t = value.trim();
+          if (/^[a-f0-9]{5,64}$/i.test(t)) return t;
+          try {
+            const u = new URL(t);
+            if (u.protocol !== "https:" || u.hostname !== "gist.github.com")
+              return null;
+            return (
+              u.pathname
+                .split("/")
+                .filter(Boolean)
+                .find((x) => /^[a-f0-9]{5,64}$/i.test(x) && x.length >= 20) ||
+              null
+            );
+          } catch {
+            return null;
+          }
+        }
+        let gistController = null;
+        async function importGist(value) {
+          const id = gistId(value);
+          if (!id) {
+            status("Enter a GitHub Gist URL or hexadecimal ID.");
+            return;
+          }
+          gistController?.abort();
+          gistController = new AbortController();
+          const timer = setTimeout(() => gistController.abort(), 20000);
+          $("import-gist").disabled = true;
+          $("gist-files").hidden = true;
+          status("Reading Gist…");
+          try {
+            const response = await fetch(
+              "https://api.github.com/gists/" + encodeURIComponent(id),
+              {
+                headers: { Accept: "application/vnd.github+json" },
+                signal: gistController.signal,
+                credentials: "omit",
+                redirect: "error",
+              },
+            );
+            if (!response.ok) {
+              if (response.status === 404)
+                throw new Error(
+                  "Gist not found (404). Check the ID and that the Gist is public or unlisted.",
+                );
+              if (response.status === 403 || response.status === 429) {
+                const reset = Number(response.headers.get("x-ratelimit-reset"));
+                throw new Error(
+                  "GitHub refused the request or the 60 requests/hour limit was reached." +
+                    (reset
+                      ? " Try again after " +
+                        new Date(reset * 1000).toLocaleTimeString() +
+                        "."
+                      : " Try again later."),
+                );
+              }
+              throw new Error("GitHub returned HTTP " + response.status + ".");
+            }
+            const data = await response.json();
+            gistFiles = Object.values(data.files || {}).filter(
+              (f) => f && typeof f.filename === "string",
+            );
+            if (!gistFiles.length)
+              throw new Error("This Gist has no readable files.");
+            const preferred = gistFiles.filter((f) =>
+              f.filename.toLowerCase().endsWith(".deadwax"),
+            );
+            if (preferred.length === 1) {
+              await loadGistFile(preferred[0]);
+            } else if (gistFiles.length === 1) {
+              await loadGistFile(gistFiles[0]);
+            } else {
+              $("gist-choice").replaceChildren();
+              gistFiles.forEach((f, i) =>
+                $("gist-choice").add(new Option(f.filename, String(i))),
+              );
+              $("gist-files").hidden = false;
+              status("Choose which Gist file to load.");
+            }
+            const url = new URL(location.href);
+            url.searchParams.set("gist", id);
+            try {
+              history.replaceState(null, "", url);
+            } catch {}
+          } catch (e) {
+            status(
+              e.name === "AbortError"
+                ? "Gist request timed out or was cancelled. Try again."
+                : e.message,
+            );
+          } finally {
+            clearTimeout(timer);
+            $("import-gist").disabled = false;
+          }
+        }
+        async function loadGistFile(f) {
+          if (f.truncated) {
+            status(
+              "GitHub truncated this file. Download it from GitHub, then upload it here. No raw-content endpoint is contacted.",
+            );
+            return;
+          }
+          if (typeof f.content !== "string") {
+            status(
+              "GitHub did not include file contents. Download the file and upload it here.",
+            );
+            return;
+          }
+          if (f.content.length > 1024 * 1024) {
+            status("Gist file exceeds the 1 MB limit.");
+            return;
+          }
+          if (mayReplace()) {
+            applyText(f.content);
+            $("gist-files").hidden = true;
+          }
+        }
+        $("import-gist").onclick = () => importGist($("gist").value);
+        $("gist-load").onclick = () =>
+          loadGistFile(gistFiles[+$("gist-choice").value]);
+        renderLibrary();
+        let restored = false;
+        if (saved && typeof saved.text === "string") {
+          const p = DW.parse(saved.text);
+          if (!p.errors.length) {
+            applyText(saved.text, { queue: false });
+            restored = true;
+          } else {
+            $("editor").value = saved.text;
+            showErrors(p.errors);
+            status(
+              "Recovered an unfinished draft. Fix errors or choose an example.",
+            );
+            restored = true;
+          }
+          const st = saved.settings;
+          if (st && typeof st === "object") {
+            for (const k of ["volume", "wander"])
+              if (Number.isFinite(st[k])) settings[k] = DW.clamp(st[k], 0, 1);
+            if (
+              Number.isInteger(st.seed) &&
+              st.seed >= 0 &&
+              st.seed <= 4294967295
+            )
+              settings.seed = st.seed;
+            settings.drift = st.drift === true;
+            settings.repeat = st.repeat !== false;
+            if (Array.isArray(st.muted))
+              settings.muted = new Set(
+                st.muted.filter((p) =>
+                  ["chords", "bass", "melody", "drums"].includes(p),
+                ),
+              );
+          }
+        }
+        if (!restored) applyText(EXAMPLES[0].text, { queue: false });
+        renderSong();
+        $("volume").value = settings.volume;
+        const gist = new URLSearchParams(location.search).get("gist");
+        if (gist) {
+          $("gist").value = gist;
+          importGist(gist);
+        }
+        document.addEventListener("visibilitychange", () => {
+          if (transport) {
+            clearTimeout(transport.timer);
+            transport.tick();
+          }
+        });
+        window.addEventListener("pagehide", () => {
+          persist();
+          if (transport) transport.stop();
+        });
+      })();
+    </script>
+  </body>
+</html>

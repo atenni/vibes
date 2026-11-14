@@ -11,6 +11,10 @@ GitHub Pages; there is no build step.
 
 - [CIDR helper](https://vibes.atenni.com/cidr/) — IPv4 and IPv6 subnet
   calculator. [Documentation](cidr/README.md).
+- [Dead Wax](https://vibes.atenni.com/deadwax/) — procedural lo-fi jazz loops,
+  plain-text scores and steerable Drift. [Format and guide](deadwax/FORMAT.md).
+  Self-contained; also works from a downloaded `deadwax/index.html`. Tests:
+  `node deadwax/test.cjs` or open `deadwax/tests.html`.
 
 ## Local development
 
