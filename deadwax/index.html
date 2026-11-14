@@ -1499,7 +1499,7 @@
       /* All sources, including room/record effects, are made here. No sampled assets. */
       class AudioRack {
         constructor(seed, volume) {
-          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+          this.ctx = new AudioContext();
           const c = this.ctx;
           this.random = DW.rng(seed ^ 0xa5a5a5a5);
           this.active = new Set();

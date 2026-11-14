@@ -1,5 +1,5 @@
 /* Shared assertions: Node runner and browser test page. */
-function runDeadWaxTests(DW, examples) {
+export function runDeadWaxTests(DW, examples) {
   const results = [];
   const assert = (condition, message = "Assertion failed") => {
     if (!condition) throw new Error(message);
@@ -250,4 +250,3 @@ function runDeadWaxTests(DW, examples) {
   });
   return results;
 }
-if (typeof module !== "undefined") module.exports = runDeadWaxTests;

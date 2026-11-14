@@ -39,8 +39,9 @@
     </p>
     <p id="summary">Running…</p>
     <ol id="results"></ol>
-    <script src="tests.js"></script>
-    <script>
+    <script type="module">
+      import { runDeadWaxTests } from "./tests.mjs";
+
       const frame = document.createElement("iframe");
       // Do not import a ?gist query into the test frame.
       frame.src = "index.html";
