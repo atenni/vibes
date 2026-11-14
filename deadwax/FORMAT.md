@@ -221,10 +221,28 @@ of sub-bass tones; `rain` is filtered noise plus occasional drops; `room` is
 dark noise; `hum` uses 50 Hz and harmonics. Defaults: vinyl 0.12, tape 0.05, all
 others zero. The examples explicitly set their own surface levels.
 
-Starting playback adds a needle-drop transient. **Stop** bends active pitches
-down and fades the session like stopping tape. With **Loop** off, the loop plays
-once, then enters a repeating run-out click until Stop. These transport effects
-are not part of a captured score.
+## Transport and desk
+
+Playback always loops. The single **Play / Pause** key lowers or lifts the
+needle. Pause bends active pitches down and fades the sound like stopping tape,
+but retains the audible playhead (including mid-bar), Drift, Hold, destination
+and random-generator state. Play resumes from there with a needle drop. Notes
+that began before the resumed offset are not retriggered. These transport
+effects are not part of a captured score.
+
+Tap a bar to cue it for the next bar line, without changing the currently
+sounding bar. Tap the current bar to cancel a cue. While paused, tapping a bar
+moves the playhead there. Arrow keys navigate the bar buttons; Enter or Space
+cues one. Loops of 1–64 bars appear in rows of four, or eight when a loop
+divides by eight and the display has enough room.
+
+**Return home** while paused resets the playhead and Drift immediately; the next
+Play starts a fresh seeded session. Editing the seed or loading another Pressing
+also starts fresh. **Apply** during playback replaces the score at the next bar.
+Per-part level faders and mute keys update the score; master volume is a
+listener setting. Room knobs update the written texture levels and show live
+Drift values. The desk is dark-only, uses system fonts and makes no asset
+requests.
 
 ## Drift
 
@@ -270,32 +288,37 @@ boundaries; filter, mix, effects and tempo glide. Background-tab throttling can
 interrupt browser audio: the scheduler resumes at a safe future time rather than
 playing a burst of late notes.
 
-- **Wander** controls stochastic speed/spread. At zero, unsteered Drift stops
-  moving. The file's `drift rate` sets its initial position.
+- **Wander** controls stochastic speed/spread. At zero, Drift stays where it is.
+  The file's `drift rate` sets its initial position.
 - **Directions** are named offsets from home, clamped to permitted bounds:
   Darker, Brighter, Busier, Sparser, Looser, Tighter, Dreamier, Dustier.
   Clicking a direction turns Drift on; it never jumps directly to the
-  destination.
+  destination. Click the active direction again to return to free wandering.
 - **Return home** removes randomness and eases all dimensions back. It also
   releases Hold. With a normal four-bar Pressing this takes about two loops.
 - **Hold** freezes the dimensions, not the transport or every random note
   choice.
 - Switching **Drift** off pauses wandering at the present state. Return home
   explicitly to restore the score.
-- **Capture** generates one complete loop using the current dimensions and a
-  copy of the current PRNG state. It writes explicit voicings, bass, motif,
-  grids, current instruments, mix and textures into a new Pressing, with drift
-  permissions removed. It is a quantised snapshot of the present musical
-  character, not an audio recording or a transcript of the preceding loop.
-  Subsequent playback does not need to recreate the original drift history.
+- **Cut a take** (Capture) generates one complete loop using the current
+  dimensions and a copy of the current PRNG state. It writes explicit voicings,
+  bass, motif, grids, current instruments, mix and textures into a new Pressing,
+  with drift permissions removed. It is a quantised snapshot of the present
+  musical character, not an audio recording or a transcript of the preceding
+  loop. Subsequent playback does not need to recreate the original drift
+  history. Each take is saved as a new shelf entry, `<title> · take N`, and
+  loaded with Drift off. It never overwrites another take. The original score is
+  also kept on the shelf if it was not already there. With storage unavailable,
+  both stay in memory and can still be exported.
 
 The PRNG is a seeded 32-bit Mulberry-style generator. Score planning, timing and
 sound/noise generation use separate derived streams. The seed is shown and
 saved. The same seed, Pressing and **same bar-timed steering actions** reproduce
 the compositional session. A seed alone cannot encode arbitrary user actions;
 those actions are not recorded as a replay log. Browser/sample-rate differences
-can still change the exact waveform. Play restarts at home; reload restores the
-source and listener settings, not a running session.
+can still change the exact waveform. Pause/resume preserves the session in the
+current tab. Reload restores source and listener settings, not a running
+session; the next Play starts at home.
 
 ## Files, shelf and Gists
 
@@ -305,11 +328,15 @@ source and listener settings, not a running session.
   the musical score, but canonical serialisation normalises spacing/numbers and
   does not retain comments.
 - **Upload** and drag/drop read a local file, with a 1 MB limit.
-- **Your shelf** is a named in-browser library. Replacing a saved name asks for
-  confirmation. The current editor and listener settings autosave separately.
-  Every storage read/write is guarded. If storage fails or is full, the app
-  remains usable; export to keep your work. An unfinished invalid draft also
-  survives a reload when storage is available.
+- **New Pressing** opens an unsaved, valid starter in the Score view and selects
+  its title. **Save to shelf** keeps the current editor text under a name.
+- **Your shelf** is a named in-browser library with Put on, Rename, Duplicate,
+  Export and Delete actions. Rename rejects collisions; Delete asks for inline
+  confirmation and never removes the loaded score. Replacing a saved name asks
+  for confirmation. The current editor and listener settings autosave
+  separately. Every storage read/write is guarded. If storage fails or is full,
+  the app remains usable; export to keep your work. An unfinished invalid draft
+  also survives a reload when storage is available.
 - **Gist import** accepts an ID or HTTPS `gist.github.com` URL. It selects a
   sole `.deadwax` file automatically, otherwise offers a file chooser (or loads
   a sole non-`.deadwax` file). `?gist=ID` automatically imports but does **not**
@@ -318,7 +345,8 @@ source and listener settings, not a running session.
 - Audio starts only with Play. Nothing is fetched for examples: their text is
   embedded in `index.html` and mirrored in `examples/`.
 
-WAV rendering is not implemented; `.deadwax` is the lossless notation export.
+The only export is `.deadwax` text. WAV and other audio exports are out of
+scope.
 
 ## Included Pressings
 
@@ -344,3 +372,15 @@ Or open [tests.html](tests.html). The same assertions cover valid examples,
 invalid input, source positions, chord decoding, stable canonical round-trips,
 embedded/file parity (Node), seeded planning, captures, drift bounds, Hold and
 Return home. The browser test page embeds the actual app but never starts audio.
+The Node runner additionally exercises the real inline transport with a silent
+rack and deterministic clock: mid-bar resume, speculative scheduling rollback,
+PRNG preservation, seeking, cue cancellation, looping, interruption and rapid
+pause/resume resource cleanup.
+
+## Keyboard shortcuts
+
+Space plays or pauses; D toggles Drift; 1–8 choose directions; [ and ] adjust
+Wander; H returns home; K toggles Hold; C cuts a take; N starts a new Pressing;
+P, E and L switch Desk, Score and Shelf. Ctrl/⌘+Enter applies from the editor.
+Press ? for the shortcut sheet. Global shortcuts are ignored while typing, and
+Space on a focused control activates that control instead of the transport.

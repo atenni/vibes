@@ -33,3 +33,5 @@ for (const result of runDeadWaxTests(sandbox.DW, sandbox.examples)) {
   if (!result.ok) failures++;
 }
 process.exitCode = failures ? 1 : 0;
+// Native Node tests exercise transport timing without requiring a browser.
+await import("./transport.test.mjs");

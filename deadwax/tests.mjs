@@ -154,6 +154,25 @@ export function runDeadWaxTests(DW, examples) {
       );
     }
   });
+  test("Wander zero freezes existing momentum but Return home still works", () => {
+    const s = valid(source),
+      d = DW.driftState(s),
+      r = DW.rng(42);
+    DW.steer(d, s, "Dustier");
+    d.current.tempo += 1;
+    d.velocity.tempo = 0.5;
+    const before = JSON.stringify(d),
+      random = r.state();
+    for (let i = 0; i < 8; i++) DW.advance(d, s, r, 0, true);
+    assert(JSON.stringify(d) === before, "Zero Wander moved");
+    assert(r.state() === random, "Zero Wander consumed Drift randomness");
+    DW.steer(d, s, "Home");
+    DW.advance(d, s, r, 0, true);
+    assert(
+      d.current.tempo < d.origin.tempo + 1,
+      "Zero Wander prevented Return home",
+    );
+  });
   test("drift-disabled dimensions never move", () => {
     const s = valid(source);
     s.drift.limits = {};
