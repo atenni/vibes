@@ -4,18 +4,9 @@ Small web experiments and useful browser applications, mostly written with LLMs.
 
 **Site:** https://vibes.atenni.com
 
-Each experiment lives in its own folder and is served as static files. On
-deploy, a small dependency-free script renders the homepage from each
-experiment's own `<head>`; experiment folders are published unchanged.
-
-## Tools
-
-- [CIDR helper](https://vibes.atenni.com/cidr/) — IPv4 and IPv6 subnet
-  calculator. [Documentation](cidr/README.md).
-- [Dead Wax](https://vibes.atenni.com/deadwax/) — procedural lo-fi jazz loops,
-  plain-text scores and steerable Drift. [Format and guide](deadwax/FORMAT.md).
-  Self-contained; also works from a downloaded `deadwax/index.html`. Tests:
-  `node --test deadwax/` or open `deadwax/tests.html`.
+Each experiment lives in its own top-level folder and is served as static files.
+The homepage is generated from each experiment's own HTML; see the site for the
+current list. Experiments may have their own README with usage and test notes.
 
 ## Adding an experiment
 
@@ -33,7 +24,8 @@ homepage at the next deploy. Every field has a default, and these standard
 | Listed      | Hide with `<meta name="robots" content="noindex">`                                      | Listed             |
 
 Folders starting with `.` or `_`, and `llm/`, `tmp/` and `scripts/`, are never
-experiments.
+experiments. Link back to the homepage (`../`) from each experiment: the
+installed app has no browser back button on iOS.
 
 ## Local development
 
@@ -44,22 +36,13 @@ Serve the repository root over HTTP (JavaScript modules do not work via
 uv run python -m http.server 8000
 ```
 
-Open http://localhost:8000. Experiments work directly; the root `index.html` is
-a template with empty card regions. To preview the homepage as deployed:
+Open http://localhost:8000/<experiment>/. The root `index.html` is a template
+with empty card regions; to preview the homepage as deployed:
 
 ```sh
 node scripts/build-site.mjs
 uv run python -m http.server 8000 --directory _site
 ```
-
-## Deployment
-
-[Pages](.github/workflows/pages.yaml) runs `scripts/build-site.mjs` on pushes to
-`main` and deploys `_site/` with GitHub Actions. The build copies the repository
-except tooling (`llm/`, `tmp/`, `scripts/`, dotfiles, `README.md`, `AGENTS.md`)
-and Node test files, renders the homepage cards, writes `experiments.json`, and
-generates the home-screen PNG icons. The site is an installable PWA: Share → Add
-to Home Screen on iOS.
 
 ## Tests
 
@@ -67,9 +50,23 @@ Node's built-in runner discovers `*.test.mjs`, `test.mjs` and similar files in
 every folder. No manifests are needed:
 
 ```sh
-node --test            # everything
-node --test deadwax/   # one project
+node --test            # everything, as in CI
+node --test cidr/      # one experiment
 ```
+
+## Deployment
+
+[Pages](.github/workflows/pages.yaml) runs `scripts/build-site.mjs` on pushes to
+`main` and deploys `_site/` with GitHub Actions. The build:
+
+- copies the repository, except tooling (`llm/`, `tmp/`, `scripts/`, dotfiles,
+  `README.md`, `AGENTS.md`) and Node test files;
+- renders the homepage cards, tag filters and count into `index.html`;
+- writes `experiments.json`;
+- generates the home-screen PNG icons and versions the service worker cache.
+
+Experiment folders are published unchanged. The site is an installable PWA: on
+iOS, Share → Add to Home Screen.
 
 ## Formatting
 
