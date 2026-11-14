@@ -241,8 +241,8 @@
             <div class="transport__display display">
               <p class="first-run">
                 <span class="lamp is-on" aria-hidden="true"></span>
-                Press Play to start the sound. Browsers wait for a click before
-                any audio.
+                Drop the needle to begin. Browsers wait for a tap before making
+                any sound.
               </p>
               <div class="display__top">
                 <output id="clock" class="display__clock">Ready</output>
@@ -257,12 +257,12 @@
               ></ol>
               <div class="display__empty">
                 <p style="margin: 0 0 var(--sp-3)">
-                  No record on the platter. Choose one above, open your shelf,
-                  or drop a
+                  No record on the platter. Choose one above, pull one from the
+                  shelf, or drop a
                   <span class="mono">.deadwax</span> file anywhere.
                 </p>
                 <button class="key key--quiet" type="button" data-goto="shelf">
-                  Open the shelf
+                  Go to the shelf
                 </button>
               </div>
               <p
@@ -463,7 +463,7 @@
                       />
                       <circle cx="7" cy="7" r="1.6" fill="currentColor" />
                     </svg>
-                    Capture
+                    Cut a take
                   </button>
                 </div>
               </div>
@@ -916,7 +916,7 @@
                 autocomplete="off"
               />
               <button id="save" class="key key--primary" type="submit">
-                Save current
+                Save to shelf
               </button>
             </form>
             <ul id="library" class="sleeves" aria-label="Saved Pressings"></ul>
@@ -942,17 +942,17 @@
                 />
                 <circle cx="24" cy="24" r="2" fill="currentColor" />
               </svg>
-              <p><strong>Nothing on the shelf yet.</strong></p>
+              <p><strong>The shelf is bare.</strong></p>
               <p>
-                Save the current Pressing, capture a drift you like, or bring
-                one in from a file or a Gist.
+                Save what’s on the platter, cut a take while it drifts, or bring
+                a record in from a file or a Gist.
               </p>
             </div>
           </section>
 
           <section class="rack import" aria-labelledby="import-title">
             <div class="rack__head" style="margin: 0">
-              <h2 id="import-title" class="rack__title">Bring one in</h2>
+              <h2 id="import-title" class="rack__title">Bring a record in</h2>
             </div>
             <div class="dropzone" id="dropzone">
               <svg viewBox="0 0 32 32" aria-hidden="true">
@@ -1063,7 +1063,7 @@
         <dt><kbd>K</kbd></dt>
         <dd>Hold (keep this state)</dd>
         <dt><kbd>C</kbd></dt>
-        <dd>Capture as a new Pressing</dd>
+        <dd>Cut a take (a new Pressing)</dd>
         <dt><kbd>N</kbd></dt>
         <dd>New Pressing</dd>
         <dt><kbd>P</kbd> <kbd>E</kbd> <kbd>L</kbd></dt>
@@ -1534,7 +1534,7 @@ drift rain 0 0.5`;
           $("clock").textContent =
             body.dataset.audio === "on"
               ? `${state.current.tempo.toFixed(1)} BPM · bar ${bar + 1}/${loop.length} · loop ${loopCount + 1}`
-              : `Paused · bar ${bar + 1}/${loop.length}`;
+              : `Needle up · bar ${bar + 1}/${loop.length}`;
         }
         // Advance to the next bar (or to `cued`), then schedule the next one.
         // `frac` > 0 when resuming mid-bar.
@@ -1595,7 +1595,7 @@ drift rain 0 0.5`;
             return;
           delete body.dataset.firstRun;
           body.dataset.audio = "on";
-          $("power-text").textContent = "On air";
+          $("power-text").textContent = "Spinning";
           $("seed").disabled = true;
           if (fresh) {
             resetDrift();
@@ -1616,12 +1616,12 @@ drift rain 0 0.5`;
           resumeFrac = Math.min(0.999, (performance.now() - barStart) / barDur);
           cued = null;
           body.dataset.audio = "off";
-          $("power-text").textContent = "Paused";
+          $("power-text").textContent = "Needle up";
           $("seed").disabled = false;
           setActive(bar, resumeFrac);
           updateClock();
           status(
-            "Tape slowing to a stop. Play carries on from here; Return home resets.",
+            `Needle up. Play carries on from bar ${bar + 1}; Return home starts afresh.`,
           );
         }
         const togglePlay = () =>
@@ -1643,7 +1643,7 @@ drift rain 0 0.5`;
         for (const b of directionButtons)
           b.onclick = () => {
             if (body.dataset.audio !== "on")
-              return status("Press Play before steering the record.");
+              return status("Drop the needle before steering.");
             const name = b.dataset.direction;
             const same = state.direction === name;
             state.direction = same ? null : name;
@@ -1684,13 +1684,13 @@ drift rain 0 0.5`;
         };
         $("hold").onclick = () => {
           if (body.dataset.audio !== "on")
-            return status("Press Play before holding a state.");
+            return status("Drop the needle before holding.");
           state.hold = !state.hold;
           $("hold").setAttribute("aria-pressed", String(state.hold));
           driftStatus(
             state.hold
               ? "Holding here. The groove keeps turning."
-              : "Released. The journey continues.",
+              : "Released. It’s wandering again.",
           );
         };
         // Capture never overwrites: it makes a new, untitled-but-named
@@ -1705,9 +1705,9 @@ drift rain 0 0.5`;
           );
           $("title").textContent = name;
           state.drift = $("drift").checked = false;
-          driftStatus("This take is now home. Drift is off.");
+          driftStatus("This take is the new home. Drift is off.");
           status(
-            `Captured “${name}” as a new Pressing on your shelf. The original is untouched.`,
+            `Cut “${name}” and put it on the platter. The original is untouched on your shelf.`,
           );
         };
         let takes = 0;
@@ -2006,7 +2006,7 @@ drift busyness 0.1 0.7
           editor.focus();
           editor.setSelectionRange(6 + 10, 6 + 10 + 18);
           status(
-            "A blank Pressing is in the score. Apply to hear it; save it to keep it.",
+            "A blank Pressing is in the score. Apply to hear it; save it to the shelf to keep it.",
           );
         };
 
@@ -2014,8 +2014,8 @@ drift busyness 0.1 0.7
           const errs = syncEditor();
           status(
             errs.length
-              ? "Not applied. Fix the marked lines; the last good Pressing keeps playing."
-              : "Pressing queued for the next bar.",
+              ? "Not applied. Fix the marked lines; the record on the platter keeps playing."
+              : "Queued. It drops in at the next bar.",
           );
           if (errs.length) $("errors").firstElementChild?.focus();
         };
@@ -2040,7 +2040,7 @@ drift busyness 0.1 0.7
             <span class="sleeve__spine" aria-hidden="true"></span>
             <div class="sleeve__body"><h3 class="sleeve__title">${esc(name)}</h3><p class="sleeve__meta">${meta}</p></div>
             <div class="sleeve__actions" role="group" aria-label="${esc(name)}">
-              <button class="key key--quiet" type="button" data-action="load">Load</button>
+              <button class="key key--quiet" type="button" data-action="load">Put on</button>
               <button class="key key--quiet" type="button" data-action="rename">Rename</button>
               <button class="key key--quiet" type="button" data-action="duplicate">Duplicate</button>
               <button class="key key--quiet" type="button" data-action="export">Export</button>
@@ -2169,7 +2169,9 @@ drift busyness 0.1 0.7
         $("upload").onclick = () => $("file").click();
         $("file").onchange = () => {
           if ($("file").files[0])
-            status(`Read “${$("file").files[0].name}”. It’s in the score now.`);
+            status(
+              `Read “${$("file").files[0].name}”. It’s on the platter, needle up.`,
+            );
           $("file").value = "";
         };
         let dragDepth = 0;
@@ -2187,7 +2189,7 @@ drift busyness 0.1 0.7
           dragDepth = 0;
           body.classList.remove("is-dragging");
           const f = e.dataTransfer.files[0];
-          if (f) status(`Read “${f.name}”. It’s in the score now.`);
+          if (f) status(`Read “${f.name}”. It’s on the platter, needle up.`);
         });
 
         function gistState(s, msg) {
@@ -2204,7 +2206,7 @@ drift busyness 0.1 0.7
           limited:
             "GitHub’s limit of 60 requests an hour has been reached. Try again after 2:40 pm, or download the file and drop it here.",
           choose: "This Gist has several files. Choose one to load.",
-          done: "Loaded “night-bus.deadwax” from the Gist. It’s on the platter, unplayed.",
+          done: "Loaded “night-bus.deadwax” from the Gist. It’s on the platter, needle up.",
         };
         $("import-gist").onclick = () => {
           const v = $("gist").value.trim();
@@ -2357,7 +2359,7 @@ drift busyness 0.1 0.7
               ])
                 $(id).textContent = "—";
               $("play").disabled = true;
-              status("Choose a record to begin.");
+              status("Choose a record to put on.");
               setView("desk");
               break;
             case "storage":

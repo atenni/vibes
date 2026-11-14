@@ -769,7 +769,71 @@ Long titles wrap with `overflow-wrap: anywhere`.
 
 ## Copy and voice
 
-The copy is quiet, concrete and a little warm, in British English. Use
-"Pressing" for the file and format and "record" casually. "On the platter" is
-the loaded one; "home" is the original as written; "the shelf" is the library.
-Avoid exclamation marks.
+The copy is quiet, concrete and a little warm, in British English, with no
+exclamation marks. It uses the language of a record room: the needle, the
+platter, the shelf and takes.
+
+**Rules**
+
+- **Control names stay plain.** Buttons say what they do: Play, Pause, Return
+  home, Hold. The record language lives in status lines, hints and empty states,
+  where it adds feeling without making anything harder to find. "Cut a take" and
+  "Put on" are the exceptions, because they're as clear as the plain words.
+- **One metaphor per sentence.** Don't stack puns.
+- **Glossary:**
+  - **Pressing:** the file and format, in docs and the editor.
+  - **Record:** a Pressing, casually.
+  - **On the platter:** the loaded Pressing.
+  - **Needle down / needle up:** playing / paused.
+  - **Home:** the Pressing as written.
+  - **Take:** a capture.
+  - **The shelf:** the library.
+
+**Copy table.** Replace the POC text with the new text. Strings with `{…}` are
+templates.
+
+| Where                      | Element                | Text                                                                                                                                  |
+| -------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| First-run note             | `.first-run`           | Drop the needle to begin. Browsers wait for a tap before making any sound.                                                            |
+| Initial status             | `#status`              | Everything is synthesised here, in your browser.                                                                                      |
+| Power indicator            | `#power-text`          | Standby (before first Play) · Spinning (playing) · Needle up (paused)                                                                 |
+| Clock, ready               | `#clock`               | Ready                                                                                                                                 |
+| Clock, playing             | `#clock`               | {tempo} BPM · bar {n}/{bars} · loop {loop}                                                                                            |
+| Clock, paused              | `#clock`               | Needle up · bar {n}/{bars}                                                                                                            |
+| Play, fresh                | `#status`              | Needle down.                                                                                                                          |
+| Play, resume               | `#status`              | Needle down at bar {n}.                                                                                                               |
+| Pause                      | `#status`              | Needle up. Play carries on from bar {n}; Return home starts afresh.                                                                   |
+| Tap bar, playing           | `#status`              | Bar {n} is next.                                                                                                                      |
+| Tap current bar (cancel)   | `#status`              | Cue cancelled.                                                                                                                        |
+| Tap bar, paused            | `#status`              | Needle moved to bar {n}. Play starts there.                                                                                           |
+| Steer or Hold while paused | `#status`              | Drop the needle before steering. · Drop the needle before holding.                                                                    |
+| Drift on                   | `#drift-status`        | Wandering within this Pressing’s permitted dimensions.                                                                                |
+| Drift off                  | `#drift-status`        | Drift paused here. Return home to restore the original.                                                                               |
+| Direction                  | `#drift-status`        | Heading {direction}. It arrives a little each bar.                                                                                    |
+| Direction cleared          | `#drift-status`        | Free wandering again.                                                                                                                 |
+| Return home, playing       | `#drift-status`        | Coming home. Give it a loop or two.                                                                                                   |
+| Arrived home               | `#drift-status`        | Home. The Pressing as written.                                                                                                        |
+| At rest                    | `#drift-status`        | The original Pressing, with nowhere else to be.                                                                                       |
+| Hold on / off              | `#drift-status`        | Holding here. The groove keeps turning. · Released. It’s wandering again.                                                             |
+| Capture key                | `#capture`             | Cut a take                                                                                                                            |
+| Capture done               | `#status`              | Cut “{title} · take {n}” and put it on the platter. The original is untouched on your shelf.                                          |
+| Capture done               | `#drift-status`        | This take is the new home. Drift is off.                                                                                              |
+| Apply, valid               | `#status`              | Queued. It drops in at the next bar.                                                                                                  |
+| Apply, invalid             | `#status`              | Not applied. Fix the marked lines; the record on the platter keeps playing.                                                           |
+| New Pressing               | `#status`              | A blank Pressing is in the score. Apply to hear it; save it to the shelf to keep it.                                                  |
+| Empty platter              | `.display__empty`      | No record on the platter. Choose one above, pull one from the shelf, or drop a .deadwax file anywhere.                                |
+| Empty platter button       | `[data-goto="shelf"]`  | Go to the shelf                                                                                                                       |
+| Empty platter status       | `#status`              | Choose a record to put on.                                                                                                            |
+| Save key                   | `#save`                | Save to shelf                                                                                                                         |
+| Sleeve load action         | `[data-action="load"]` | Put on                                                                                                                                |
+| Sleeve loaded              | `#status`              | “{name}” is on the platter.                                                                                                           |
+| Delete confirm             | `.sleeve__confirm`     | Take “{name}” off the shelf? This can’t be undone. · [Delete] [Keep it]                                                               |
+| Empty shelf                | `#shelf-empty`         | **The shelf is bare.** Save what’s on the platter, cut a take while it drifts, or bring a record in from a file or a Gist.            |
+| Import heading             | `#import-title`        | Bring a record in                                                                                                                     |
+| File read                  | `#status`              | Read “{file}”. It’s on the platter, needle up.                                                                                        |
+| Gist loaded                | `#gist-message`        | Loaded “{file}” from the Gist. It’s on the platter, needle up.                                                                        |
+| Drag-over veil             | `.drop-veil`           | Drop the needle…                                                                                                                      |
+| Storage unavailable        | `#storage-status`      | This browser isn’t letting Dead Wax save, so the shelf lasts only until you close the tab. You can still play, edit and export files. |
+
+Error messages (parse errors, Gist 404 and rate limits, file too large) stay
+literal and specific. Clarity beats theme there.
