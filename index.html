@@ -1,136 +1,491 @@
 <!doctype html>
+<!--
+  Homepage template. The cards, filters, count and logo are rendered at deploy
+  time by scripts/build-site.mjs from each experiment's own <head>.
+  Preview locally: node scripts/build-site.mjs && open _site/index.html
+-->
 <html lang="en-AU">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <meta
       name="description"
       content="Small web experiments and useful browser tools by Andrew Tennikoff."
     />
-    <meta name="theme-color" content="#121816" />
+    <meta name="theme-color" content="#fbf8f0" />
+    <meta name="apple-mobile-web-app-title" content="Vibes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
     <title>Vibes · Browser tools and experiments</title>
     <style>
       :root {
-        color-scheme: dark;
-        --paper: #121816;
-        --surface: #1b2420;
-        --raised: #24342b;
-        --ink: #e6eee8;
-        --muted: #a8b8ad;
-        --line: #3a4b40;
-        --accent: #8bd5a8;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color-scheme: light;
+        --desk: #c9d7c9;
+        --desk-dot: #b3c5b4;
+        --win: #fbf8f0;
+        --card: #fff;
+        --ink: #1f2a24;
+        --muted: #4f5b53;
+        --rule: #d8dacd;
+        --accent: #2a6e4c;
+        font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
         color: var(--ink);
-        background: var(--paper);
+        background: var(--desk);
       }
       * {
         box-sizing: border-box;
       }
       body {
         margin: 0;
+        min-height: 100dvh;
+        background:
+          radial-gradient(var(--desk-dot) 1px, transparent 1.5px) 0 0 / 6px 6px,
+          var(--desk);
       }
-      main {
-        max-width: 900px;
-        margin: auto;
-        padding: 80px 24px 32px;
+      [hidden] {
+        display: none !important;
       }
-      .eyebrow {
-        font-size: 0.75rem;
-        letter-spacing: 0.14em;
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+
+      /* Menu bar */
+      .menubar {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        padding: calc(env(safe-area-inset-top) + 6px)
+          calc(env(safe-area-inset-right) + 14px) 6px
+          calc(env(safe-area-inset-left) + 14px);
+        background: var(--win);
+        border-bottom: 2px solid var(--ink);
+        font-size: 0.9rem;
+      }
+      .menubar .logo {
+        display: flex;
+        color: var(--accent);
+      }
+      .menubar h1 {
+        margin: 0;
+        font-size: 1em;
+      }
+      .menubar .clock {
+        margin-left: auto;
         font-weight: 600;
+        font-variant-numeric: tabular-nums;
       }
-      h1 {
-        font-size: clamp(3.5rem, 12vw, 6rem);
-        letter-spacing: -0.07em;
-        margin: 20px 0 12px;
-        line-height: 1;
-        font-weight: 650;
+
+      /* Window */
+      .window {
+        max-width: 1040px;
+        margin: 28px auto;
+        background: var(--win);
+        border: 2px solid var(--ink);
+        border-radius: 10px;
+        box-shadow: 6px 6px 0 var(--ink);
+        overflow: hidden;
       }
-      .intro {
+      .titlebar {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-bottom: 2px solid var(--ink);
+        background: repeating-linear-gradient(
+          var(--win) 0 2px,
+          #d9dccf 2px 4px
+        );
+      }
+      .titlebar::before,
+      .titlebar::after {
+        content: "";
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--ink);
+        border-radius: 4px;
+        background: var(--win);
+      }
+      .titlebar h2 {
+        margin: 0 auto;
+        padding: 0 10px;
+        background: var(--win);
+        font-size: 1rem;
+      }
+
+      /* Toolbar */
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 16px;
+        align-items: center;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--rule);
+        font-size: 0.8rem;
         color: var(--muted);
-        line-height: 1.7;
-        max-width: 440px;
-        margin-bottom: 48px;
       }
-      .tool {
-        display: block;
-        max-width: 500px;
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 26px;
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        flex: 1;
+      }
+      .chip {
+        font: inherit;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--ink);
+        background: var(--win);
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        padding: 2px 10px;
+        cursor: pointer;
+      }
+      .chip[aria-pressed="true"] {
+        background: var(--ink);
+        color: var(--win);
+      }
+      .sort {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .sort select {
+        font: inherit;
+        font-weight: 600;
+        color: var(--ink);
+        background: var(--win);
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        padding: 2px 6px;
+      }
+      .chip:focus-visible,
+      .sort select:focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      /* Cards */
+      .cards {
+        list-style: none;
+        margin: 0;
+        padding: 18px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 14px;
+      }
+      .card {
+        display: grid;
+        grid-template-columns: 56px 1fr;
+        gap: 14px;
+        align-items: start;
+        height: 100%;
+        padding: 14px;
+        border: 2px solid var(--ink);
+        border-radius: 12px;
+        background: var(--card);
         color: inherit;
-        background: var(--surface);
         text-decoration: none;
+        box-shadow: 3px 3px 0 var(--ink);
+        transition:
+          transform 120ms,
+          box-shadow 120ms;
       }
-      .tool:hover {
-        background: var(--raised);
+      a.card:hover,
+      a.card:focus-visible {
+        transform: translate(-2px, -2px);
+        box-shadow: 5px 5px 0 var(--ink);
+        outline: none;
       }
-      .tool:focus-visible {
-        outline: 3px solid #efb75e;
-        outline-offset: 4px;
+      a.card:focus-visible {
+        background: #eef7f1;
+      }
+      .icon {
+        width: 56px;
+        height: 56px;
+        display: grid;
+        place-items: center;
+        border: 2px solid var(--ink);
+        border-radius: 12px;
+        background: var(--tile);
+        overflow: hidden;
+      }
+      .icon img {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+      }
+      .card h2 {
+        margin: 2px 0 4px;
+        font-size: 1rem;
+      }
+      .card p {
+        margin: 0;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        color: var(--muted);
+      }
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .tags:not(:has(.tag:not([hidden]))) {
+        display: none;
       }
       .tag {
-        font-size: 0.7rem;
-        letter-spacing: 0.1em;
-        color: var(--accent);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 1px 8px;
+        border-radius: 999px;
+        background: var(--tile);
+        border: 1px solid rgb(0 0 0 / 0.15);
       }
-      h2 {
-        font-size: 1.35rem;
-        margin: 18px 0 10px;
+      .tag.fresh {
+        color: #fff;
+        background: var(--accent);
+        border-color: var(--accent);
+        text-transform: uppercase;
       }
-      .tool p {
-        color: var(--muted);
-        font-size: 0.95rem;
-        line-height: 1.7;
-        margin: 0;
-      }
-      .open {
+      .meta {
         display: block;
-        margin-top: 24px;
-        color: var(--accent);
-        font-size: 0.85rem;
-      }
-      footer {
-        margin-top: 64px;
-        padding-top: 20px;
-        border-top: 1px solid var(--line);
+        margin-top: 8px;
+        font-size: 0.72rem;
         color: var(--muted);
+      }
+      .ghost {
+        border-style: dashed;
+        box-shadow: none;
+        background: transparent;
+        color: var(--muted);
+      }
+      .ghost .icon {
+        border-style: dashed;
+        background: transparent;
+        font-size: 1.6rem;
+      }
+      .ghost .icon span {
+        animation: blink 1.2s steps(1) infinite;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+      .empty {
+        margin: 0;
+        padding: 0 18px 18px;
+        color: var(--muted);
+      }
+
+      footer {
+        text-align: center;
         font-size: 0.8rem;
+        color: var(--muted);
+        padding: 0 16px calc(env(safe-area-inset-bottom) + 32px);
       }
       footer a {
         color: var(--accent);
-        text-underline-offset: 3px;
+      }
+
+      @media (max-width: 600px) {
+        .window {
+          margin: 0 0 24px;
+          border-radius: 0;
+          border-inline: 0;
+          box-shadow: none;
+        }
+        .menubar .subtitle {
+          display: none;
+        }
+        .toolbar {
+          padding: 8px 12px;
+        }
+        .chips {
+          order: 2;
+          flex: 1 0 100%;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          scrollbar-width: none;
+          margin: 0 -12px;
+          padding: 2px 12px;
+        }
+        .count {
+          margin-left: auto;
+        }
+        .cards {
+          grid-template-columns: 1fr;
+          padding: 12px max(12px, env(safe-area-inset-right)) 12px
+            max(12px, env(safe-area-inset-left));
+          gap: 10px;
+        }
+        .card {
+          box-shadow: 2px 2px 0 var(--ink);
+          padding: 12px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .ghost .icon span {
+          animation: none;
+        }
+        .card {
+          transition: none;
+        }
       }
     </style>
   </head>
   <body>
-    <main>
-      <div class="eyebrow">BROWSER TOOLS AND EXPERIMENTS</div>
+    <header class="menubar">
+      <span class="logo">
+        <!-- build:logo -->
+        <!-- /build:logo -->
+      </span>
       <h1>Vibes</h1>
-      <p class="intro">Web experiments and browser-based utilities.</p>
-      <a class="tool" href="cidr/">
-        <span class="tag">NETWORKING</span>
-        <h2>CIDR helper</h2>
-        <p>
-          Calculate IPv4 and IPv6 address ranges and subnet sizes. Split
-          networks into smaller subnets.
-        </p>
-        <span class="open">Open calculator ↗</span>
-      </a>
-      <a class="tool" href="deadwax/" style="margin-top: 18px">
-        <span class="tag">GENERATIVE MUSIC</span>
-        <h2>Dead Wax</h2>
-        <p>
-          A browser-only lo-fi jazz loop player. Write a plain-text Pressing,
-          let it drift, and bring it home.
-        </p>
-        <span class="open">Enter the listening room ↗</span>
-      </a>
-      <footer>
-        By Andrew Tennikoff ·
-        <a href="https://github.com/atenni/vibes">Source on GitHub</a>
-      </footer>
+      <span class="subtitle">Browser tools and experiments</span>
+      <time class="clock" id="clock"></time>
+    </header>
+
+    <main class="window" aria-labelledby="window-title">
+      <div class="titlebar"><h2 id="window-title">Experiments</h2></div>
+      <div class="toolbar">
+        <div class="chips" id="filters" role="group" aria-label="Filter by tag">
+          <!-- build:filters -->
+          <!-- /build:filters -->
+        </div>
+        <label class="sort">
+          Sort
+          <select id="sort-by">
+            <option value="updated">Recently updated</option>
+            <option value="name">A–Z</option>
+          </select>
+        </label>
+        <span class="count" id="count" aria-live="polite">
+          <!-- build:count -->
+          <!-- /build:count -->
+        </span>
+      </div>
+      <ul class="cards" id="cards">
+        <!-- build:cards -->
+        <!-- /build:cards -->
+        <li data-ghost>
+          <div class="card ghost">
+            <span class="icon" aria-hidden="true"><span>▮</span></span>
+            <div class="body">
+              <h2>Next experiment</h2>
+              <p>Something new is on the workbench. Check back soon.</p>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <p class="empty" id="empty" hidden>No experiments with that tag yet.</p>
     </main>
+
+    <footer>
+      By Andrew Tennikoff ·
+      <a href="https://github.com/atenni/vibes">Source on GitHub</a>
+    </footer>
+
+    <script type="module">
+      const FRESH_DAYS = 14;
+      const cards = document.getElementById("cards");
+      const filters = document.getElementById("filters");
+      const sortBy = document.getElementById("sort-by");
+      const count = document.getElementById("count");
+      const empty = document.getElementById("empty");
+      const clock = document.getElementById("clock");
+      const items = () => [...cards.querySelectorAll("li:not([data-ghost])")];
+      const params = new URL(location.href).searchParams;
+
+      // "Updated" badge relative to today, not to the deploy.
+      const freshSince = Date.now() - FRESH_DAYS * 86_400_000;
+      for (const li of items()) {
+        li.querySelector(".fresh").hidden =
+          Number(li.dataset.updated) < freshSince;
+      }
+
+      function applyFilter(tag) {
+        let shown = 0;
+        for (const button of filters.querySelectorAll(".chip")) {
+          button.setAttribute("aria-pressed", button.dataset.tag === tag);
+        }
+        for (const li of items()) {
+          li.hidden = tag !== "" && !li.dataset.tags.split(" ").includes(tag);
+          if (!li.hidden) shown++;
+        }
+        const total = items().length;
+        count.textContent =
+          shown === total
+            ? `${total} experiment${total === 1 ? "" : "s"}`
+            : `${shown} of ${total}`;
+        empty.hidden = shown > 0;
+        updateUrl({ tag });
+      }
+
+      function applySort() {
+        const key = sortBy.value;
+        const sorted = items().sort((a, b) =>
+          key === "name"
+            ? a.dataset.name.localeCompare(b.dataset.name, "en-AU")
+            : b.dataset.updated - a.dataset.updated,
+        );
+        cards.prepend(...sorted); // The ghost card stays last.
+        updateUrl({ sort: key === "updated" ? "" : key });
+      }
+
+      function updateUrl(changes) {
+        const url = new URL(location.href);
+        for (const [key, value] of Object.entries(changes)) {
+          if (value) url.searchParams.set(key, value);
+          else url.searchParams.delete(key);
+        }
+        history.replaceState(null, "", url);
+      }
+
+      filters.addEventListener("click", (event) => {
+        const button = event.target.closest(".chip");
+        if (button) applyFilter(button.dataset.tag);
+      });
+      sortBy.addEventListener("change", applySort);
+
+      if (params.get("sort") === "name") sortBy.value = "name";
+      applySort();
+      const initialTag = params.get("tag") ?? "";
+      applyFilter(
+        filters.querySelector(`.chip[data-tag="${CSS.escape(initialTag)}"]`)
+          ? initialTag
+          : "",
+      );
+
+      const tick = () => {
+        const now = new Date();
+        clock.dateTime = now.toISOString();
+        clock.textContent = now.toLocaleTimeString("en-AU", {
+          hour: "numeric",
+          minute: "2-digit",
+        });
+      };
+      tick();
+      setInterval(tick, 10_000);
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js").catch(() => {});
+      }
+    </script>
   </body>
 </html>
