@@ -8,6 +8,9 @@ contacts only `https://api.github.com/gists/{id}`.
 Open [the player](index.html), select an example and press **Play**. It also
 works as a standalone downloaded `index.html`, without a server or build step.
 Browser storage availability for `file:` URLs varies; file export always works.
+On iOS, Play requests a media playback audio session where supported, so Silent
+Mode does not mute the music. Media volume and the selected audio output still
+apply.
 
 ## A complete short example
 
@@ -372,9 +375,11 @@ Or open [tests.html](tests.html). The same assertions cover valid examples,
 invalid input, source positions, chord decoding, stable canonical round-trips,
 embedded/file parity (Node), seeded planning, captures, drift bounds, Hold and
 Return home. The browser test page embeds the actual app but never starts audio.
-The Node runner additionally exercises the real inline transport with a silent
-rack and deterministic clock: mid-bar resume, speculative scheduling rollback,
-PRNG preservation, seeking, cue cancellation, looping, interruption and rapid
+The Node runner checks that the real audio rack requests playback routing before
+opening its context, with fallbacks for missing or rejected Audio Session APIs.
+It additionally exercises the real inline transport with a silent rack and
+deterministic clock: mid-bar resume, speculative scheduling rollback, PRNG
+preservation, seeking, cue cancellation, looping, interruption and rapid
 pause/resume resource cleanup.
 
 ## Keyboard shortcuts

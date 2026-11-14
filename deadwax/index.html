@@ -4332,6 +4332,15 @@
       /* All sources, including room/record effects, are made here. No sampled assets. */
       class AudioRack {
         constructor(seed, volume) {
+          // iOS otherwise treats Web Audio as ambient sound, muted by Silent Mode.
+          // Request media playback before opening the context, on the Play gesture.
+          if (globalThis.navigator?.audioSession) {
+            try {
+              navigator.audioSession.type = "playback";
+            } catch {
+              // An unavailable session policy must not prevent ordinary playback.
+            }
+          }
           this.ctx = new AudioContext();
           const c = this.ctx;
           this.random = DW.rng(seed ^ 0xa5a5a5a5);
