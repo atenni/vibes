@@ -11,8 +11,9 @@ current list. Experiments may have their own README with usage and test notes.
 ## Adding an experiment
 
 Create a top-level folder with an `index.html`. That is all; it appears on the
-homepage at the next deploy. Every field has a default, and these standard
-`<head>` tags improve the card:
+homepage at the next deploy. Split the rest into whatever CSS files and ES
+modules suit the experiment; there is no single-file requirement. Every field
+has a default, and these standard `<head>` tags improve the card:
 
 | Field       | Source                                                                                  | Default            |
 | ----------- | --------------------------------------------------------------------------------------- | ------------------ |

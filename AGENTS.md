@@ -8,6 +8,11 @@
   infrastructure must earn its complexity.
 - Target the latest browsers and Node. Use native ESM and, when useful, Node's
   native TypeScript type stripping; avoid legacy compatibility shims.
+- Split an experiment into as many files as make it easy to read, test and edit:
+  markup in `index.html`, styles in CSS files and logic in ES modules that tests
+  import directly. Keep pure logic free of DOM and audio so Node can test it.
+  There is no single-file requirement; experiments are served over HTTP, not
+  opened from `file:` URLs.
 - Read the affected project's documentation and run its tests. Run repository
   formatting checks with `uvx pre-commit run --all-files`.
 - Use Conventional Commits with abbreviated project scopes where relevant: `dw`
