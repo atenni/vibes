@@ -1,0 +1,57 @@
+deadwax 1
+title Bus window, 7:40 am
+tempo 88
+meter 4/4
+key F major
+swing 0.3
+bars 4
+seed 104729
+
+; Boom-bap head nod: Rhodes over a lazy, syncopated kick.
+chords Bbmaj9:4 Am7:4 Gm9:4 C7sus4:4
+bass Bb2:1.5 Bb2:0.5 -:1 F2:1 A2:1.5 A2:0.5 -:1 E2:1 G2:1.5 G2:0.5 -:1 D2:1 C2:1.5 C2:0.5 -:1 G2:0.5 A2:0.5
+melody -:1 F5:0.5 E5:0.5 D5:1 C5:1 -:2 A4:1.5 C5:0.5
+kick X... ...x ..X. .... | X... ...x ..x. ..g.
+snare .... X... .... X..g | .... X... .... X...
+hats x.x. x.xg x.x. x.x.
+
+instrument chords epiano
+instrument bass upright
+instrument melody felt
+level chords 0.7
+level bass 0.85
+level melody 0.4
+level drums 0.75
+
+dimension humanise 0.3
+dimension tone 0.4
+dimension saturation 0.4
+dimension wow 0.3
+dimension reverb 0.2
+
+texture vinyl 0.2
+texture surface 0.05
+texture tape 0.08
+texture rumble 0.04
+texture rain 0
+texture room 0.02
+texture hum 0.02
+
+drift rate 0.35
+drift tempo 80 94
+drift swing 0.18 0.4
+drift humanise 0.1 0.6
+drift busyness 0.1 0.8
+drift embellish 0 0.6
+drift density 0.3 0.8
+drift register 0.25 0.7
+drift rhythm 0 0.5
+drift timbre 0 0.6
+drift tone 0.2 0.65
+drift saturation 0.25 0.7
+drift wow 0.15 0.6
+drift reverb 0.1 0.45
+drift balance 0.3 0.7
+drift arrangement 0 0.3
+drift vinyl 0 0.5
+drift tape 0 0.3

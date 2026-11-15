@@ -1,0 +1,57 @@
+deadwax 1
+title Rewind
+tempo 72
+meter 4/4
+key A minor
+swing 0.22
+bars 2
+seed 271828
+
+; A two-chord cassette loop: felt piano, soft synth bass, music-box bells.
+chords Fmaj9:4 Em9:4
+bass F2:3.5 -:0.5 E2:3 -:0.5 G2:0.5
+melody -:2 E5:1 G5:1 B4:2 -:2
+kick X... .... ..x. .... | X... ..g. .x.. ..g.
+snare .... x... .... x...
+hats x..g x.x. x..g x.x.
+
+instrument chords felt
+instrument bass pad
+instrument melody vibes
+level chords 0.75
+level bass 0.9
+level melody 0.3
+level drums 0.6
+
+dimension humanise 0.25
+dimension density 0.45
+dimension tone 0.34
+dimension saturation 0.4
+dimension wow 0.45
+dimension reverb 0.3
+
+texture vinyl 0.25
+texture surface 0.06
+texture tape 0.12
+texture rumble 0.05
+texture rain 0.35
+texture room 0.03
+texture hum 0.02
+
+drift rate 0.3
+drift tempo 66 78
+drift swing 0.1 0.34
+drift humanise 0.1 0.5
+drift busyness 0.05 0.6
+drift embellish 0 0.5
+drift density 0.25 0.7
+drift register 0.2 0.65
+drift timbre 0 0.8
+drift tone 0.18 0.55
+drift saturation 0.25 0.65
+drift wow 0.25 0.7
+drift reverb 0.15 0.5
+drift arrangement 0 0.35
+drift vinyl 0.1 0.5
+drift tape 0.05 0.3
+drift rain 0.1 0.6
