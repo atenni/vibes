@@ -64,11 +64,24 @@ node --test cidr/      # one experiment
 - copies the repository, except tooling (`llm/`, `tmp/`, `scripts/`, dotfiles,
   `README.md`, `AGENTS.md`) and Node test files;
 - renders the homepage cards, tag filters and count into `index.html`;
-- writes `experiments.json`;
+- writes `experiments.json`, including the SHA and GitHub link of the last
+  commit to touch each experiment;
 - generates the home-screen PNG icons and versions the service worker cache.
 
 Experiment folders are published unchanged. The site is an installable PWA: on
 iOS, Share → Add to Home Screen.
+
+Each card shows the short SHA of the experiment's last commit. To show it in an
+experiment's footer too, linked to the commit on GitHub, add:
+
+```html
+<a data-version hidden></a>
+<script type="module" src="../version.mjs"></script>
+```
+
+[`version.mjs`](version.mjs) fills the link from `experiments.json` and adds a
+`·` separator before it. Both stay hidden when serving the repository rather
+than `_site/`.
 
 ## Formatting
 

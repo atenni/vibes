@@ -41,7 +41,11 @@ field has a default; never make the build fail for missing metadata.
   icon.
 - **Icon**: `icon.svg` or `icon.png` in the folder, else the page's own
   `<link rel="icon">` if it is a `data:` URI or a file inside the folder.
-- **Updated** date and sort order: the last git commit touching the folder.
+- **Updated** date, short SHA and sort order: the last git commit touching the
+  folder. Experiments can show the same SHA in their footer, linked to GitHub,
+  with `<a data-version hidden></a>` and
+  `<script type="module" src="../version.mjs"></script>`. It is optional, but
+  both current experiments do it.
 - **Unlisted**: `<meta name="robots" content="noindex">` hides it from the
   homepage; the folder is still deployed.
 

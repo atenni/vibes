@@ -16,6 +16,7 @@ import {
   bitmapPng,
   buildSite,
   collectExperiments,
+  commitUrl,
   discoverExperiments,
   escapeHtml,
   fillTemplate,
@@ -158,6 +159,14 @@ test("experiments sort by git date, newest first", () => {
         ["old", "2026-01-01T00:00:00.000Z"],
       ],
     );
+    // Each experiment carries the SHA of the last commit touching it.
+    const head = execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: root,
+      encoding: "utf8",
+    }).trim();
+    assert.equal(experiments[0].sha, head);
+    assert.match(experiments[1].sha, /^[0-9a-f]{40}$/);
+    assert.notEqual(experiments[1].sha, head);
   } finally {
     rmSync(root, { recursive: true });
   }
@@ -176,7 +185,26 @@ test("cards escape metadata and omit empty descriptions", () => {
   assert.doesNotMatch(card, /<p>/);
   assert.match(card, /a&amp;b/);
   assert.match(card, /15 Nov 2026/); // Sydney time.
+  assert.doesNotMatch(card, /<code>/); // No SHA, no version.
   assert.equal(escapeHtml(`'`), "&#39;");
+});
+
+test("cards show the short SHA when there is one", () => {
+  const card = renderCard({
+    slug: "x",
+    name: "X",
+    description: "",
+    tags: [],
+    icon: null,
+    updated: new Date("2026-11-14T21:00:00Z"),
+    sha: "8c0e8c2f1a6b9d3e4c5b6a7980f1e2d3c4b5a697",
+  });
+  assert.match(card, /· <code>8c0e8c2<\/code><\/span>/);
+  assert.equal(
+    commitUrl("abc123"),
+    "https://github.com/atenni/vibes/commit/abc123",
+  );
+  assert.equal(commitUrl(null), null);
 });
 
 test("fillTemplate replaces only known regions", () => {
@@ -233,6 +261,9 @@ test("buildSite renders the homepage and copies only deployable files", () => {
     );
     assert.equal(experiment.name, "App");
     assert.equal("listed" in experiment, false);
+    // Not a git checkout: no SHA, no commit link, but the keys exist.
+    assert.equal(experiment.sha, null);
+    assert.equal(experiment.url, null);
   } finally {
     rmSync(root, { recursive: true });
   }

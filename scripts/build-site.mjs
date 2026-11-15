@@ -33,6 +33,8 @@ const SKIP_ROOT_FILES = new Set(["README.md", "AGENTS.md"]);
 const NODE_TEST_FILE = /^(test|test-.+|.+[.\-_]test)\.[cm]?[jt]s$/;
 
 const TIME_ZONE = "Australia/Sydney";
+// Commit links on the homepage and in experiment footers point here.
+const REPO_URL = "https://github.com/atenni/vibes";
 
 // ---------------------------------------------------------------- metadata
 
@@ -153,19 +155,33 @@ export function resolveIcon(root, slug, iconHref) {
     : null;
 }
 
-/** Author date of the last commit touching the folder, else index.html mtime. */
-export function lastUpdated(root, slug) {
+/**
+ * The last commit touching the folder: its author date and full SHA. Outside
+ * a git checkout, or for uncommitted folders, the date falls back to the
+ * index.html mtime and the SHA is null.
+ */
+export function lastCommit(root, slug) {
   try {
-    const output = execFileSync(
+    const [sha, date] = execFileSync(
       "git",
-      ["log", "-1", "--format=%aI", "--", slug],
+      ["log", "-1", "--format=%H %aI", "--", slug],
       { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
-    ).trim();
-    if (output) return new Date(output);
+    )
+      .trim()
+      .split(" ");
+    if (sha && date) return { sha, updated: new Date(date) };
   } catch {
     // Not a git checkout, or git is unavailable: fall back to the file system.
   }
-  return statSync(path.join(root, slug, "index.html")).mtime;
+  return {
+    sha: null,
+    updated: statSync(path.join(root, slug, "index.html")).mtime,
+  };
+}
+
+/** Link to a commit on GitHub, or null without one. */
+export function commitUrl(sha) {
+  return sha ? `${REPO_URL}/commit/${sha}` : null;
 }
 
 export function collectExperiments(root) {
@@ -177,7 +193,7 @@ export function collectExperiments(root) {
         slug,
         ...metadata,
         icon: resolveIcon(root, slug, iconHref),
-        updated: lastUpdated(root, slug),
+        ...lastCommit(root, slug),
       };
     })
     .filter((experiment) => experiment.listed)
@@ -299,7 +315,7 @@ export function renderCard(experiment) {
               <h2>${escapeHtml(experiment.name)}</h2>
               ${description}
               <div class="tags"><span class="tag fresh" hidden>Updated</span>${tags}</div>
-              <span class="meta">Updated <time datetime="${experiment.updated.toISOString()}">${dateFormat.format(experiment.updated)}</time></span>
+              <span class="meta">Updated <time datetime="${experiment.updated.toISOString()}">${dateFormat.format(experiment.updated)}</time>${experiment.sha ? ` · <code>${experiment.sha.slice(0, 7)}</code>` : ""}</span>
             </div>
           </a>
         </li>`;
@@ -429,7 +445,10 @@ export function buildSite(root = ROOT, out = path.join(root, "_site")) {
   writeFileSync(
     path.join(out, "experiments.json"),
     `${JSON.stringify(
-      experiments.map(({ listed, ...experiment }) => experiment),
+      experiments.map(({ listed, ...experiment }) => ({
+        ...experiment,
+        url: commitUrl(experiment.sha),
+      })),
       null,
       2,
     )}\n`,
