@@ -54,4 +54,7 @@ field has a default; never make the build fail for missing metadata.
   `<!-- /build:name -->` is generated. Preview with
   `node scripts/build-site.mjs`, then serve `_site/`.
 - The site is an installable PWA scoped to `/`. In standalone mode iOS has no
-  back button, so each experiment should link back to the homepage (`../`).
+  back button, so every experiment's `<footer>` must contain a link to the
+  homepage (`<a href="../">`). Wording, placement within the footer and styling
+  are up to the experiment (for example `← Vibes`); extra header links are fine.
+  `scripts/back-link.test.mjs` enforces this.

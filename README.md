@@ -25,8 +25,9 @@ has a default, and these standard `<head>` tags improve the card:
 | Listed      | Hide with `<meta name="robots" content="noindex">`                                      | Listed             |
 
 Folders starting with `.` or `_`, and `llm/`, `tmp/` and `scripts/`, are never
-experiments. Link back to the homepage (`../`) from each experiment: the
-installed app has no browser back button on iOS.
+experiments. Every experiment's `<footer>` links back to the homepage with
+`<a href="../">` (wording and styling are up to the experiment): the installed
+app has no browser back button on iOS. `scripts/back-link.test.mjs` checks it.
 
 ## Local development
 
