@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
+import { FIXTURE } from "./tests.mjs";
 
 // Exercise the real inline transport with a deterministic clock and a silent rack.
 // Browser smoke tests separately exercise the procedural Web Audio sources.
@@ -64,7 +65,7 @@ function harness({ resume = async () => {} } = {}) {
   }
   sandbox.FakeRack = FakeRack;
   vm.runInContext("AudioRack = FakeRack;", sandbox);
-  const song = DW.parse(vm.runInContext("EXAMPLES[0].text", sandbox)).song;
+  const song = DW.parse(FIXTURE).song;
   const settings = {
     seed: song.seed,
     volume: 0.65,

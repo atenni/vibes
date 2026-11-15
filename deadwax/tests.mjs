@@ -1,4 +1,10 @@
 /* Shared assertions: Node runner and browser test page. */
+
+/* A fixed four-bar score, independent of the house records. Several tests edit
+   specific tokens in it or assume its tempo, length and drift bounds. */
+export const FIXTURE =
+  "deadwax 1\ntitle Window seat, 1:17 am\ntempo 72\nmeter 4/4\nkey C minor\nswing 0.18\nbars 4\nseed 104729\n\nchords Dm7b5:4 G7alt:4 Cm9:4 Abmaj7#11:4\nbass auto root-fifth\nmelody -:2 F5:0.5 Eb5:0.5 D5:1 -:2 B4:1 Ab4:1 G4:3 -:1 Eb5:1 D5:1 C5:2\nkick X... ..g. x... ....\nrim .... x... .... x..g\nhats x.g. x.g. x.g. x.gg\nbrushes .... .... g... ....\n\ninstrument chords epiano\ninstrument bass upright\ninstrument melody vibes\nlevel chords 0.7\nlevel bass 0.8\nlevel melody 0.4\nlevel drums 0.65\n\ntexture vinyl 0.12\ntexture surface 0.04\ntexture tape 0.05\ntexture rumble 0.06\ntexture rain 0.2\ntexture room 0.03\ntexture hum 0.02\n\ndrift rate 0.35\ndrift tempo 58 100\ndrift swing 0 0.4\ndrift humanise 0 0.8\ndrift busyness 0.05 0.9\ndrift embellish 0 0.8\ndrift density 0.1 0.95\ndrift register 0.2 0.8\ndrift substitution 0 0.45\ndrift rhythm 0 0.7\ndrift timbre 0 1\ndrift tone 0.1 0.9\ndrift saturation 0.05 0.8\ndrift wow 0 0.75\ndrift reverb 0.1 0.75\ndrift balance 0.2 0.8\ndrift arrangement 0 0.45\ndrift vinyl 0 0.5\ndrift tape 0 0.4\ndrift surface 0 0.2\ndrift rumble 0 0.2\ndrift rain 0 0.5\ndrift room 0 0.3\ndrift hum 0 0.2\n";
+
 export function runDeadWaxTests(DW, examples) {
   const results = [];
   const assert = (condition, message = "Assertion failed") => {
@@ -17,7 +23,7 @@ export function runDeadWaxTests(DW, examples) {
     assert(!p.errors.length, JSON.stringify(p.errors));
     return p.song;
   };
-  const source = examples[0].text;
+  const source = FIXTURE;
   for (const example of examples) {
     test(`${example.file}: valid and stable canonical round-trip`, () => {
       const song = valid(example.text);
