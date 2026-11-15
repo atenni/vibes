@@ -1,0 +1,58 @@
+deadwax 1
+title Rain on a tin roof
+tempo 64
+meter 4/4
+key Db major
+swing 0.14
+bars 16
+seed 314159
+
+; A long, slow loop. The second half turns through the minor iv on the way home.
+chords Dbmaj9:8 Bbm9:8 Gbmaj9:8 Ab7sus4:8 Dbmaj9:8 Bbm9:8 Gbmaj9:8 Gbm6:4 Ab7sus4:4
+bass auto roots
+melody -:4 F5:2 Eb5:2 Db5:6 -:2 -:4 C5:2 Bb4:2 Ab4:8
+kick X... .... .x.. .... | X... ..g. ..x. ....
+rim .... x... .... x... | .... x... .... x..g
+hats x.g. x.g. x.g. x.g.
+brushes .... .... .... ..g. | .... g... .... ....
+
+instrument chords pad
+instrument bass upright
+instrument melody felt
+level chords 0.65
+level bass 0.8
+level melody 0.5
+level drums 0.55
+
+dimension humanise 0.25
+dimension density 0.6
+dimension tone 0.32
+dimension saturation 0.3
+dimension wow 0.3
+dimension reverb 0.42
+
+texture vinyl 0.12
+texture surface 0.04
+texture tape 0.06
+texture rumble 0.06
+texture rain 0.45
+texture room 0.08
+texture hum 0.02
+
+drift rate 0.25
+drift tempo 58 70
+drift swing 0.05 0.28
+drift humanise 0.1 0.5
+drift busyness 0 0.6
+drift embellish 0 0.6
+drift density 0.35 0.9
+drift register 0.25 0.7
+drift timbre 0 1
+drift tone 0.15 0.5
+drift saturation 0.15 0.55
+drift wow 0.15 0.55
+drift reverb 0.25 0.7
+drift balance 0.3 0.8
+drift arrangement 0 0.4
+drift rain 0.2 0.7
+drift room 0 0.25

@@ -1,0 +1,58 @@
+deadwax 1
+title Corner store neon
+tempo 98
+meter 4/4
+key A dorian
+swing 0.2
+bars 8
+seed 161803
+
+; Bouncy and bright: a dorian vamp that opens up in the second half.
+chords Am9:4 D9:4 Am9:4 D9:4 Cmaj9:4 Bm7:4 Fmaj7#11:4 E7sus4:4
+bass auto root-fifth
+melody E5:2 -:1 D5:0.5 C5:0.5 A4:3 -:1 G5:1.5 E5:0.5 -:1 D5:1 E5:4
+kick X... ..x. ..x. .... | X... ..x. .... .x..
+snare .... X... .... X... | .... X... .... X..g
+hats x.xx x.x. x.xx x.xg
+perc .... .... ..g. .... | .... .... .... ..g.
+
+instrument chords vibes
+instrument bass upright
+instrument melody felt
+level chords 0.65
+level bass 0.85
+level melody 0.35
+level drums 0.75
+
+dimension humanise 0.2
+dimension busyness 0.4
+dimension tone 0.52
+dimension saturation 0.35
+dimension wow 0.2
+
+texture vinyl 0.15
+texture surface 0.04
+texture tape 0.06
+texture rumble 0.03
+texture rain 0
+texture room 0.02
+texture hum 0.03
+
+drift rate 0.4
+drift tempo 90 104
+drift swing 0.1 0.32
+drift humanise 0.05 0.5
+drift busyness 0.2 0.9
+drift embellish 0 0.7
+drift density 0.3 0.9
+drift register 0.3 0.75
+drift substitution 0 0.15
+drift rhythm 0 0.7
+drift timbre 0 0.6
+drift tone 0.3 0.8
+drift saturation 0.15 0.6
+drift wow 0.05 0.45
+drift reverb 0.1 0.4
+drift balance 0.3 0.75
+drift arrangement 0 0.3
+drift vinyl 0 0.4

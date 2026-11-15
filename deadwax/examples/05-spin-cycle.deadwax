@@ -1,0 +1,60 @@
+deadwax 1
+title Spin cycle
+tempo 80
+meter 4/4
+key C minor
+swing 0.34
+bars 1
+seed 57721
+
+; A one-bar sample chop, crushed and drunk. Drift keeps it turning.
+chords Abmaj9:2 Gm7:2
+bass Ab2:1.5 Ab2:0.5 G2:1.5 D2:0.5
+melody Eb5:0.5 C5:0.5 G4:1 D5:0.5 Bb4:0.5 -:1
+kick X... ..x. .x.. ..g.
+snare .... X..g .... X...
+hats x.xg x.x. x.xg x.xx
+perc .... ..g. .... .g..
+
+instrument chords epiano
+instrument bass upright
+instrument melody vibes
+level chords 0.7
+level bass 0.85
+level melody 0.3
+level drums 0.8
+
+dimension humanise 0.4
+dimension tone 0.42
+dimension saturation 0.5
+dimension wow 0.35
+dimension crush 0.25
+dimension reverb 0.18
+
+texture vinyl 0.3
+texture surface 0.08
+texture tape 0.08
+texture rumble 0.04
+texture rain 0
+texture room 0.03
+texture hum 0.04
+
+drift rate 0.5
+drift tempo 74 86
+drift swing 0.22 0.45
+drift humanise 0.2 0.7
+drift busyness 0.1 0.9
+drift embellish 0 0.7
+drift density 0.25 0.85
+drift register 0.25 0.7
+drift rhythm 0 0.6
+drift timbre 0 0.6
+drift tone 0.2 0.6
+drift saturation 0.3 0.75
+drift wow 0.15 0.65
+drift crush 0 0.5
+drift reverb 0.08 0.4
+drift balance 0.25 0.75
+drift arrangement 0 0.35
+drift vinyl 0.1 0.55
+drift hum 0 0.12

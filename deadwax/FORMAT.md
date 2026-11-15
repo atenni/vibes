@@ -362,15 +362,16 @@ The five house records are put on the shelf the first time Dead Wax opens in a
 browser. They are ordinary shelf entries: rename, edit or delete them freely.
 **Put the house records back** on the Shelf restores any that are missing.
 
-| File                                                 | Mood                            | Tempo / meter |
-| ---------------------------------------------------- | ------------------------------- | ------------- |
-| [Window seat](examples/01-window-seat.deadwax)       | Late-night rain, minor ii–V     | 72 / 4/4      |
-| [Sunday paper](examples/02-sunday-paper.deadwax)     | Warm felt keys, walking bass    | 86 / 4/4      |
-| [The last table](examples/03-last-table.deadwax)     | Smoky, swung minor changes      | 80 / 4/4      |
-| [Empty platform](examples/04-empty-platform.deadwax) | Sparse ambient pad, long chords | 60 / 4/4      |
-| [Three cups left](examples/05-three-cups.deadwax)    | Vibraphone jazz waltz           | 78 / 3/4      |
+| File                                                  | Mood                                         | Tempo / length |
+| ----------------------------------------------------- | -------------------------------------------- | -------------- |
+| [Bus window, 7:40 am](examples/01-bus-window.deadwax) | Boom-bap head nod, Rhodes, written bass line | 88 / 4 bars    |
+| [Rewind](examples/02-rewind.deadwax)                  | Two-chord cassette loop, wobbly tape, rain   | 72 / 2 bars    |
+| [Corner store neon](examples/03-corner-store.deadwax) | Bouncy dorian vamp that opens up halfway     | 98 / 8 bars    |
+| [Rain on a tin roof](examples/04-tin-roof.deadwax)    | Slow pads, heavy rain, a minute-long loop    | 64 / 16 bars   |
+| [Spin cycle](examples/05-spin-cycle.deadwax)          | One-bar crushed, drunk sample chop           | 80 / 1 bar     |
 
-Each is a complete format example with editable chords, grids and drift bounds.
+All are in 4/4. Each is a complete format example with editable chords, grids
+and drift bounds.
 
 ## Tests
 
