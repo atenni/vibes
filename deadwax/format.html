@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'self' 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="theme-color" content="#0c1011" />
+    <meta name="color-scheme" content="dark" />
+    <meta
+      name="description"
+      content="Reference for the .deadwax Pressing format, version 1."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23141a1b'/%3E%3Cpath d='M10.7 33.1A26 26 0 0 1 53.3 33.1' fill='none' stroke='%23e6e0d2' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M32 48L46.1 21.5' stroke='%23f2b35b' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='48' r='6' fill='%23e6e0d2'/%3E%3C/svg%3E"
+    />
+    <title>The Pressing format · Dead Wax</title>
+    <link rel="stylesheet" href="tokens.css" />
+    <style>
+      /* A plain reading page in Dead Wax colours. No scripts. */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        background: var(--c-room);
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        max-width: 46rem;
+        margin: 0 auto;
+        padding: var(--sp-6) var(--sp-4) var(--sp-10);
+        color: var(--c-ink);
+        font: 1rem / 1.6 var(--font-ui);
+      }
+      a {
+        color: var(--c-amber);
+        text-underline-offset: 3px;
+      }
+      :focus-visible {
+        outline: 2px solid var(--c-amber);
+        outline-offset: 2px;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+      .back {
+        font-family: var(--font-legend);
+        font-size: var(--fs-sm);
+        font-weight: 600;
+        letter-spacing: var(--track-legend);
+        text-transform: uppercase;
+        text-decoration: none;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--font-display);
+        font-weight: 500;
+        line-height: var(--lh-tight);
+        text-wrap: balance;
+      }
+      h1 {
+        margin: var(--sp-4) 0 var(--sp-3);
+        font-size: var(--fs-title);
+      }
+      h2 {
+        margin: var(--sp-10) 0 var(--sp-3);
+        padding-top: var(--sp-4);
+        border-top: 1px solid var(--c-seam);
+        font-size: var(--fs-lg);
+        scroll-margin-top: var(--sp-4);
+      }
+      h3 {
+        margin: var(--sp-6) 0 var(--sp-2);
+        font-size: var(--fs-md);
+      }
+      nav ol {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--sp-1) var(--sp-4);
+        margin: var(--sp-4) 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: var(--fs-sm);
+      }
+      code,
+      pre {
+        font-family: var(--font-mono);
+        font-size: 0.88em;
+      }
+      :not(pre) > code {
+        padding: 0.05em 0.3em;
+        border-radius: var(--r-xs);
+        background: var(--c-panel);
+        overflow-wrap: anywhere;
+      }
+      pre {
+        margin: var(--sp-3) 0;
+        padding: var(--sp-3) var(--sp-4);
+        overflow-x: auto;
+        border: 1px solid var(--c-seam);
+        border-radius: var(--r-md);
+        background: var(--c-inset);
+        line-height: 1.5;
+      }
+      .table {
+        margin: var(--sp-3) 0;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--fs-sm);
+      }
+      th,
+      td {
+        padding: var(--sp-2) var(--sp-3) var(--sp-2) 0;
+        border-bottom: 1px solid var(--c-seam);
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        color: var(--c-muted);
+        font-family: var(--font-legend);
+        font-size: var(--fs-legend);
+        font-weight: 600;
+        letter-spacing: var(--track-legend);
+        text-transform: uppercase;
+      }
+      td:first-child {
+        white-space: nowrap;
+      }
+      footer {
+        margin-top: var(--sp-10);
+        padding-top: var(--sp-4);
+        border-top: 1px solid var(--c-seam);
+        color: var(--c-muted);
+        font-size: var(--fs-sm);
+      }
+    </style>
+  </head>
+  <body>
+    <header><a class="back" href="./">← Dead Wax</a></header>
+    <main>
+      <h1>The Pressing format</h1>
+      <p>
+        A <strong>Pressing</strong> is a UTF-8 plain-text
+        <code>.deadwax</code> file describing one repeating, instrumental loop:
+        its harmony, bass, melody, drums, instruments, mix, surface textures and
+        how far each musical dimension may drift. This page describes version 1
+        of the format. <a href="./">Dead Wax</a> plays Pressings in the browser.
+      </p>
+      <nav aria-label="Contents">
+        <h2 class="sr-only">Contents</h2>
+        <ol>
+          <li>
+            <a href="#a-complete-short-example">A complete short example</a>
+          </li>
+          <li><a href="#lines-and-diagnostics">Lines and diagnostics</a></li>
+          <li><a href="#header">Header</a></li>
+          <li><a href="#chords-and-durations">Chords and durations</a></li>
+          <li><a href="#bass-and-melody">Bass and melody</a></li>
+          <li><a href="#drums">Drums</a></li>
+          <li>
+            <a href="#instruments-mix-and-muting"
+              >Instruments, mix and muting</a
+            >
+          </li>
+          <li><a href="#textures">Textures</a></li>
+          <li><a href="#drift">Drift</a></li>
+          <li>
+            <a href="#seed-and-reproducibility">Seed and reproducibility</a>
+          </li>
+          <li><a href="#canonical-form">Canonical form</a></li>
+        </ol>
+      </nav>
+      <h2 id="a-complete-short-example">A complete short example</h2>
+      <pre><code class="language-text">deadwax 1
+title A quiet corner
+tempo 76
+meter 4/4
+key C major
+swing 0.16
+bars 4
+seed 104729
+
+instrument chords epiano
+instrument bass upright
+instrument melody vibes
+level chords 0.7
+level bass 0.8
+level melody 0.4
+level drums 0.65
+
+chords Dm9:4 G13:4 Cmaj7#11:4 Am9:4
+bass auto root-fifth
+melody -:2 A4:1 C5:1 B4:2 -:2 E5:4 -:4
+kick X... ..g. x... ....
+rim .... x... .... x..g
+hats x.g. x.g. x.g. x.gg
+
+texture vinyl 0.12
+texture tape 0.05
+texture rain 0.1
+
+drift rate 0.35
+drift tempo 60 96
+drift swing 0 0.4
+drift tone 0.15 0.85
+drift busyness 0.1 0.8
+drift vinyl 0 0.5</code></pre>
+      <h2 id="lines-and-diagnostics">Lines and diagnostics</h2>
+      <ul>
+        <li>
+          The first non-blank, non-comment line must be exactly
+          <code>deadwax 1</code>.
+        </li>
+        <li>
+          Keywords, notes, instruments and chord symbols are case-sensitive.
+        </li>
+        <li>
+          One directive per line. Spaces/tabs separate tokens. Blank lines are
+          ignored.
+        </li>
+        <li>
+          <code>;</code> starts a full-line comment, or an inline comment when
+          preceded by whitespace. <code>#</code> is <strong>not</strong> a
+          comment character: it belongs to sharp notes and chord alterations.
+        </li>
+        <li>
+          Required lines: <code>deadwax</code>, <code>title</code>,
+          <code>tempo</code>, <code>meter</code>, <code>key</code>,
+          <code>swing</code>, <code>bars</code>, <code>chords</code>. Other
+          lines have defaults.
+        </li>
+        <li>
+          Header and sequence lines cannot be duplicated.
+          <code>instrument</code>, <code>level</code>, <code>dimension</code>,
+          <code>texture</code> and <code>drift</code> may repeat for different
+          settings; later settings for the same name win.
+        </li>
+        <li>
+          Unknown directives, instruments and tokens are errors, not silent
+          fallbacks.
+        </li>
+        <li>
+          Errors identify a 1-based line and column. Token errors point to the
+          token (or bad character); sequence-length/cross-field errors point to
+          the line start. Missing required lines and invalid cross-field drift
+          bounds point to line 1.
+        </li>
+      </ul>
+      <h2 id="header">Header</h2>
+      <div class="table">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Line</th>
+              <th scope="col">Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>title Window seat, 1:17 am</code></td>
+              <td>Unquoted title, remainder of the line</td>
+            </tr>
+            <tr>
+              <td><code>tempo 72</code></td>
+              <td>Quarter notes per minute, 45–130; decimals allowed</td>
+            </tr>
+            <tr>
+              <td><code>meter 4/4</code></td>
+              <td>Numerator 1–12; denominator 4 or 8</td>
+            </tr>
+            <tr>
+              <td><code>key C minor</code></td>
+              <td>
+                Root plus <code>major</code>, <code>minor</code>,
+                <code>dorian</code> or <code>mixolydian</code>
+              </td>
+            </tr>
+            <tr>
+              <td><code>swing 0.18</code></td>
+              <td>
+                Odd sixteenths delayed by this fraction of a sixteenth, 0–0.48
+              </td>
+            </tr>
+            <tr>
+              <td><code>bars 4</code></td>
+              <td>Loop length, integer 1–64</td>
+            </tr>
+            <tr>
+              <td><code>seed 104729</code></td>
+              <td>Unsigned 32-bit integer, default 104729 (see below)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>Tempo always counts quarter notes</strong>, including 6/8. A 6/8
+        bar is three quarter notes, or twelve sixteenth-note steps. The key is
+        descriptive metadata; explicit chords and notes are authoritative.
+        Changing the key does not transpose them.
+      </p>
+      <h2 id="chords-and-durations">Chords and durations</h2>
+      <pre><code class="language-text">chords Dm9:4 G13:4 Cmaj7#11:4 F#m7b5:2 Bb7alt:2</code></pre>
+      <p>
+        <code>symbol:duration</code> means a chord for that many
+        <strong>quarter notes</strong>. Durations must be positive multiples of
+        <code>0.25</code>; the total must equal the complete loop length. Chords
+        may span bars or change mid-bar. They are softly rearticulated at bar
+        boundaries. A 4-bar 4/4 loop totals 16 quarter notes; 4 bars of 3/4
+        total 12.
+      </p>
+      <p>
+        Roots: <code>A</code>–<code>G</code>, optionally <code>#</code> or
+        <code>b</code>. Supported qualities:
+      </p>
+      <pre><code class="language-text">(no suffix)  m  6  m6  7  maj7  m7  mmaj7
+9  maj9  m9  11  m11  13  maj13  m13
+m7b5  dim  dim7  aug  sus2  sus4  7sus4  add9  7alt  alt</code></pre>
+      <p>
+        Append alterations <code>b5</code>, <code>#5</code>, <code>b9</code>,
+        <code>#9</code>, <code>b11</code>, <code>#11</code>, <code>b13</code>,
+        <code>#13</code>, including several together, e.g. <code>G7b9#5</code>.
+        Add a slash bass: <code>Cmaj9/E</code>, <code>Abmaj9/Eb</code>.
+        Automatic bass respects the slash root; keyboard voicings remain
+        rootless.
+      </p>
+      <p>
+        The voicing engine searches rootless/extension, shell, drop-2, quartal
+        and upper-structure shapes and minimises motion from the previous chord.
+        Density and register influence the search; seeded variation avoids a
+        completely mechanical repetition. Explicit extensions are retained in
+        the pitch pool. This is a compact voicing engine, not a comprehensive
+        jazz-theory or arbitrary chord-symbol interpreter.
+      </p>
+      <h3 id="explicit-voicings">Explicit voicings</h3>
+      <pre><code class="language-text">chords Dm9:4 G13:4 Cmaj9:8
+chord-notes F3+A3+C4+E4:4 F3+B3+E4+A4:4 E3+G3+B3+D4:8</code></pre>
+      <p>
+        <code>chord-notes</code> overrides the voicing search. It must have
+        exactly the same number of events and durations as <code>chords</code>.
+        <code>-:4</code> means a silent chord event. Dead Wax's Capture writes
+        these, so a captured take keeps its exact notes and gaps.
+      </p>
+      <h2 id="bass-and-melody">Bass and melody</h2>
+      <pre><code class="language-text">bass auto roots
+bass auto root-fifth
+bass auto walking</code></pre>
+      <p>
+        Choose one. Roots plays half-note pulses; root-fifth alternates at
+        quarter notes; walking uses roots/thirds/fifths and chromatic approaches
+        to the next bar. Notes stay in a bass register. Default:
+        <code>auto roots</code>.
+      </p>
+      <p>Or write explicit notes:</p>
+      <pre><code class="language-text">bass C2:2 G2:2 A1:2 E2:2
+melody E4:1 G4:0.5 A4:0.5 -:2</code></pre>
+      <p>
+        Notes are <code>A</code>–<code>G</code>, optional
+        <code>#</code>/<code>b</code>, octave 0–8 (C4 is middle C).
+        <code>-</code> is a rest. Use <code>+</code> for simultaneous pitches,
+        e.g. <code>C4+Eb4:1</code>. Each explicit sequence must have a total
+        duration that divides the complete loop exactly. Shorter sequences
+        repeat. Omit <code>melody</code> for no motif; Drift can add chord-tone
+        fragments if embellishment rises. Explicit sequences can sustain across
+        bar lines.
+      </p>
+      <h2 id="drums">Drums</h2>
+      <p>
+        One line per voice: <code>kick</code>, <code>snare</code>,
+        <code>rim</code>, <code>hats</code>, <code>brushes</code>,
+        <code>perc</code>.
+      </p>
+      <pre><code class="language-text">kick X... ..g. x... .... | X... .... x..g ..g.
+rim .... x... .... x..g
+hats x.g. x.g. x.g. x.gg</code></pre>
+      <p>
+        Each character is one sixteenth note. Spaces are cosmetic.
+        <code>|</code> separates bars; there are no leading/trailing pipes. Each
+        grid bar must contain exactly the meter's number of sixteenths (16 for
+        4/4, 12 for 3/4 or 6/8).
+      </p>
+      <div class="table">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Mark</th>
+              <th scope="col">Meaning</th>
+              <th scope="col">Velocity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>.</code></td>
+              <td>Rest</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td><code>x</code></td>
+              <td>Normal hit</td>
+              <td>0.68</td>
+            </tr>
+            <tr>
+              <td><code>X</code></td>
+              <td>Accent</td>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td><code>g</code></td>
+              <td>Ghost note</td>
+              <td>0.24</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        The number of written grid bars must divide the loop length. A single
+        bar repeats throughout. Missing voices are silent (but Drift can
+        introduce ghost hits).
+      </p>
+      <h2 id="instruments-mix-and-muting">Instruments, mix and muting</h2>
+      <pre><code class="language-text">instrument chords epiano
+instrument bass upright
+instrument melody vibes
+level chords 0.7
+level bass 0.8
+level melody 0.4
+level drums 0.65
+mute melody drums</code></pre>
+      <p>
+        Melodic instruments: <code>epiano</code> (FM tine),
+        <code>felt</code> (muted additive piano), <code>upright</code> (plucked
+        triangle/body), <code>vibes</code> (inharmonic metallic partial),
+        <code>pad</code> (detuned, filtered soft triangles). Any melodic
+        instrument can be used on any melodic part. Defaults are as above,
+        except the default melody level is 0.45.
+      </p>
+      <p>
+        The drum kit is procedural too: pitched envelopes, filtered noise and
+        resonant clicks. <code>perc</code> is a soft falling wood-like tone. Mix
+        levels are 0–1. Omit <code>mute</code> for no mutes. Master volume is a
+        listener setting, not part of the Pressing.
+      </p>
+      <p>
+        The master chain has kick ducking, low-pass tone, tape-like saturation,
+        optional bit-depth quantisation (<code>dimension crush</code>),
+        dual-rate modulated delay for wow and flutter, and a seeded stereo
+        convolution reverb. Everything is generated in the browser, including
+        the reverb impulse.
+      </p>
+      <h2 id="textures">Textures</h2>
+      <pre><code class="language-text">texture vinyl 0.12
+texture surface 0.04
+texture tape 0.05
+texture rumble 0.06
+texture rain 0.2
+texture room 0.03
+texture hum 0.02</code></pre>
+      <p>
+        All levels are 0–1. <code>vinyl</code> combines seeded short pops with
+        density proportional to level. <code>surface</code> and
+        <code>tape</code> are differently filtered hiss; <code>rumble</code> is
+        a pair of sub-bass tones; <code>rain</code> is filtered noise plus
+        occasional drops; <code>room</code> is dark noise; <code>hum</code> uses
+        50 Hz and harmonics. Defaults: vinyl 0.12, tape 0.05, all others zero.
+      </p>
+      <h2 id="drift">Drift</h2>
+      <p>
+        Drift lets the player wander away from the score and back. Each musical
+        dimension starts at its origin from the Pressing. Only explicitly
+        permitted dimensions move: add <code>drift NAME LOW HIGH</code> bounds
+        for each one.
+      </p>
+      <pre><code class="language-text">drift rate 0.35
+drift tempo 58 100
+drift tone 0.1 0.9
+drift reverb 0.1 0.75
+drift rain 0 0.5</code></pre>
+      <p>
+        Origins must lie inside the bounds. Limits must be inside the absolute
+        range. Omitting a dimension from <code>drift</code> locks it at home.
+        Set initial non-header, non-texture dimensions with
+        <code>dimension NAME VALUE</code>:
+      </p>
+      <div class="table">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Dimension</th>
+              <th scope="col">Absolute range</th>
+              <th scope="col">Default</th>
+              <th scope="col">Effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>tempo</td>
+              <td>45–130</td>
+              <td>header</td>
+              <td>Quarter-note rate, smoothed each step</td>
+            </tr>
+            <tr>
+              <td>swing</td>
+              <td>0–0.48</td>
+              <td>header</td>
+              <td>Sixteenth-note swing</td>
+            </tr>
+            <tr>
+              <td>humanise</td>
+              <td>0–1</td>
+              <td>0.18</td>
+              <td>Small seeded timing offsets</td>
+            </tr>
+            <tr>
+              <td>busyness</td>
+              <td>0–1</td>
+              <td>0.35</td>
+              <td>Add ghost hits or thin normal hits relative to origin</td>
+            </tr>
+            <tr>
+              <td>embellish</td>
+              <td>0–1</td>
+              <td>0.1</td>
+              <td>Add motif neighbours/chord tones relative to origin</td>
+            </tr>
+            <tr>
+              <td>density</td>
+              <td>0–1</td>
+              <td>0.55</td>
+              <td>Keyboard voicing size</td>
+            </tr>
+            <tr>
+              <td>register</td>
+              <td>0–1</td>
+              <td>0.45</td>
+              <td>Keyboard pitch centre</td>
+            </tr>
+            <tr>
+              <td>substitution</td>
+              <td>0–1</td>
+              <td>0</td>
+              <td>Chance of dominant tritone substitution</td>
+            </tr>
+            <tr>
+              <td>rhythm</td>
+              <td>0–1</td>
+              <td>0</td>
+              <td>Mid-bar chord rearticulation above 0.25</td>
+            </tr>
+            <tr>
+              <td>timbre</td>
+              <td>0–1</td>
+              <td>0</td>
+              <td>
+                Chord instrument: score below 0.35, felt, then pad above 0.72
+              </td>
+            </tr>
+            <tr>
+              <td>tone</td>
+              <td>0–1</td>
+              <td>0.48</td>
+              <td>Master low-pass brightness</td>
+            </tr>
+            <tr>
+              <td>saturation</td>
+              <td>0–1</td>
+              <td>0.25</td>
+              <td>Soft tape drive</td>
+            </tr>
+            <tr>
+              <td>wow</td>
+              <td>0–1</td>
+              <td>0.2</td>
+              <td>Wow/flutter delay depth</td>
+            </tr>
+            <tr>
+              <td>crush</td>
+              <td>0–1</td>
+              <td>0</td>
+              <td>Optional bit-depth reduction (16 down to 5 bits)</td>
+            </tr>
+            <tr>
+              <td>reverb</td>
+              <td>0–0.85</td>
+              <td>0.24</td>
+              <td>Wet room/reverb level</td>
+            </tr>
+            <tr>
+              <td>balance</td>
+              <td>0–1</td>
+              <td>0.5</td>
+              <td>Bass versus melody emphasis</td>
+            </tr>
+            <tr>
+              <td>arrangement</td>
+              <td>0–1</td>
+              <td>0</td>
+              <td>Probability of resting chords/melody for a bar</td>
+            </tr>
+            <tr>
+              <td>each texture name</td>
+              <td>0–1</td>
+              <td>see above</td>
+              <td>Texture level, also a drift dimension</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <code>drift rate</code> (0–1) sets how far and how fast it roams at
+        first; the listener can change it while playing. The walk updates once
+        per bar. Notes, patterns and instrument changes happen at bar
+        boundaries; filter, mix, effects and tempo glide.
+      </p>
+      <h2 id="seed-and-reproducibility">Seed and reproducibility</h2>
+      <p>
+        <code>seed</code> initialises a 32-bit Mulberry-style generator. Score
+        planning, timing and sound/noise generation use separate derived
+        streams. The same seed, Pressing and the same bar-timed steering
+        reproduce the same musical session; a seed alone cannot encode a
+        listener's actions. Browser and sample-rate differences can still change
+        the exact waveform.
+      </p>
+      <h2 id="canonical-form">Canonical form</h2>
+      <p>
+        Dead Wax keeps exported text unchanged, including comments. Its
+        canonical serialiser (used by Capture) normalises spacing and numbers
+        and drops comments, but parse → serialise → parse preserves the musical
+        score. There is no audio export; a Pressing is always text.
+      </p>
+    </main>
+    <footer><a href="./">Open Dead Wax</a> · <a href="../">← Vibes</a></footer>
+  </body>
+</html>
