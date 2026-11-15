@@ -700,48 +700,44 @@
       }
 
       /* Play/Pause: one key. Shows "Play" when paused, "Pause" while playing. */
-      .key--play {
-        min-width: 88px;
-        min-height: 72px;
-      }
-      .key--play .icon-pause,
-      .key--play .when-on {
+      #play .icon-pause,
+      #play .when-on {
         display: none;
       }
-      body[data-audio="on"] .key--play .icon-pause,
-      body[data-audio="on"] .key--play .when-on {
+      body[data-audio="on"] #play .icon-pause,
+      body[data-audio="on"] #play .when-on {
         display: inline;
       }
-      body[data-audio="on"] .key--play .icon-play,
-      body[data-audio="on"] .key--play .when-off {
+      body[data-audio="on"] #play .icon-play,
+      body[data-audio="on"] #play .when-off {
         display: none;
-      }
-      body[data-audio="on"] #play {
-        color: var(--c-amber);
-        border-color: color-mix(in oklab, var(--c-amber) 50%, var(--c-edge));
-        background: var(--c-panel);
-        box-shadow:
-          var(--sh-key-down),
-          0 0 18px -6px var(--c-amber-glow);
-        transform: translateY(1px);
-      }
-      body[data-audio="on"] #play .lamp {
-        background: var(--c-amber);
-        box-shadow: 0 0 10px var(--c-amber-glow);
       }
 
       /* ── Turntable (#1) ──
-         Decorative and aria-hidden: the Play key stays the accessible control.
-         The arm swings on body[data-audio] over the lamp timings, so it lands
+         The turntable is the Play/Pause key; its centre sticker shows the
+         action (▶ or ❚❚) and stays upright while the record turns. The arm swings on body[data-audio] over the lamp timings, so it lands
          with the needle-drop sound and lifts with the tape stop. The platter's
          spin-up and wind-down are ramped in JS (spinPlatter) so a pause winds
          down from wherever it is. Reduced motion: no spin; the arm alone shows
          state. */
       .turntable {
         flex: none;
-        width: 112px;
+        display: block;
+        width: 152px;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: none;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+      .turntable:focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
+      }
+      .turntable:disabled {
+        cursor: progress;
       }
       .turntable svg {
         display: block;
@@ -779,19 +775,15 @@
           var(--c-panel)
         );
       }
-      .tt__initial {
+      .tt__icon {
         fill: var(--c-amber-ink);
-        font: 600 8px var(--font-display);
-        text-anchor: middle;
-        dominant-baseline: central;
+        pointer-events: none;
       }
       .tt__matrix {
         stroke: var(--c-amber-ink);
-        stroke-width: 0.8;
-        opacity: 0.6;
-      }
-      .tt__spindle {
-        fill: var(--c-ink);
+        stroke-width: 1.2;
+        stroke-linecap: round;
+        opacity: 0.55;
       }
       /* A fixed, very soft light across the record: it doesn't turn, so the spin
          reads through the grooves and the label underneath. */
@@ -836,11 +828,19 @@
         fill: var(--c-panel-hi);
         stroke: var(--c-edge);
       }
+      .tt__plinth {
+        transition:
+          stroke var(--t-quick),
+          fill var(--t-quick);
+      }
       .turntable:hover .tt__plinth {
         stroke: var(--c-edge);
       }
       .turntable:active .tt__plinth {
         fill: var(--c-chassis);
+      }
+      .turntable:active .tt__label {
+        fill: var(--c-amber);
       }
 
       /* ───────────────────────────── Transport rack ───────────────────────────── */
@@ -1367,17 +1367,15 @@
       }
       @keyframes dw-breathe {
         50% {
-          box-shadow:
-            var(--sh-key),
-            0 0 0 5px color-mix(in oklab, var(--c-amber) 22%, transparent);
+          box-shadow: 0 0 0 5px
+            color-mix(in oklab, var(--c-amber) 22%, transparent);
         }
       }
       @media (prefers-reduced-motion: reduce) {
         body[data-first-run] #play {
           animation: none;
-          box-shadow:
-            var(--sh-key),
-            0 0 0 3px color-mix(in oklab, var(--c-amber) 40%, transparent);
+          box-shadow: 0 0 0 3px
+            color-mix(in oklab, var(--c-amber) 40%, transparent);
         }
       }
 
@@ -2521,19 +2519,10 @@
         }
       }
 
-      /* Phones: the turntable sits above Play, one column. */
+      /* Phones: a slightly smaller deck beside the title. */
       @media (max-width: 759px) {
-        .transport__keys {
-          flex-direction: column;
-          flex-wrap: nowrap;
-          width: 96px;
-        }
         .turntable {
-          width: 96px;
-        }
-        .transport__keys .key--play {
-          min-width: 0;
-          min-height: 56px;
+          width: 124px;
         }
       }
 
@@ -2544,8 +2533,8 @@
         .strip {
           padding-inline: 0;
         }
-        .key--play {
-          min-width: 72px;
+        .turntable {
+          width: 112px;
         }
       }
 
@@ -2653,10 +2642,17 @@
           <section class="rack transport" aria-labelledby="transport-title">
             <h2 id="transport-title" class="sr-only">Transport</h2>
             <div class="transport__keys" role="group" aria-label="Transport">
-              <!-- Decorative turntable. State comes from body[data-audio]; the
-                   platter is also a pointer-only shortcut for the Play key. -->
-              <div class="turntable" id="turntable" aria-hidden="true">
-                <svg viewBox="0 0 112 96">
+              <!-- The turntable is the Play/Pause key. State comes from
+                   body[data-audio]; the centre sticker shows the action. -->
+              <button
+                id="play"
+                class="turntable"
+                type="button"
+                aria-keyshortcuts="Space"
+              >
+                <span class="when-off sr-only">Play</span
+                ><span class="when-on sr-only">Pause</span>
+                <svg viewBox="0 0 112 96" aria-hidden="true">
                   <rect
                     class="tt__plinth"
                     x="1"
@@ -2672,14 +2668,18 @@
                     <circle class="tt__grooves" cx="48" cy="48" r="29" />
                     <circle class="tt__grooves" cx="48" cy="48" r="24" />
                     <circle class="tt__strobe" cx="48" cy="48" r="40.5" />
-                    <circle class="tt__label" cx="48" cy="48" r="14" />
-                    <text class="tt__initial" id="tt-initial" x="48" y="41">
-                      W
-                    </text>
-                    <path class="tt__matrix" d="M43 55h10" />
-                    <circle class="tt__spindle" cx="48" cy="48" r="1.6" />
+                    <circle class="tt__label" cx="48" cy="48" r="15" />
+                    <path class="tt__matrix" d="M48 34.5v3.5" />
                   </g>
                   <circle class="tt__sheen" cx="48" cy="48" r="39" />
+                  <!-- The sticker's icon stays upright while the record turns. -->
+                  <g class="tt__icon">
+                    <path class="icon-play" d="M44.5 41.5v13L55 48z" />
+                    <g class="icon-pause">
+                      <rect x="42.5" y="42" width="4" height="12" rx="1" />
+                      <rect x="49.5" y="42" width="4" height="12" rx="1" />
+                    </g>
+                  </g>
                   <rect
                     class="tt__rest"
                     x="95"
@@ -2710,37 +2710,6 @@
                     <circle class="tt__pivot" cx="98" cy="16" r="5.5" />
                   </g>
                 </svg>
-              </div>
-              <button
-                id="play"
-                class="key key--transport key--play"
-                type="button"
-                aria-keyshortcuts="Space"
-              >
-                <span class="lamp" aria-hidden="true"></span>
-                <svg class="icon-play" viewBox="0 0 18 18" aria-hidden="true">
-                  <path d="M5 3.2v11.6L14.6 9z" fill="currentColor" />
-                </svg>
-                <svg class="icon-pause" viewBox="0 0 18 18" aria-hidden="true">
-                  <rect
-                    x="4"
-                    y="3.5"
-                    width="3.4"
-                    height="11"
-                    rx="1"
-                    fill="currentColor"
-                  />
-                  <rect
-                    x="10.6"
-                    y="3.5"
-                    width="3.4"
-                    height="11"
-                    rx="1"
-                    fill="currentColor"
-                  />
-                </svg>
-                <span class="when-off">Play</span
-                ><span class="when-on">Pause</span>
               </button>
             </div>
 
@@ -5912,8 +5881,6 @@
         function renderSong() {
           renderPicker();
           $("title").textContent = song.title;
-          $("tt-initial").textContent =
-            [...song.title.trim()][0]?.toUpperCase() ?? "";
           $("meta-tempo").textContent = song.tempo + " bpm";
           $("meta-key").textContent = pretty(song.key);
           $("meta-meter").textContent = song.meter;
@@ -6108,7 +6075,6 @@
           });
           if (!ok) $("errors").querySelector("button")?.focus();
         };
-        $("turntable").onclick = () => $("play").click();
         $("play").onclick = async () => {
           if (starting) return;
           if (transport?.running) {
