@@ -6,11 +6,13 @@ external fonts, libraries, model calls or analytics. The optional Gist importer
 contacts only `https://api.github.com/gists/{id}`.
 
 Open [the player](index.html), pick a record from the title menu and press
-**Play**. It also works as a standalone downloaded `index.html`, without a
-server or build step. Browser storage availability for `file:` URLs varies; file
-export always works. On iOS, Play requests a media playback audio session where
-supported, so Silent Mode does not mute the music. Media volume and the selected
-audio output still apply.
+**Play**. The turntable beside Play mirrors it: the arm drops and the platter
+spins up on Play, then lifts and winds down on Pause (no spin with reduced
+motion). Tapping the platter also plays or pauses. It also works as a standalone
+downloaded `index.html`, without a server or build step. Browser storage
+availability for `file:` URLs varies; file export always works. On iOS, Play
+requests a media playback audio session where supported, so Silent Mode does not
+mute the music. Media volume and the selected audio output still apply.
 
 ## A complete short example
 

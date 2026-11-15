@@ -730,6 +730,119 @@
         box-shadow: 0 0 10px var(--c-amber-glow);
       }
 
+      /* ── Turntable (#1) ──
+         Decorative and aria-hidden: the Play key stays the accessible control.
+         The arm swings on body[data-audio] over the lamp timings, so it lands
+         with the needle-drop sound and lifts with the tape stop. The platter's
+         spin-up and wind-down are ramped in JS (spinPlatter) so a pause winds
+         down from wherever it is. Reduced motion: no spin; the arm alone shows
+         state. */
+      .turntable {
+        flex: none;
+        width: 112px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .turntable svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        overflow: visible;
+      }
+      .tt__plinth {
+        fill: var(--c-panel);
+        stroke: var(--c-seam-strong);
+      }
+      .tt__mat {
+        fill: var(--c-inset);
+      }
+      .tt__record {
+        fill: #0a0c0d;
+        stroke: #000;
+      }
+      .tt__grooves {
+        fill: none;
+        stroke: rgb(255 255 255 / 0.06);
+        stroke-width: 0.6;
+      }
+      /* Strobe dots on the platter rim make the rotation readable without glare. */
+      .tt__strobe {
+        fill: none;
+        stroke: var(--c-seam-strong);
+        stroke-width: 1.4;
+        stroke-dasharray: 1.4 3.4;
+      }
+      .tt__label {
+        fill: color-mix(
+          in oklab,
+          var(--c-amber) calc(55% + var(--lamp) * 30%),
+          var(--c-panel)
+        );
+      }
+      .tt__initial {
+        fill: var(--c-amber-ink);
+        font: 600 8px var(--font-display);
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+      .tt__matrix {
+        stroke: var(--c-amber-ink);
+        stroke-width: 0.8;
+        opacity: 0.6;
+      }
+      .tt__spindle {
+        fill: var(--c-ink);
+      }
+      /* A fixed, very soft light across the record: it doesn't turn, so the spin
+         reads through the grooves and the label underneath. */
+      .tt__sheen {
+        pointer-events: none;
+        fill: none;
+        stroke: rgb(255 255 255 / 0.05);
+        stroke-width: 10;
+        stroke-dasharray: 22 223;
+        stroke-dashoffset: -150;
+      }
+      .tt__platter {
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      .tt__rest {
+        fill: var(--c-panel-hi);
+        stroke: var(--c-seam-strong);
+      }
+      .tt__arm {
+        transform-box: view-box;
+        transform-origin: 98px 16px;
+        transform: rotate(0deg);
+        transition: transform var(--t-lamp-off) var(--ease-damped);
+      }
+      body[data-audio="on"] .tt__arm {
+        transform: rotate(22deg);
+        transition-duration: var(--t-lamp-on);
+      }
+      .tt__tube {
+        fill: none;
+        stroke: var(--c-muted);
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .tt__head {
+        fill: var(--c-ink);
+      }
+      .tt__weight,
+      .tt__pivot {
+        fill: var(--c-panel-hi);
+        stroke: var(--c-edge);
+      }
+      .turntable:hover .tt__plinth {
+        stroke: var(--c-edge);
+      }
+      .turntable:active .tt__plinth {
+        fill: var(--c-chassis);
+      }
+
       /* ───────────────────────────── Transport rack ───────────────────────────── */
 
       .transport {
@@ -777,9 +890,6 @@
          labelled combobox. */
       .picker {
         position: relative;
-        display: flex;
-        align-items: center;
-        gap: var(--sp-2);
         width: fit-content;
         max-width: 100%;
         margin: 0 0 var(--sp-2);
@@ -787,9 +897,10 @@
         border-radius: var(--r-sm);
       }
       .picker__chevron {
-        flex: none;
-        width: 14px;
-        height: 10px;
+        width: 0.5em;
+        height: 0.35em;
+        margin-left: 0.3em;
+        vertical-align: 0.15em;
         color: var(--c-muted);
         transition: color var(--t-quick);
       }
@@ -2410,6 +2521,22 @@
         }
       }
 
+      /* Phones: the turntable sits above Play, one column. */
+      @media (max-width: 759px) {
+        .transport__keys {
+          flex-direction: column;
+          flex-wrap: nowrap;
+          width: 96px;
+        }
+        .turntable {
+          width: 96px;
+        }
+        .transport__keys .key--play {
+          min-width: 0;
+          min-height: 56px;
+        }
+      }
+
       @media (max-width: 400px) {
         .strips {
           gap: 4px;
@@ -2526,6 +2653,64 @@
           <section class="rack transport" aria-labelledby="transport-title">
             <h2 id="transport-title" class="sr-only">Transport</h2>
             <div class="transport__keys" role="group" aria-label="Transport">
+              <!-- Decorative turntable. State comes from body[data-audio]; the
+                   platter is also a pointer-only shortcut for the Play key. -->
+              <div class="turntable" id="turntable" aria-hidden="true">
+                <svg viewBox="0 0 112 96">
+                  <rect
+                    class="tt__plinth"
+                    x="1"
+                    y="1"
+                    width="110"
+                    height="94"
+                    rx="7"
+                  />
+                  <circle class="tt__mat" cx="48" cy="48" r="42" />
+                  <g class="tt__platter" id="tt-platter">
+                    <circle class="tt__record" cx="48" cy="48" r="39" />
+                    <circle class="tt__grooves" cx="48" cy="48" r="34" />
+                    <circle class="tt__grooves" cx="48" cy="48" r="29" />
+                    <circle class="tt__grooves" cx="48" cy="48" r="24" />
+                    <circle class="tt__strobe" cx="48" cy="48" r="40.5" />
+                    <circle class="tt__label" cx="48" cy="48" r="14" />
+                    <text class="tt__initial" id="tt-initial" x="48" y="41">
+                      W
+                    </text>
+                    <path class="tt__matrix" d="M43 55h10" />
+                    <circle class="tt__spindle" cx="48" cy="48" r="1.6" />
+                  </g>
+                  <circle class="tt__sheen" cx="48" cy="48" r="39" />
+                  <rect
+                    class="tt__rest"
+                    x="95"
+                    y="70"
+                    width="7"
+                    height="5"
+                    rx="1.5"
+                  />
+                  <g class="tt__arm">
+                    <rect
+                      class="tt__weight"
+                      x="94"
+                      y="4"
+                      width="8"
+                      height="7"
+                      rx="2"
+                    />
+                    <path class="tt__tube" d="M98 16V62l-3 7" />
+                    <rect
+                      class="tt__head"
+                      x="91"
+                      y="67"
+                      width="7"
+                      height="9"
+                      rx="1.5"
+                      transform="rotate(20 94.5 71.5)"
+                    />
+                    <circle class="tt__pivot" cx="98" cy="16" r="5.5" />
+                  </g>
+                </svg>
+              </div>
               <button
                 id="play"
                 class="key key--transport key--play"
@@ -2562,21 +2747,23 @@
             <div class="transport__record">
               <!-- The title is the record picker: a native select sits over it. -->
               <div class="picker">
-                <h1 id="title" class="title">Window seat, 1:17 am</h1>
-                <svg
-                  class="picker__chevron"
-                  viewBox="0 0 12 8"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M1.5 1.5 6 6l4.5-4.5"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
+                <h1 class="title">
+                  <span id="title">Window seat, 1:17 am</span
+                  ><svg
+                    class="picker__chevron"
+                    viewBox="0 0 12 8"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M1.5 1.5 6 6l4.5-4.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </h1>
                 <label class="sr-only" for="record"
                   >Choose a record from the shelf</label
                 >
@@ -5725,6 +5912,8 @@
         function renderSong() {
           renderPicker();
           $("title").textContent = song.title;
+          $("tt-initial").textContent =
+            [...song.title.trim()][0]?.toUpperCase() ?? "";
           $("meta-tempo").textContent = song.tempo + " bpm";
           $("meta-key").textContent = pretty(song.key);
           $("meta-meter").textContent = song.meter;
@@ -5744,9 +5933,41 @@
           setActive(Math.min(p.bar, song.bars - 1), p.offset);
           renderLibrary();
         }
+        /* Platter speed eases towards 16⅔ rpm on Play and back to rest on Pause,
+           over the same times as the lamps (--t-lamp-on, --t-lamp-off). */
+        const platter = { angle: 0, speed: 0, target: 0, frame: 0, last: 0 };
+        function spinPlatter(on) {
+          platter.target = on ? 100 : 0; // degrees per second
+          if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            cancelAnimationFrame(platter.frame);
+            platter.frame = 0;
+            platter.speed = 0; // still record; the arm alone shows state
+            return;
+          }
+          if (platter.frame) return;
+          platter.last = performance.now();
+          const step = (now) => {
+            const dt = Math.min((now - platter.last) / 1000, 0.1);
+            platter.last = now;
+            const seconds = platter.target ? 1.2 : 2.6,
+              rate = (100 / seconds) * dt;
+            platter.speed =
+              platter.speed < platter.target
+                ? Math.min(platter.target, platter.speed + rate)
+                : Math.max(platter.target, platter.speed - rate);
+            if (matchMedia("(prefers-reduced-motion: reduce)").matches)
+              platter.speed = platter.target = 0;
+            platter.angle = (platter.angle + platter.speed * dt) % 360;
+            $("tt-platter").style.transform = `rotate(${platter.angle}deg)`;
+            platter.frame =
+              platter.speed || platter.target ? requestAnimationFrame(step) : 0;
+          };
+          platter.frame = requestAnimationFrame(step);
+        }
         function transportUI() {
           const playing = !!transport?.running;
           document.body.dataset.audio = playing ? "on" : "off";
+          spinPlatter(playing);
           $("power-text").textContent = playing
             ? "Spinning"
             : document.body.hasAttribute("data-first-run")
@@ -5887,6 +6108,7 @@
           });
           if (!ok) $("errors").querySelector("button")?.focus();
         };
+        $("turntable").onclick = () => $("play").click();
         $("play").onclick = async () => {
           if (starting) return;
           if (transport?.running) {
