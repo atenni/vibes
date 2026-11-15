@@ -4,13 +4,14 @@ tempo 72
 meter 4/4
 key A minor
 swing 0.22
-bars 2
+bars 4
 seed 271828
 
-; A two-chord cassette loop: felt piano, soft synth bass, music-box bells.
-chords Fmaj9:4 Em9:4
-bass F2:3.5 -:0.5 E2:3 -:0.5 G2:0.5
-melody -:2 E5:1 G5:1 B4:2 -:2
+; A cassette loop: felt piano, soft synth bass, music-box bells.
+; The bell asks a question in bar 2 and answers it, falling, in bar 4.
+chords Fmaj9:4 Em9:4 Dm9:4 E7sus4:4
+bass F2:3.5 -:0.5 E2:3 -:0.5 G2:0.5 D2:3.5 -:0.5 E2:2 B1:1 -:0.5 E2:0.5
+melody -:2 E5:1 G5:1 B4:2 -:2 -:2 E5:1 D5:1 C5:1.5 A4:0.5 -:2
 kick X... .... ..x. .... | X... ..g. .x.. ..g.
 snare .... x... .... x...
 hats x..g x.x. x..g x.x.
