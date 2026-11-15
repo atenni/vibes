@@ -505,15 +505,23 @@ function renderSong() {
   setActive(Math.min(p.bar, song.bars - 1), p.offset);
   renderLibrary();
 }
-/* Platter speed eases towards 16⅔ rpm on Play and back to rest on Pause,
-   over the same times as the lamps (--t-lamp-on, --t-lamp-off). */
-const platter = { angle: 0, speed: 0, target: 0, frame: 0, last: 0 };
+/* The record turns as a Web Animation, which the browser runs on the
+   compositor, so main-thread work at bar lines can't make it stutter. Play
+   ramps the playback rate up over 1.2 s and Pause winds it down over 2.6 s,
+   the same times as the lamps (--t-lamp-on, --t-lamp-off). Only the ramps
+   touch the main thread; a steady spin needs no JavaScript at all. */
+const platter = { anim: null, rate: 0, target: 0, frame: 0, last: 0 };
 function spinPlatter(on) {
-  platter.target = on ? 100 : 0; // degrees per second
+  platter.target = on ? 1 : 0;
+  platter.anim ??= $("tt-platter").animate(
+    [{ transform: "rotate(0deg)" }, { transform: "rotate(360deg)" }],
+    { duration: 3600, iterations: Infinity }, // 100° a second
+  );
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
     cancelAnimationFrame(platter.frame);
     platter.frame = 0;
-    platter.speed = 0; // still record; the arm alone shows state
+    platter.rate = 0; // still record; the arm alone shows state
+    platter.anim.pause();
     return;
   }
   if (platter.frame) return;
@@ -521,18 +529,16 @@ function spinPlatter(on) {
   const step = (now) => {
     const dt = Math.min((now - platter.last) / 1000, 0.1);
     platter.last = now;
-    const seconds = platter.target ? 1.2 : 2.6,
-      rate = (100 / seconds) * dt;
-    platter.speed =
-      platter.speed < platter.target
-        ? Math.min(platter.target, platter.speed + rate)
-        : Math.max(platter.target, platter.speed - rate);
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches)
-      platter.speed = platter.target = 0;
-    platter.angle = (platter.angle + platter.speed * dt) % 360;
-    $("tt-platter").style.transform = `rotate(${platter.angle}deg)`;
+    platter.rate =
+      platter.rate < platter.target
+        ? Math.min(platter.target, platter.rate + dt / 1.2)
+        : Math.max(platter.target, platter.rate - dt / 2.6);
+    if (platter.rate > 0) {
+      platter.anim.playbackRate = platter.rate;
+      if (platter.anim.playState !== "running") platter.anim.play();
+    } else platter.anim.pause();
     platter.frame =
-      platter.speed || platter.target ? requestAnimationFrame(step) : 0;
+      platter.rate !== platter.target ? requestAnimationFrame(step) : 0;
   };
   platter.frame = requestAnimationFrame(step);
 }

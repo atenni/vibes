@@ -538,12 +538,16 @@ body[data-audio="on"] #play .when-off {
 }
 
 /* ── Turntable (#1) ──
-   The turntable is the Play/Pause key; its centre sticker shows the
-   action (▶ or ❚❚) and stays upright while the record turns. The arm swings on body[data-audio] over the lamp timings, so it lands
-   with the needle-drop sound and lifts with the tape stop. The platter's
-   spin-up and wind-down are ramped in JS (spinPlatter) so a pause winds
-   down from wherever it is. Reduced motion: no spin; the arm alone shows
-   state. */
+   The turntable is the Play/Pause key. The action (▶ or ❚❚) is printed on
+   the centre label, so it turns with the record, around a punched
+   spindle hole. The arm swings on body[data-audio] over the lamp timings,
+   so it lands with the needle-drop sound and lifts with the tape stop.
+
+   The deck is three stacked SVGs sharing one viewBox: base, disc and top
+   (sheen and arm). Only the disc turns, as a Web Animation on its own
+   composited layer, so work on the main thread at each bar line can't
+   stall it. spinPlatter ramps the animation's playback rate on Play and
+   Pause. Reduced motion: no spin; the arm alone shows state. */
 .turntable {
   flex: none;
   display: block;
@@ -563,11 +567,31 @@ body[data-audio="on"] #play .when-off {
 .turntable:disabled {
   cursor: progress;
 }
-.turntable svg {
+.tt {
+  display: grid;
+  isolation: isolate;
+}
+/* Explicit order: WebKit otherwise lifts the composited disc over the arm. */
+.tt__base {
+  z-index: 0;
+}
+.tt__disc {
+  z-index: 1;
+}
+.tt__top {
+  z-index: 2;
+}
+.tt > svg {
+  grid-area: 1 / 1;
   display: block;
   width: 100%;
   height: auto;
   overflow: visible;
+}
+/* The record's centre (48, 48) in the 112 × 96 viewBox. */
+.tt__disc {
+  transform-origin: 42.857% 50%;
+  will-change: transform;
 }
 .tt__plinth {
   fill: var(--c-panel);
@@ -599,15 +623,26 @@ body[data-audio="on"] #play .when-off {
     var(--c-panel)
   );
 }
-.tt__icon {
+/* Printed ink: slightly translucent so the label colour shows through, with
+   softened corners like a rubber-stamped mark. */
+.tt__print {
   fill: var(--c-amber-ink);
+  stroke: var(--c-amber-ink);
+  stroke-width: 0.6;
+  stroke-linejoin: round;
+  opacity: 0.82;
   pointer-events: none;
 }
-.tt__matrix {
-  stroke: var(--c-amber-ink);
-  stroke-width: 1.2;
-  stroke-linecap: round;
-  opacity: 0.55;
+.tt__ring {
+  fill: none;
+  stroke-width: 0.5;
+  opacity: 0.5;
+}
+/* The spindle hole: the dark mat shows through, with a faint lit edge. */
+.tt__hole {
+  fill: var(--c-inset);
+  stroke: rgb(255 255 255 / 0.18);
+  stroke-width: 0.4;
 }
 /* A fixed, very soft light across the record: it doesn't turn, so the spin
    reads through the grooves and the label underneath. */
@@ -618,10 +653,6 @@ body[data-audio="on"] #play .when-off {
   stroke-width: 10;
   stroke-dasharray: 22 223;
   stroke-dashoffset: -150;
-}
-.tt__platter {
-  transform-box: fill-box;
-  transform-origin: center;
 }
 .tt__rest {
   fill: var(--c-panel-hi);
