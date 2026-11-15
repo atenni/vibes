@@ -365,10 +365,10 @@ browser. They are ordinary shelf entries: rename, edit or delete them freely.
 | File                                                  | Mood                                         | Tempo / length |
 | ----------------------------------------------------- | -------------------------------------------- | -------------- |
 | [Bus window, 7:40 am](examples/01-bus-window.deadwax) | Boom-bap head nod, Rhodes, written bass line | 88 / 4 bars    |
-| [Rewind](examples/02-rewind.deadwax)                  | Two-chord cassette loop, wobbly tape, rain   | 72 / 2 bars    |
+| [Rewind](examples/02-rewind.deadwax)                  | Cassette loop, bell call and answer, rain    | 72 / 4 bars    |
 | [Corner store neon](examples/03-corner-store.deadwax) | Bouncy dorian vamp that opens up halfway     | 98 / 8 bars    |
 | [Rain on a tin roof](examples/04-tin-roof.deadwax)    | Slow pads, heavy rain, a minute-long loop    | 64 / 16 bars   |
-| [Spin cycle](examples/05-spin-cycle.deadwax)          | One-bar crushed, drunk sample chop           | 80 / 1 bar     |
+| [Spin cycle](examples/05-spin-cycle.deadwax)          | Crushed, drunk sample chop with a flip       | 80 / 4 bars    |
 
 All are in 4/4. Each is a complete format example with editable chords, grids
 and drift bounds.

@@ -4,15 +4,15 @@ tempo 80
 meter 4/4
 key C minor
 swing 0.34
-bars 1
+bars 4
 seed 57721
 
-; A one-bar sample chop, crushed and drunk. Drift keeps it turning.
-chords Abmaj9:2 Gm7:2
-bass Ab2:1.5 Ab2:0.5 G2:1.5 D2:0.5
-melody Eb5:0.5 C5:0.5 G4:1 D5:0.5 Bb4:0.5 -:1
+; A chopped sample, crushed and drunk: the same bar three times, then a flip.
+chords Abmaj9:2 Gm7:2 Abmaj9:2 Gm7:2 Abmaj9:2 Gm7:2 Fm9:2 G7sus4:2
+bass Ab2:1.5 Ab2:0.5 G2:1.5 D2:0.5 Ab2:1.5 Ab2:0.5 G2:1.5 D2:0.5 Ab2:1.5 Ab2:0.5 G2:1.5 D2:0.5 F2:1.5 F2:0.5 G2:1.5 G1:0.5
+melody Eb5:0.5 C5:0.5 G4:1 D5:0.5 Bb4:0.5 -:1 Eb5:0.5 C5:0.5 G4:1 F4:0.5 G4:0.5 -:1
 kick X... ..x. .x.. ..g.
-snare .... X..g .... X...
+snare .... X..g .... X... | .... X..g .... X... | .... X..g .... X... | .... X..g ..g. X.gg
 hats x.xg x.x. x.xg x.xx
 perc .... ..g. .... .g..
 
