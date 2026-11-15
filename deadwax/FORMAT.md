@@ -8,11 +8,11 @@ contacts only `https://api.github.com/gists/{id}`.
 Open [the player](index.html), pick a record from the title menu and tap the
 turntable (or press Space) to play. The sticker in the centre of the record
 shows Play or Pause. The arm drops and the platter spins up on Play, then lifts
-and winds down on Pause (no spin with reduced motion). It also works as a
-standalone downloaded `index.html`, without a server or build step. Browser
-storage availability for `file:` URLs varies; file export always works. On iOS,
-Play requests a media playback audio session where supported, so Silent Mode
-does not mute the music. Media volume and the selected audio output still apply.
+and winds down on Pause (no spin with reduced motion). It is plain static files
+with no build step; serve the folder over HTTP, as JavaScript modules do not
+load from `file:` URLs. On iOS, Play requests a media playback audio session
+where supported, so Silent Mode does not mute the music. Media volume and the
+selected audio output still apply.
 
 ## A complete short example
 
@@ -350,8 +350,8 @@ and listener settings, not a running session; the next Play starts at home.
   a sole non-`.deadwax` file). `?gist=ID` automatically imports but does **not**
   start audio. Imports handle 404, 403/429 rate limits and timeouts. Truncated
   files are not fetched from raw URLs; download and upload those manually.
-- Audio starts only with Play. Nothing is fetched for the house records: their
-  text is embedded in `index.html` and mirrored in `examples/`.
+- Audio starts only with Play. The house records are the files in `examples/`,
+  fetched from the same folder.
 
 The only export is `.deadwax` text. WAV and other audio exports are out of
 scope.
@@ -373,6 +373,19 @@ browser. They are ordinary shelf entries: rename, edit or delete them freely.
 All are in 4/4. Each is a complete format example with editable chords, grids
 and drift bounds.
 
+## Code layout
+
+| File                | Contents                                                     |
+| ------------------- | ------------------------------------------------------------ |
+| `index.html`        | Markup only                                                  |
+| `tokens.css`        | Design tokens                                                |
+| `components.css`    | Component styles                                             |
+| `core.mjs`          | Pure parser, serialiser, seeded planner and Drift; no DOM    |
+| `audio.mjs`         | `AudioRack`: every synthesised source and effect (Web Audio) |
+| `transport.mjs`     | `Transport`: lookahead scheduling, pause, seek and cue       |
+| `house-records.mjs` | The house record list and loader for `examples/`             |
+| `app.mjs`           | UI wiring, storage, shelf, editor and Gist import            |
+
 ## Tests
 
 Run from the repository root (no dependencies):
@@ -383,14 +396,14 @@ node --test deadwax/
 
 Or open [tests.html](tests.html). The same assertions cover valid examples,
 invalid input, source positions, chord decoding, stable canonical round-trips,
-embedded/file parity (Node), seeded planning, captures, drift bounds, Hold and
-Return home. The browser test page embeds the actual app but never starts audio.
-The Node runner checks that the real audio rack requests playback routing before
-opening its context, with fallbacks for missing or rejected Audio Session APIs.
-It additionally exercises the real inline transport with a silent rack and
-deterministic clock: mid-bar resume, speculative scheduling rollback, PRNG
-preservation, seeking, cue cancellation, looping, interruption and rapid
-pause/resume resource cleanup.
+seeded planning, captures, drift bounds, Hold and Return home. The browser test
+page imports the core and house records but never starts audio. The Node runner
+also checks that every file in `examples/` is a house record, and that the real
+audio rack requests playback routing before opening its context, with fallbacks
+for missing or rejected Audio Session APIs. It additionally exercises the real
+transport with a silent rack and deterministic clock: mid-bar resume,
+speculative scheduling rollback, PRNG preservation, seeking, cue cancellation,
+looping, interruption and rapid pause/resume resource cleanup.
 
 ## Keyboard shortcuts
 

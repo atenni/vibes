@@ -1,32 +1,28 @@
-import test from "node:test";
+import test, { afterEach, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import vm from "node:vm";
+import * as DW from "./core.mjs";
+import { Transport } from "./transport.mjs";
 import { FIXTURE } from "./tests.mjs";
 
-// Exercise the real inline transport with a deterministic clock and a silent rack.
+// Exercise the real transport with a deterministic clock and a silent rack.
 // Browser smoke tests separately exercise the procedural Web Audio sources.
+let timers = [];
+const realTimers = { setTimeout, clearTimeout };
+beforeEach(() => {
+  timers = [];
+  globalThis.setTimeout = (fn, delay) => {
+    const timer = { fn, delay };
+    timers.push(timer);
+    return timer;
+  };
+  globalThis.clearTimeout = (timer) => {
+    if (timer) timer.cancelled = true;
+  };
+});
+afterEach(() => Object.assign(globalThis, realTimers));
+
 /** @param {{ resume?: () => Promise<void> }} [options] */
 function harness({ resume = async () => {} } = {}) {
-  const html = readFileSync(new URL("index.html", import.meta.url), "utf8");
-  const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(
-    (m) => m[1],
-  );
-  const timers = [],
-    sandbox = {
-      document: { hidden: false },
-      setTimeout(fn, delay) {
-        const timer = { fn, delay };
-        timers.push(timer);
-        return timer;
-      },
-      clearTimeout(timer) {
-        if (timer) timer.cancelled = true;
-      },
-    };
-  vm.createContext(sandbox);
-  vm.runInContext(scripts.slice(0, 3).join("\n"), sandbox);
-  const DW = sandbox.DeadWax;
   class FakeRack {
     constructor(seed) {
       this.random = DW.rng(seed ^ 0xa5a5a5a5);
@@ -63,8 +59,6 @@ function harness({ resume = async () => {} } = {}) {
       this.ctx.onstatechange?.();
     }
   }
-  sandbox.FakeRack = FakeRack;
-  vm.runInContext("AudioRack = FakeRack;", sandbox);
   const song = DW.parse(FIXTURE).song;
   const settings = {
     seed: song.seed,
@@ -75,12 +69,13 @@ function harness({ resume = async () => {} } = {}) {
   };
   const bars = [],
     pauses = [];
-  const transport = new sandbox.DeadWaxTransport(
+  const transport = new Transport(
     song,
     settings,
     (v) => bars.push(v),
     () => pauses.push(true),
   );
+  transport.createRack = (seed) => new FakeRack(seed);
   function advance(time) {
     const c = transport.rack.ctx;
     while (c.currentTime < time - 1e-9) {
