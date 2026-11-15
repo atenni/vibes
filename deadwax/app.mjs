@@ -1010,13 +1010,16 @@ function renderLibrary() {
     li.className = "sleeve";
     li.dataset.name = name;
     li.style.setProperty("--hue", sleeveHue(name));
-    li.classList.toggle(
-      "is-current",
-      name === currentShelfName && library[name] === lastApplied,
-    );
-    const spine = document.createElement("span");
-    spine.className = "sleeve__spine";
-    spine.setAttribute("aria-hidden", "true");
+    const current = name === currentShelfName && library[name] === lastApplied;
+    li.classList.toggle("is-current", current);
+    // The cover: a square sleeve with a die-cut hole showing the record's
+    // label, in the name's own colour, like the record on the turntable.
+    const cover = document.createElement("span");
+    cover.className = "sleeve__cover";
+    cover.setAttribute("aria-hidden", "true");
+    const label = document.createElement("span");
+    label.className = "sleeve__label";
+    cover.append(label);
     const body = document.createElement("div");
     body.className = "sleeve__body";
     const title = document.createElement("h3");
@@ -1025,11 +1028,29 @@ function renderLibrary() {
     const meta = document.createElement("p");
     meta.className = "sleeve__meta";
     const p = DW.parse(library[name]);
-    meta.textContent = p.errors.length
-      ? "Needs repair in the Score view"
-      : `${p.song.tempo} BPM · ${pretty(p.song.key)} · ${p.song.meter} · ${p.song.bars} bars` +
-        (/ · take \d+$/.test(name) ? " · captured" : "");
+    if (p.errors.length) meta.textContent = "Needs repair in the Score view";
+    else
+      meta.append(
+        ...[
+          `${p.song.tempo} BPM`,
+          pretty(p.song.key),
+          p.song.meter,
+          `${p.song.bars} bar${p.song.bars === 1 ? "" : "s"}`,
+          ...(/ · take \d+$/.test(name) ? ["captured"] : []),
+        ].flatMap((part, i, all) => {
+          // The dot stays with the part before it, so no line starts with one.
+          const span = document.createElement("span");
+          span.textContent = i < all.length - 1 ? `${part} ·` : part;
+          return i ? [" ", span] : [span];
+        }),
+      );
     body.append(title, meta);
+    if (current) {
+      const tag = document.createElement("p");
+      tag.className = "sleeve__current";
+      tag.textContent = "On the platter";
+      body.prepend(tag);
+    }
     const actions = document.createElement("div");
     actions.className = "sleeve__actions";
     actions.setAttribute("role", "group");
@@ -1038,7 +1059,9 @@ function renderLibrary() {
       const b = document.createElement("button");
       b.type = "button";
       b.className =
-        "key key--quiet" + (action === "delete" ? " key--danger" : "");
+        "key key--quiet" +
+        (action === "load" ? " sleeve__load" : "") +
+        (action === "delete" ? " key--danger" : "");
       b.dataset.action = action;
       b.textContent =
         action === "load"
@@ -1046,7 +1069,7 @@ function renderLibrary() {
           : action[0].toUpperCase() + action.slice(1);
       actions.append(b);
     }
-    li.append(spine, body, actions);
+    li.append(cover, body, actions);
     list.append(li);
   }
 }

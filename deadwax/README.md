@@ -60,9 +60,10 @@ steering at the same bars give the same music.
 - **Bring a record in** by dropping a `.deadwax` file anywhere (up to 1 MB),
   choosing a file, or pasting a GitHub Gist URL or ID. Linking to `?gist=ID`
   imports it without starting playback.
-- **The shelf** keeps named Pressings in this browser: Put on, Rename,
-  Duplicate, Export and Delete. Your draft and settings are saved too. If the
-  browser won't save, everything still works; export to keep your work.
+- **The shelf** keeps named Pressings in this browser as record sleeves, each
+  with its own colour. Put on, Rename, Duplicate, Export and Delete. Your draft
+  and settings are saved too. If the browser won't save, everything still works;
+  export to keep your work.
 - An **Edited** tag means the record has changed since you put it on.
   **Unsaved** means it isn't on your shelf, for example a file, Gist or New
   Pressing.
