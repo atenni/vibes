@@ -1,9 +1,9 @@
 deadwax 1
 title Corner store neon
-tempo 98
+tempo 110
 meter 4/4
 key A dorian
-swing 0.2
+swing 0.16
 bars 8
 seed 161803
 
@@ -39,8 +39,8 @@ texture room 0.02
 texture hum 0.03
 
 drift rate 0.4
-drift tempo 90 104
-drift swing 0.1 0.32
+drift tempo 102 116
+drift swing 0.06 0.28
 drift humanise 0.05 0.5
 drift busyness 0.2 0.9
 drift embellish 0 0.7
