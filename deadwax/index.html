@@ -76,6 +76,8 @@
           var(--c-face-off)
         );
         --c-face-ink: #2b2113; /* scale, legends on face */
+        --c-bulb: #ffd08a; /* incandescent meter lamp: spill */
+        --c-bulb-hot: #fff3d9; /* incandescent meter lamp: hotspot */
         --c-needle: #9c2b18; /* needle while lit */
         --c-face-home: #2f6a55; /* home tick on face */
 
@@ -1785,12 +1787,52 @@
  * .vu       centre-zero meter, one per dimension. JS sets --d (−1 … 1),
  *           where ±1 is the edge of that dimension's permitted drift range.
  * .vu--gauge one-sided meter for total distance from home. --d is 0 … 1.
- * The needle eases over --t-needle, so a once-per-bar update looks damped.
+ * The needle eases over --t-needle, so a once-per-bar update looks damped,
+ * and wobbles slightly while playing (dw-wobble).
  */
 
       .vu {
         --d: 0;
         --sweep: 48deg;
+        --wobble: 0.9deg;
+        /* Re-resolve the face colour here: on :root, --lamp is always 0. */
+        --c-face: color-mix(
+          in oklab,
+          var(--c-face-lit) calc(var(--lamp) * 100%),
+          var(--c-face-off)
+        );
+        /* Lit like a 1970s console meter: a small incandescent bulb hides
+           under the black pivot hood and shines up onto the card face. Warm
+           and bright just above the hood, falling off into the top corners,
+           with the bezel shading the top edge. --lamp warms it up and down. */
+        --vu-light:
+          linear-gradient(
+            rgb(20 12 2 / calc(0.04 + var(--lamp) * 0.12)),
+            transparent 18%
+          ),
+          radial-gradient(
+            42% 60% at 50% 104%,
+            color-mix(
+              in oklab,
+              var(--c-bulb-hot) calc(var(--lamp) * 80%),
+              transparent
+            ),
+            transparent
+          ),
+          radial-gradient(
+            80% 110% at 50% 104%,
+            color-mix(
+              in oklab,
+              var(--c-bulb) calc(var(--lamp) * 40%),
+              transparent
+            ),
+            transparent
+          ),
+          radial-gradient(
+            120% 120% at 50% 100%,
+            transparent 45%,
+            rgb(46 28 8 / calc(var(--lamp) * 0.18)) 100%
+          );
         min-width: 0;
         margin: 0;
       }
@@ -1802,15 +1844,7 @@
         background:
           url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 56'%3E%3Cpath d='M15.8 33.1A46 46 0 0 1 84.2 33.1' fill='none' stroke='%232b2113' stroke-width='1'/%3E%3Cpath d='M15.8 33.1L21.0 37.7' stroke='%232b2113' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M23.0 26.6L25.3 29.9' stroke='%232b2113' stroke-width='1.0' stroke-linecap='round'/%3E%3Cpath d='M31.3 21.8L32.9 25.5' stroke='%232b2113' stroke-width='1.0' stroke-linecap='round'/%3E%3Cpath d='M40.4 18.8L41.3 22.8' stroke='%232b2113' stroke-width='1.0' stroke-linecap='round'/%3E%3Cpath d='M50.0 17.8L50.0 24.8' stroke='%232f6a55' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M59.6 18.8L58.7 22.8' stroke='%232b2113' stroke-width='1.0' stroke-linecap='round'/%3E%3Cpath d='M68.7 21.8L67.1 25.5' stroke='%232b2113' stroke-width='1.0' stroke-linecap='round'/%3E%3Cpath d='M77.0 26.6L74.7 29.9' stroke='%232b2113' stroke-width='1.0' stroke-linecap='round'/%3E%3Cpath d='M84.2 33.1L79.0 37.7' stroke='%232b2113' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M14.2 31.6A46 46 0 0 1 20.3 25.9' fill='none' stroke='%239c2b18' stroke-width='2.2'/%3E%3Cpath d='M79.7 25.9A46 46 0 0 1 85.8 31.6' fill='none' stroke='%239c2b18' stroke-width='2.2'/%3E%3C/svg%3E")
             center top / 100% auto no-repeat,
-          radial-gradient(
-            120% 90% at 50% 120%,
-            color-mix(
-              in oklab,
-              var(--c-amber) calc(var(--lamp) * 35%),
-              transparent
-            ),
-            transparent 70%
-          ),
+          var(--vu-light),
           var(--c-face);
         box-shadow:
           inset 0 0 0 1px rgb(0 0 0 / 0.35),
@@ -1833,6 +1867,65 @@
         transform-origin: 50% 100%;
         transform: rotate(calc(var(--d) * var(--sweep)));
         transition: transform var(--t-needle) var(--ease-damped);
+        /* The needle rides just above the card, so it casts a soft shadow. */
+        box-shadow: 1px 0 2px rgb(30 18 4 / calc(0.15 + var(--lamp) * 0.2));
+        /* A steady needle still breathes: a small, uneven wobble layered on
+           top of the eased travel (rotate composes with transform). JS gives
+           each meter its own period and phase so they never move in step.
+           Paused, the animation freezes where it is, like the rest of the
+           meter; locked meters and reduced motion stay perfectly still. */
+        rotate: 0deg;
+        animation: dw-wobble var(--wobble-period, 3.1s) ease-in-out
+          var(--wobble-delay, 0s) infinite paused;
+      }
+      body[data-audio="on"] .vu:not(.is-locked) .vu__needle {
+        animation-play-state: running;
+      }
+      @keyframes dw-wobble {
+        12% {
+          rotate: calc(var(--wobble) * 0.45);
+        }
+        25% {
+          rotate: calc(var(--wobble) * -0.25);
+        }
+        39% {
+          rotate: calc(var(--wobble) * 0.7);
+        }
+        52% {
+          rotate: calc(var(--wobble) * 0.1);
+        }
+        63% {
+          rotate: calc(var(--wobble) * -0.55);
+        }
+        78% {
+          rotate: calc(var(--wobble) * 0.3);
+        }
+        90% {
+          rotate: calc(var(--wobble) * -0.15);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .vu__needle {
+          animation: none;
+        }
+      }
+      /* The cover glass: a faint, fixed reflection from the room, and a
+         highlight along the top edge. It sits over the needle and pivot. */
+      .vu__face::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        pointer-events: none;
+        border-radius: inherit;
+        background: linear-gradient(
+          112deg,
+          transparent 22%,
+          rgb(255 255 255 / 0.1) 23%,
+          rgb(255 255 255 / 0.03) 44%,
+          transparent 45%
+        );
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22);
       }
       .vu__face::after {
         content: "";
@@ -1842,6 +1935,7 @@
         width: 22px;
         height: 22px;
         margin-left: -11px;
+        z-index: 1;
         border-radius: 50%;
         background: radial-gradient(circle at 50% 35%, #3a3328, #15110b);
       }
@@ -1895,6 +1989,7 @@
       .vu.is-locked .vu__needle {
         transform: rotate(0);
         background: var(--c-face-ink);
+        animation: none;
       }
       .vu.is-locked .vu__value {
         color: var(--c-muted);
@@ -1905,6 +2000,8 @@
       /* Gauge: one-sided total distance from home. */
       .vu--gauge {
         --sweep: 50deg;
+        --wobble: 0.45deg; /* longer needle, so less angle for the same tip travel */
+        --wobble-period: 3.7s;
       }
       .vu--gauge .vu__face {
         aspect-ratio: 2 / 1.08;
@@ -1912,15 +2009,7 @@
         background:
           url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 108'%3E%3Cpath d='M24.9 64.4A98 98 0 0 1 175.1 64.4' fill='none' stroke='%232b2113' stroke-width='1.2'/%3E%3Cpath d='M24.9 64.4L36.9 74.5' stroke='%232f6a55' stroke-width='2.6' stroke-linecap='round'/%3E%3Cpath d='M37.0 52.4L42.7 59.1' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M51.0 42.6L55.4 50.2' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M66.5 35.4L69.5 43.6' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M83.0 30.9L84.5 39.6' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M100.0 29.4L100.0 45.1' stroke='%232b2113' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M117.0 30.9L115.5 39.6' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M133.5 35.4L130.5 43.6' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M149.0 42.6L144.6 50.2' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M163.0 52.4L157.3 59.1' stroke='%232b2113' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M175.1 64.4L163.1 74.5' stroke='%232b2113' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M142.7 35.9A98 98 0 0 1 177.4 62.5' fill='none' stroke='%239c2b18' stroke-width='3.6'/%3E%3C/svg%3E")
             center top / 100% auto no-repeat,
-          radial-gradient(
-            120% 90% at 50% 120%,
-            color-mix(
-              in oklab,
-              var(--c-amber) calc(var(--lamp) * 35%),
-              transparent
-            ),
-            transparent 70%
-          ),
+          var(--vu-light),
           var(--c-face);
       }
       .vu--gauge .vu__needle {
@@ -5727,9 +5816,21 @@
           const meters = document.createElement("div");
           meters.className = "bridge__meters";
           for (const key of keys) {
-            const el = document.createElement("div");
+            const el = document.createElement("div"),
+              n =
+                $("dimensions").querySelectorAll(".vu").length +
+                meters.children.length;
             el.className = "vu";
             el.id = "dim-" + key;
+            // Golden-ratio steps spread periods and phases without repeats.
+            el.style.setProperty(
+              "--wobble-period",
+              (2.4 + ((n * 0.618) % 1) * 1.6).toFixed(2) + "s",
+            );
+            el.style.setProperty(
+              "--wobble-delay",
+              (-((n * 1.618) % 1) * 4).toFixed(2) + "s",
+            );
             el.setAttribute("role", "meter");
             el.setAttribute("aria-label", labels[key] || key);
             el.setAttribute("aria-valuemin", "-100");
