@@ -5,12 +5,12 @@ instrumental loop. Dead Wax reads it locally: no uploads, sample downloads,
 external fonts, libraries, model calls or analytics. The optional Gist importer
 contacts only `https://api.github.com/gists/{id}`.
 
-Open [the player](index.html), select an example and press **Play**. It also
-works as a standalone downloaded `index.html`, without a server or build step.
-Browser storage availability for `file:` URLs varies; file export always works.
-On iOS, Play requests a media playback audio session where supported, so Silent
-Mode does not mute the music. Media volume and the selected audio output still
-apply.
+Open [the player](index.html), pick a record from the title menu and press
+**Play**. It also works as a standalone downloaded `index.html`, without a
+server or build step. Browser storage availability for `file:` URLs varies; file
+export always works. On iOS, Play requests a media playback audio session where
+supported, so Silent Mode does not mute the music. Media volume and the selected
+audio output still apply.
 
 ## A complete short example
 
@@ -316,12 +316,12 @@ playing a burst of late notes.
 
 The PRNG is a seeded 32-bit Mulberry-style generator. Score planning, timing and
 sound/noise generation use separate derived streams. The seed is shown and
-saved. The same seed, Pressing and **same bar-timed steering actions** reproduce
-the compositional session. A seed alone cannot encode arbitrary user actions;
-those actions are not recorded as a replay log. Browser/sample-rate differences
-can still change the exact waveform. Pause/resume preserves the session in the
-current tab. Reload restores source and listener settings, not a running
-session; the next Play starts at home.
+edited beside the Score editor, and saved. The same seed, Pressing and **same
+bar-timed steering actions** reproduce the compositional session. A seed alone
+cannot encode arbitrary user actions; those actions are not recorded as a replay
+log. Browser/sample-rate differences can still change the exact waveform.
+Pause/resume preserves the session in the current tab. Reload restores source
+and listener settings, not a running session; the next Play starts at home.
 
 ## Files, shelf and Gists
 
@@ -333,6 +333,9 @@ session; the next Play starts at home.
 - **Upload** and drag/drop read a local file, with a 1 MB limit.
 - **New Pressing** opens an unsaved, valid starter in the Score view and selects
   its title. **Save to shelf** keeps the current editor text under a name.
+- **The title** on the Desk is a menu of everything on the shelf. A tag marks a
+  loaded Pressing as **Edited** (changed since it was put on) or **Unsaved**
+  (not on the shelf, such as a file, Gist or New Pressing).
 - **Your shelf** is a named in-browser library with Put on, Rename, Duplicate,
   Export and Delete actions. Rename rejects collisions; Delete asks for inline
   confirmation and never removes the loaded score. Replacing a saved name asks
@@ -345,13 +348,17 @@ session; the next Play starts at home.
   a sole non-`.deadwax` file). `?gist=ID` automatically imports but does **not**
   start audio. Imports handle 404, 403/429 rate limits and timeouts. Truncated
   files are not fetched from raw URLs; download and upload those manually.
-- Audio starts only with Play. Nothing is fetched for examples: their text is
-  embedded in `index.html` and mirrored in `examples/`.
+- Audio starts only with Play. Nothing is fetched for the house records: their
+  text is embedded in `index.html` and mirrored in `examples/`.
 
 The only export is `.deadwax` text. WAV and other audio exports are out of
 scope.
 
-## Included Pressings
+## House records
+
+The five house records are put on the shelf the first time Dead Wax opens in a
+browser. They are ordinary shelf entries: rename, edit or delete them freely.
+**Put the house records back** on the Shelf restores any that are missing.
 
 | File                                                 | Mood                            | Tempo / meter |
 | ---------------------------------------------------- | ------------------------------- | ------------- |

@@ -762,7 +762,7 @@
       }
 
       .title {
-        margin: var(--sp-1) 0 var(--sp-3);
+        margin: 0;
         font-family: var(--font-display);
         font-size: var(--fs-title);
         font-weight: 500;
@@ -772,6 +772,49 @@
         overflow-wrap: anywhere;
       }
 
+      /* The title doubles as the record picker. A transparent native select
+         covers it, so iOS still shows its own wheel and screen readers get a
+         labelled combobox. */
+      .picker {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+        width: fit-content;
+        max-width: 100%;
+        margin: 0 0 var(--sp-2);
+        padding: 2px var(--sp-2) 2px 0;
+        border-radius: var(--r-sm);
+      }
+      .picker__chevron {
+        flex: none;
+        width: 14px;
+        height: 10px;
+        color: var(--c-muted);
+        transition: color var(--t-quick);
+      }
+      .picker__select {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        font-size: 1rem; /* iOS: no focus zoom */
+      }
+      .picker__select:disabled {
+        cursor: default;
+      }
+      .picker:has(.picker__select:disabled) .picker__chevron {
+        visibility: hidden;
+      }
+      .picker:hover .picker__chevron {
+        color: var(--c-amber);
+      }
+      .picker:has(.picker__select:focus-visible) {
+        box-shadow: var(--focus-ring);
+      }
+
       .record-line {
         display: flex;
         align-items: center;
@@ -779,20 +822,49 @@
         flex-wrap: wrap;
       }
 
+      /* Small outlined tag for Edited / Unsaved: words, not colour. */
+      .tag {
+        padding: 1px 8px;
+        border: 1px solid var(--c-edge);
+        border-radius: var(--r-pill);
+        color: var(--c-muted);
+        font: 600 var(--fs-legend) var(--font-legend);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      /* Tempo · key · meter · loop on one line, like a record label. */
       .meta {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--sp-2) var(--sp-5);
+        gap: 0;
         margin: 0;
+        color: var(--c-muted);
       }
       .meta div {
-        display: grid;
-        gap: 3px;
+        display: contents;
       }
       .meta dd {
         margin: 0;
-        font: 400 var(--fs-md) / 1.2 var(--font-mono);
+        font: 400 var(--fs-sm) / 1.4 var(--font-mono);
         font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .meta div:not(:last-child) dd::after {
+        content: "·";
+        padding-inline: 0.6ch;
+        color: var(--c-seam-strong);
+      }
+
+      .seed-field {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--sp-2);
+        min-height: var(--tap);
+      }
+
+      .shelf__restock {
+        margin: var(--sp-3) 0 0;
       }
 
       /* Inline input that reads like a display value (Seed). */
@@ -2488,59 +2560,49 @@
             </div>
 
             <div class="transport__record">
-              <div class="record-line">
-                <span class="legend" aria-hidden="true">On the platter</span>
-                <label class="sr-only" for="examples">Choose a record</label>
-                <select id="examples" class="select select--compact">
-                  <option value="0">Window seat, 1:17 am</option>
-                  <option value="1">Sunday paper</option>
-                  <option value="2">The last table</option>
-                  <option value="3">Empty platform</option>
-                  <option value="4">Three cups left</option>
-                  <option value="custom" disabled>
-                    Custom / edited Pressing
-                  </option>
-                </select>
+              <!-- The title is the record picker: a native select sits over it. -->
+              <div class="picker">
+                <h1 id="title" class="title">Window seat, 1:17 am</h1>
+                <svg
+                  class="picker__chevron"
+                  viewBox="0 0 12 8"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M1.5 1.5 6 6l4.5-4.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <label class="sr-only" for="record"
+                  >Choose a record from the shelf</label
+                >
+                <select id="record" class="picker__select"></select>
               </div>
-              <h1 id="title" class="title">Window seat, 1:17 am</h1>
-              <dl class="meta">
-                <div>
-                  <dt class="legend">Tempo</dt>
-                  <dd id="meta-tempo">72</dd>
-                </div>
-                <div>
-                  <dt class="legend">Key</dt>
-                  <dd id="meta-key">C minor</dd>
-                </div>
-                <div>
-                  <dt class="legend">Meter</dt>
-                  <dd id="meta-meter">4/4</dd>
-                </div>
-                <div>
-                  <dt class="legend">Loop</dt>
-                  <dd id="meta-bars">4 bars</dd>
-                </div>
-                <div>
-                  <dt class="legend"><label for="seed">Seed</label></dt>
-                  <dd>
-                    <input
-                      id="seed"
-                      class="inline-input"
-                      type="number"
-                      inputmode="numeric"
-                      min="0"
-                      max="4294967295"
-                      step="1"
-                      value="104729"
-                      aria-describedby="seed-help"
-                    />
-                    <span id="seed-help" class="sr-only"
-                      >Takes effect on the next Play. Locked while
-                      playing.</span
-                    >
-                  </dd>
-                </div>
-              </dl>
+              <div class="record-line">
+                <span id="title-tag" class="tag" hidden>Unsaved</span>
+                <dl class="meta">
+                  <div>
+                    <dt class="sr-only">Tempo</dt>
+                    <dd id="meta-tempo">72 bpm</dd>
+                  </div>
+                  <div>
+                    <dt class="sr-only">Key</dt>
+                    <dd id="meta-key">C minor</dd>
+                  </div>
+                  <div>
+                    <dt class="sr-only">Meter</dt>
+                    <dd id="meta-meter">4/4</dd>
+                  </div>
+                  <div>
+                    <dt class="sr-only">Loop</dt>
+                    <dd id="meta-bars">4 bars</dd>
+                  </div>
+                </dl>
+              </div>
             </div>
 
             <div class="transport__display display">
@@ -3181,6 +3243,23 @@
                 </svg>
                 Export .deadwax
               </button>
+              <label class="seed-field">
+                <span class="legend">Seed</span>
+                <input
+                  id="seed"
+                  class="inline-input"
+                  type="number"
+                  inputmode="numeric"
+                  min="0"
+                  max="4294967295"
+                  step="1"
+                  value="104729"
+                  aria-describedby="seed-help"
+                />
+              </label>
+              <span id="seed-help" class="sr-only"
+                >Takes effect on the next Play. Locked while playing.</span
+              >
               <span class="spacer"></span>
               <p class="hint">Invalid text never replaces what’s playing.</p>
             </div>
@@ -3253,6 +3332,11 @@
                 a record in from a file or a Gist.
               </p>
             </div>
+            <p class="shelf__restock" id="restock-row" hidden>
+              <button id="restock" class="key key--quiet" type="button">
+                Put the house records back
+              </button>
+            </p>
           </section>
 
           <section class="rack import" aria-labelledby="import-title">
@@ -5203,17 +5287,35 @@
         if (shelf && typeof shelf === "object" && !Array.isArray(shelf))
           for (const [name, text] of Object.entries(shelf))
             if (typeof text === "string") library[name] = text;
+        /* The house records are ordinary shelf entries. They are stocked once per
+           browser; after that, deleting or renaming them sticks. */
+        function restock() {
+          let added = 0;
+          for (const { text } of EXAMPLES) {
+            if (Object.values(library).includes(text)) continue;
+            library[uniqueName(DW.parse(text).song.title)] = text;
+            added++;
+          }
+          return added;
+        }
+        if (!storage.read("deadwax.house.v1", false)) {
+          restock();
+          storage.write("deadwax.library.v1", library);
+          storage.write("deadwax.house.v1", true);
+        }
         function persist() {
           if (!restoring)
             storage.write("deadwax.session.v1", {
               text: $("editor").value,
               applied: lastApplied,
+              shelfName: currentShelfName,
               settings: { ...settings, muted: [...settings.muted] },
             });
         }
         function saveShelf() {
           const ok = storage.write("deadwax.library.v1", library);
           renderLibrary();
+          renderPicker();
           return ok;
         }
         function setView(view) {
@@ -5371,6 +5473,7 @@
           $("editor").value = patchText($("editor").value, key, value);
           lastApplied = patchText(lastApplied, key, value);
           showErrors(DW.parse($("editor").value).errors);
+          renderPicker();
           persist();
         }
         function knob(input, value) {
@@ -5587,11 +5690,42 @@
           $("volume").value = settings.volume;
           $("volume-value").textContent = Math.round(settings.volume * 100);
         }
+        /* Which shelf entry is on the platter, if any. An exact text match wins;
+           otherwise keep the entry it was loaded from, now marked Edited. */
+        function syncCurrent() {
+          if (
+            currentShelfName !== null &&
+            !Object.hasOwn(library, currentShelfName)
+          )
+            currentShelfName = null;
+          if (library[currentShelfName] !== lastApplied)
+            currentShelfName =
+              Object.keys(library).find(
+                (name) => library[name] === lastApplied,
+              ) ?? currentShelfName;
+        }
+        function renderPicker() {
+          syncCurrent();
+          const picker = $("record"),
+            names = Object.keys(library).sort(),
+            onShelf = currentShelfName !== null,
+            edited = onShelf && library[currentShelfName] !== lastApplied;
+          const options = names.map((name) => new Option(name, name));
+          if (!onShelf) {
+            const loose = new Option(song.title + " (not on the shelf)", "");
+            loose.disabled = true;
+            options.unshift(loose);
+          }
+          picker.replaceChildren(...options);
+          picker.value = onShelf ? currentShelfName : "";
+          picker.disabled = !names.length && !onShelf;
+          $("title-tag").hidden = onShelf && !edited;
+          $("title-tag").textContent = onShelf ? "Edited" : "Unsaved";
+        }
         function renderSong() {
-          const index = EXAMPLES.findIndex((e) => e.text === lastApplied);
-          $("examples").value = index >= 0 ? String(index) : "custom";
+          renderPicker();
           $("title").textContent = song.title;
-          $("meta-tempo").textContent = song.tempo;
+          $("meta-tempo").textContent = song.tempo + " bpm";
           $("meta-key").textContent = pretty(song.key);
           $("meta-meter").textContent = song.meter;
           $("meta-bars").textContent =
@@ -5739,19 +5873,13 @@
             )
           );
         }
-        $("examples").replaceChildren(
-          ...EXAMPLES.map(
-            (e, i) => new Option(DW.parse(e.text).song.title, String(i)),
-          ),
-        );
-        const custom = new Option("Custom / edited Pressing", "custom");
-        custom.disabled = true;
-        $("examples").add(custom);
-        $("examples").onchange = () => {
-          if (mayReplace()) {
-            currentShelfName = null;
-            applyText(EXAMPLES[+$("examples").value].text);
-          } else renderSong();
+        $("record").onchange = () => {
+          const name = $("record").value;
+          if (Object.hasOwn(library, name) && mayReplace()) {
+            currentShelfName = name;
+            if (applyText(library[name]))
+              status(`“${name}” is on the platter.`);
+          } else renderPicker();
         };
         $("apply").onclick = () => {
           const ok = applyText($("editor").value, {
@@ -6039,6 +6167,17 @@
                 : " It is kept in memory; export it before closing this tab."),
           );
         };
+        $("restock").onclick = () => {
+          const added = restock();
+          const ok = saveShelf();
+          focusSleeve(Object.keys(library).sort()[0]);
+          status(
+            (added === 1
+              ? "One house record is back on the shelf."
+              : `${added} house records are back on the shelf.`) +
+              (ok ? "" : " They are kept in memory for this page session."),
+          );
+        };
         $("new").onclick = () => {
           if (!mayReplace()) return;
           currentShelfName = null;
@@ -6090,10 +6229,11 @@
           $("shelf-count").textContent =
             names.length + (names.length === 1 ? " record" : " records");
           $("shelf-empty").hidden = !!names.length;
+          $("restock-row").hidden = EXAMPLES.every(({ text }) =>
+            Object.values(library).includes(text),
+          );
           list.hidden = !names.length;
-          if (currentShelfName === null)
-            currentShelfName =
-              names.find((name) => library[name] === lastApplied) ?? null;
+          syncCurrent();
           for (const name of names) {
             const li = document.createElement("li");
             li.className = "sleeve";
@@ -6558,6 +6698,8 @@
             !DW.parse(saved.applied).errors.length
               ? saved.applied
               : EXAMPLES[0].text;
+          if (typeof saved.shelfName === "string")
+            currentShelfName = saved.shelfName;
           applyText(DW.parse(saved.text).errors.length ? fallback : saved.text);
           if (saved.text !== lastApplied) {
             $("editor").value = saved.text;
