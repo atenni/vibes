@@ -2131,7 +2131,14 @@ body[data-audio="on"] .vu:not(.is-locked) .vu__needle {
   width: auto;
 }
 
-/* #library: list of saved Pressings as sleeves. */
+/* #library: saved Pressings as record sleeves.
+   Each sleeve is a square cover with a die-cut hole showing the record's
+   label, in the name's stable --hue, beside its title, meta and actions.
+   Phones: one compact row per sleeve. Wider shelves: a grid of cards.
+   The loaded record says "On the platter" in text, not by colour alone. */
+.shelf {
+  container-type: inline-size;
+}
 .sleeves {
   display: grid;
   gap: var(--sp-2);
@@ -2140,20 +2147,102 @@ body[data-audio="on"] .vu:not(.is-locked) .vu__needle {
   list-style: none;
 }
 .sleeve {
+  --cover: 72px;
   display: grid;
-  grid-template-columns: 8px minmax(0, 1fr) auto;
-  gap: var(--sp-3);
+  grid-template-columns: var(--cover) minmax(0, 1fr);
+  grid-template-areas: "cover body" "actions actions";
+  gap: var(--sp-2) var(--sp-3);
   align-items: center;
   padding: var(--sp-3);
   border: 1px solid var(--c-seam);
   border-radius: var(--r-md);
   background: var(--c-panel);
 }
-.sleeve__spine {
-  align-self: stretch;
-  border-radius: 2px;
-  background: hsl(var(--hue, 35) 45% 55%);
-  opacity: 0.85;
+.sleeve__cover {
+  grid-area: cover;
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 3px;
+  /* Printed card: the name's colour, darkened to sit on the console, with
+     a worn top edge and a soft shadow on the shelf. */
+  background:
+    linear-gradient(160deg, rgb(255 255 255 / 0.1), transparent 45%),
+    hsl(var(--hue, 35) 28% 26%);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.07),
+    0 2px 4px rgb(0 0 0 / 0.45);
+}
+/* Die-cut hole: the black record shows through around the label. The
+   label is the record's play button: ▶, or ❚❚ while it plays, printed in
+   ink like the turntable's. */
+.sleeve__play {
+  display: grid;
+  place-items: center;
+  width: 56%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle,
+      hsl(var(--hue, 35) 55% 62%) 0 27%,
+      transparent 27.5%
+    ),
+    repeating-radial-gradient(
+      circle,
+      transparent 0 1.6px,
+      rgb(255 255 255 / 0.05) 1.6px 2.2px
+    ),
+    #0a0c0d;
+  box-shadow:
+    inset 0 1px 3px rgb(0 0 0 / 0.7),
+    0 0 0 1px rgb(0 0 0 / 0.35);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform var(--t-quick);
+}
+.sleeve__play svg {
+  width: 54%;
+  height: 54%;
+  fill: var(--c-amber-ink);
+  opacity: 0.82;
+}
+.sleeve__play .icon-pause,
+body[data-audio="on"] .sleeve.is-current .sleeve__play .icon-play {
+  display: none;
+}
+body[data-audio="on"] .sleeve.is-current .sleeve__play .icon-pause {
+  display: inline;
+}
+.sleeve__play:hover {
+  transform: scale(1.04);
+}
+.sleeve__play:active {
+  transform: scale(0.97);
+}
+.sleeve__play:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 1px 3px rgb(0 0 0 / 0.7),
+    var(--focus-ring);
+}
+.sleeve__body {
+  grid-area: body;
+  min-width: 0;
+}
+.sleeve__current {
+  margin: 0 0 2px;
+  font: 600 var(--fs-legend) var(--font-legend);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-amber);
+}
+.sleeve__current::before {
+  content: "▶ ";
 }
 .sleeve__title {
   margin: 0;
@@ -2163,30 +2252,35 @@ body[data-audio="on"] .vu:not(.is-locked) .vu__needle {
 .sleeve__meta {
   margin: 2px 0 0;
   color: var(--c-muted);
-  font: var(--fs-sm) var(--font-mono);
+  font: var(--fs-sm) / 1.35 var(--font-mono);
+}
+.sleeve__meta span {
+  white-space: nowrap;
 }
 .sleeve.is-current {
   border-color: color-mix(in oklab, var(--c-amber) 55%, var(--c-seam));
 }
-.sleeve.is-current .sleeve__body::before {
-  content: "On the platter";
-  display: block;
-  margin-bottom: 2px;
-  font: 600 var(--fs-legend) var(--font-legend);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--c-amber);
+.sleeve.is-current .sleeve__cover {
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.07),
+    0 0 0 2px var(--c-amber);
 }
 .sleeve__actions {
+  grid-area: actions;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
   gap: var(--sp-1);
+}
+/* Compact keys, left-aligned and wrapping naturally. Delete comes last and
+   is red; it also asks for confirmation, so it needs no extra separation. */
+.sleeve__actions .key {
+  padding: 0 var(--sp-2);
+  letter-spacing: 0.08em;
 }
 /* Rename and delete-confirm replace the actions in place. */
 .sleeve__rename,
 .sleeve__confirm {
-  grid-column: 2 / -1;
+  grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
@@ -2202,13 +2296,22 @@ body[data-audio="on"] .vu:not(.is-locked) .vu__needle {
   flex: 1 1 12rem;
   font-size: var(--fs-sm);
 }
-@media (max-width: 759px) {
-  .sleeve {
-    grid-template-columns: 8px minmax(0, 1fr);
+/* Wide shelves: a grid of sleeve cards with the cover on top. */
+@container (min-width: 560px) {
+  .sleeves {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--sp-3);
   }
-  .sleeve__actions {
-    grid-column: 2;
-    justify-content: flex-start;
+  .sleeve {
+    --cover: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "cover" "body" "actions";
+    align-content: start;
+    align-items: start;
+  }
+  .sleeve__cover {
+    width: 100%;
+    margin-bottom: var(--sp-1);
   }
 }
 
