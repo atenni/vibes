@@ -101,8 +101,17 @@ function saveShelf() {
   renderPicker();
   return ok;
 }
+const VIEWS = ["desk", "score", "shelf"];
 function setView(view) {
   document.body.dataset.view = view;
+  // Remember the view in the URL, so a refresh comes back to it. Desk is the
+  // default and keeps the URL clean.
+  const url = new URL(location.href);
+  if (view === "desk") url.searchParams.delete("view");
+  else url.searchParams.set("view", view);
+  try {
+    history.replaceState(null, "", url);
+  } catch {}
   if (view === "shelf") renderLibrary();
   if (view === "desk" && transport?.song === song) {
     const p = transport.position();
@@ -545,6 +554,11 @@ function spinPlatter(on) {
 function transportUI() {
   const playing = !!transport?.running;
   document.body.dataset.audio = playing ? "on" : "off";
+  if (document.body.dataset.view === "shelf") {
+    const focused = document.activeElement?.closest(".sleeve")?.dataset.name;
+    renderLibrary();
+    if (focused) focusSleeve(focused);
+  }
   spinPlatter(playing);
   $("power-text").textContent = playing
     ? "Spinning"
@@ -1012,14 +1026,23 @@ function renderLibrary() {
     li.style.setProperty("--hue", sleeveHue(name));
     const current = name === currentShelfName && library[name] === lastApplied;
     li.classList.toggle("is-current", current);
-    // The cover: a square sleeve with a die-cut hole showing the record's
-    // label, in the name's own colour, like the record on the turntable.
-    const cover = document.createElement("span");
+    // The cover: a square sleeve with a die-cut hole showing the record. Its
+    // label is the play button, printed like the turntable's: ▶, or ❚❚ while
+    // this record is playing. No spindle hole at this size: it would merge
+    // with the pause bars into an H.
+    const cover = document.createElement("div");
     cover.className = "sleeve__cover";
-    cover.setAttribute("aria-hidden", "true");
-    const label = document.createElement("span");
-    label.className = "sleeve__label";
-    cover.append(label);
+    const play = document.createElement("button");
+    play.type = "button";
+    play.className = "sleeve__play";
+    play.dataset.action = "play";
+    play.setAttribute(
+      "aria-label",
+      `${current && transport?.running ? "Pause" : "Play"} ${name}`,
+    );
+    play.innerHTML =
+      '<svg viewBox="0 0 30 30" aria-hidden="true"><path class="icon-play" d="M12 9.5v11l8.5-5.5z"/><g class="icon-pause"><rect x="9.5" y="10" width="3.5" height="10" rx=".8"/><rect x="17" y="10" width="3.5" height="10" rx=".8"/></g></svg>';
+    cover.append(play);
     const body = document.createElement("div");
     body.className = "sleeve__body";
     const title = document.createElement("h3");
@@ -1055,25 +1078,20 @@ function renderLibrary() {
     actions.className = "sleeve__actions";
     actions.setAttribute("role", "group");
     actions.setAttribute("aria-label", name);
-    for (const action of ["load", "rename", "duplicate", "export", "delete"]) {
+    for (const action of ["rename", "duplicate", "export", "delete"]) {
       const b = document.createElement("button");
       b.type = "button";
       b.className =
-        "key key--quiet" +
-        (action === "load" ? " sleeve__load" : "") +
-        (action === "delete" ? " key--danger" : "");
+        "key key--quiet" + (action === "delete" ? " key--danger" : "");
       b.dataset.action = action;
-      b.textContent =
-        action === "load"
-          ? "Put on"
-          : action[0].toUpperCase() + action.slice(1);
+      b.textContent = action[0].toUpperCase() + action.slice(1);
       actions.append(b);
     }
     li.append(cover, body, actions);
     list.append(li);
   }
 }
-function focusSleeve(name, action = "load") {
+function focusSleeve(name, action = "play") {
   const item = [...$("library").children].find(
     (li) => li.dataset.name === name,
   );
@@ -1107,12 +1125,12 @@ $("library").onclick = (e) => {
   const name = item.dataset.name,
     text = library[name],
     action = b.dataset.action;
-  if (action === "load") {
-    if (mayReplace()) {
+  if (action === "play") {
+    const onPlatter = item.classList.contains("is-current");
+    if (onPlatter) $("play").click();
+    else if (mayReplace()) {
       currentShelfName = name;
-      applyText(text);
-      setView("desk");
-      status(`“${name}” is on the platter.`);
+      if (applyText(text)) $("play").click();
     }
     return;
   }
@@ -1493,7 +1511,9 @@ transportUI();
 restoring = false;
 persist();
 if (!saved) status("Everything is synthesised here, in your browser.");
-const gist = new URLSearchParams(location.search).get("gist");
+const params = new URLSearchParams(location.search);
+if (VIEWS.includes(params.get("view"))) setView(params.get("view"));
+const gist = params.get("gist");
 if (gist) {
   $("gist").value = gist;
   setView("shelf");

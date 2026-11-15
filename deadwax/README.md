@@ -12,7 +12,10 @@ The only network request is the optional Gist import, to
 
 ## Playing
 
-- **Choose a record** from the title menu. It lists everything on your shelf.
+- **Choose a record** from the title menu, or tap one on the Shelf. The title
+  menu lists everything on your shelf.
+- **Desk, Score and Shelf** are kept in the address (`?view=score`), so a
+  refresh comes back to the same view.
 - **Tap the turntable**, or press Space, to play or pause. The sticker on the
   record shows ▶ or ❚❚. Playback always loops.
 - **Pause** stops like tape: the pitch sags and the sound fades. The playhead,
@@ -61,9 +64,10 @@ steering at the same bars give the same music.
   choosing a file, or pasting a GitHub Gist URL or ID. Linking to `?gist=ID`
   imports it without starting playback.
 - **The shelf** keeps named Pressings in this browser as record sleeves, each
-  with its own colour. Put on, Rename, Duplicate, Export and Delete. Your draft
-  and settings are saved too. If the browser won't save, everything still works;
-  export to keep your work.
+  with its own colour. Tap a sleeve's record to play it (or pause it, if it's
+  already playing); Rename, Duplicate, Export and Delete sit beside it. Your
+  draft and settings are saved too. If the browser won't save, everything still
+  works; export to keep your work.
 - An **Edited** tag means the record has changed since you put it on.
   **Unsaved** means it isn't on your shelf, for example a file, Gist or New
   Pressing.

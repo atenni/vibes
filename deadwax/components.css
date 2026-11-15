@@ -2174,13 +2174,23 @@ body[data-audio="on"] .vu:not(.is-locked) .vu__needle {
     inset 0 0 0 1px rgb(255 255 255 / 0.07),
     0 2px 4px rgb(0 0 0 / 0.45);
 }
-/* Die-cut hole: the black record shows through around the label. */
-.sleeve__cover::before {
-  content: "";
-  position: absolute;
-  inset: 22%;
+/* Die-cut hole: the black record shows through around the label. The
+   label is the record's play button: ▶, or ❚❚ while it plays, printed in
+   ink like the turntable's. */
+.sleeve__play {
+  display: grid;
+  place-items: center;
+  width: 56%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
   background:
+    radial-gradient(
+      circle,
+      hsl(var(--hue, 35) 55% 62%) 0 27%,
+      transparent 27.5%
+    ),
     repeating-radial-gradient(
       circle,
       transparent 0 1.6px,
@@ -2190,16 +2200,35 @@ body[data-audio="on"] .vu:not(.is-locked) .vu__needle {
   box-shadow:
     inset 0 1px 3px rgb(0 0 0 / 0.7),
     0 0 0 1px rgb(0 0 0 / 0.35);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform var(--t-quick);
 }
-/* The record's label, in the name's colour, with its spindle hole. */
-.sleeve__label {
-  position: relative;
-  width: 30%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle, #0a0c0d 0 9%, transparent 10%),
-    hsl(var(--hue, 35) 55% 62%);
+.sleeve__play svg {
+  width: 54%;
+  height: 54%;
+  fill: var(--c-amber-ink);
+  opacity: 0.82;
+}
+.sleeve__play .icon-pause,
+body[data-audio="on"] .sleeve.is-current .sleeve__play .icon-play {
+  display: none;
+}
+body[data-audio="on"] .sleeve.is-current .sleeve__play .icon-pause {
+  display: inline;
+}
+.sleeve__play:hover {
+  transform: scale(1.04);
+}
+.sleeve__play:active {
+  transform: scale(0.97);
+}
+.sleeve__play:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 1px 3px rgb(0 0 0 / 0.7),
+    var(--focus-ring);
 }
 .sleeve__body {
   grid-area: body;
@@ -2242,19 +2271,13 @@ body[data-audio="on"] .vu:not(.is-locked) .vu__needle {
   flex-wrap: wrap;
   gap: var(--sp-1);
 }
-/* Compact keys: Put on and Delete at the ends, so the full-width Delete
-   row seen when wrapping doesn't shout. */
+/* Compact keys, with Delete set apart at the end. */
 .sleeve__actions .key {
   padding: 0 var(--sp-2);
   letter-spacing: 0.08em;
 }
 .sleeve__actions .key--danger {
   margin-left: auto;
-}
-/* Put on is the main action: first, and outlined in amber. */
-.sleeve__actions .sleeve__load {
-  border-color: var(--c-amber);
-  color: var(--c-amber);
 }
 /* Rename and delete-confirm replace the actions in place. */
 .sleeve__rename,
