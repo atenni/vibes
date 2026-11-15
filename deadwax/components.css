@@ -2271,13 +2271,22 @@ body[data-audio="on"] .sleeve.is-current .sleeve__play .icon-pause {
   flex-wrap: wrap;
   gap: var(--sp-1);
 }
-/* Compact keys, with Delete set apart at the end. */
+/* Compact keys, with Delete set apart at the end of the row. A flexible
+   spacer before Delete takes the spare room when all four fit on one line,
+   but can shrink to nothing, so when only Delete wraps it starts the next
+   line in line with the others. The grid cards below always wrap, so they
+   drop the spacer and keep every key left-aligned. */
 .sleeve__actions .key {
   padding: 0 var(--sp-2);
   letter-spacing: 0.08em;
 }
+.sleeve__actions::after {
+  content: "";
+  order: 1;
+  flex: 1 1 0;
+}
 .sleeve__actions .key--danger {
-  margin-left: auto;
+  order: 2;
 }
 /* Rename and delete-confirm replace the actions in place. */
 .sleeve__rename,
@@ -2314,6 +2323,9 @@ body[data-audio="on"] .sleeve.is-current .sleeve__play .icon-pause {
   .sleeve__cover {
     width: 100%;
     margin-bottom: var(--sp-1);
+  }
+  .sleeve__actions::after {
+    content: none;
   }
 }
 
