@@ -288,25 +288,55 @@ a:focus-visible {
   justify-content: center;
 }
 
+/* Arcade icon toggles: square, chunky pixel glyphs, neon glow when on and a
+   pixel slash when off. */
 .toggle {
-  min-height: 44px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(160, 140, 255, 0.4);
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 10px;
+  border: 2px solid rgba(160, 140, 255, 0.4);
   background: rgba(160, 140, 255, 0.1);
-  font-size: 0.85rem;
-  font-weight: 700;
+  color: var(--muted);
+  touch-action: manipulation;
+}
+
+.toggle svg {
+  width: 26px;
+  height: 26px;
+  fill: currentColor;
+  shape-rendering: crispEdges;
+}
+
+.toggle .slash {
+  fill: var(--pink);
+}
+
+.toggle:active {
+  transform: scale(0.94);
 }
 
 .toggle[aria-pressed="true"] {
   border-color: var(--cyan);
   color: var(--cyan);
   background: rgba(125, 249, 255, 0.12);
+  box-shadow:
+    0 0 12px rgba(125, 249, 255, 0.35),
+    inset 0 0 8px rgba(125, 249, 255, 0.15);
 }
 
-.toggle[aria-pressed="false"] {
-  color: var(--muted);
-  text-decoration: line-through;
+.toggle[aria-pressed="true"] svg {
+  filter: drop-shadow(0 0 3px currentColor);
+}
+
+.toggle[aria-pressed="true"] .slash {
+  display: none;
+}
+
+.toggle[aria-pressed="false"] .glyph {
+  opacity: 0.55;
 }
 
 .toggle[hidden] {

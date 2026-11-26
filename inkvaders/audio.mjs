@@ -29,6 +29,16 @@ export function createAudio() {
     if (ctx) return ctx;
     const AC = window.AudioContext ?? window.webkitAudioContext;
     if (!AC) return null;
+    // iOS routes Web Audio through the "ambient" session by default, which the
+    // ring/silent switch mutes. A game is media the player chose to start, so
+    // ask for the "playback" session like <video> uses (Safari 17+).
+    if ("audioSession" in navigator) {
+      try {
+        navigator.audioSession.type = "playback";
+      } catch {
+        // Unsupported value; keep the default session.
+      }
+    }
     ctx = new AC({ latencyHint: "interactive" });
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -14;
