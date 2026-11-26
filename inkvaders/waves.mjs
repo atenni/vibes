@@ -250,4 +250,4 @@ export function layoutWidth(def) {
 }
 
 /** Boss hit points for a given boss level. */
-export const bossHp = (level) => 90 + (level - 1) * 40;
+export const bossHp = (level) => 110 + (level - 1) * 40;

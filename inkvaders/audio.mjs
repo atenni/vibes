@@ -132,6 +132,16 @@ export function createAudio() {
           0.1,
           { delay: 0.03 },
         );
+      if ((e.combo ?? 1) >= 3) {
+        // A rising sparkle run for real combos; longer as the combo grows.
+        const n = Math.min(6, e.combo);
+        for (let i = 0; i < n; i++) {
+          tone(semis(1047, LADDER[i]), 0.14, "triangle", 0.06, {
+            delay: 0.05 + i * 0.045,
+          });
+        }
+        tone(70, 0.25, "sine", 0.18, { slideTo: 40 });
+      }
     },
     ricochet(e) {
       const step = LADDER[Math.min(7, Math.max(0, (e.combo ?? 1) - 1))];

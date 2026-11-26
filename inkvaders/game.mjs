@@ -49,7 +49,7 @@
 // @typedef {{type:string, [k:string]:any}} GameEvent
 //   shot {x,y} · invaderHit {kind,x,y,damage} (hit but survived) ·
 //   invaderKilled {kind,x,y,points,combo,byRicochet} · ricochet {x,y,combo} ·
-//   inkEmpty · bombFired {x,y} · bombBurst {x,y} · playerHit {x,y} ·
+//   inkEmpty · bombFired {x,y} · bombBurst {x,y,radius} · playerHit {x,y} ·
 //   lifeLost {lives} · lifeGained {lives} · gameOver {score,wave,bestCombo} ·
 //   waveStart {wave,boss} · waveClear {wave} · mothershipSpawn {x} ·
 //   mothershipKilled {x,y,points} · bossHit {x,y,hp,damage,byRicochet} ·
@@ -104,6 +104,8 @@ export const LIMITS = {
 export const isInDock = (y) => y >= FIELD.dockY;
 
 const STEP_SIZE = 8;
+const BOMB_RADIUS = 120;
+const HOMING_RATE = 4; // rad/s, ricochet bullets only
 const DROP = 14;
 const EDGE = 10;
 const SHIP_R = 9;
@@ -167,6 +169,7 @@ export function createGame({ seed = 1, wave = 1 } = {}) {
       bossSpiral: 0,
       bossBurst: 0,
       bossBurstT: 0,
+      bossCharge: 0,
     },
   };
   g.sim.mothershipTimer = g.sim.rng.float(12, 20);
@@ -234,12 +237,14 @@ function startWave(g) {
       maxHp: hp,
       pattern: "fan",
       flash: 0,
+      charging: false,
     };
     s.bossT = 0;
     s.bossPhaseT = 0;
     s.bossShotT = 1.2;
     s.bossSpiral = 0;
     s.bossBurst = 0;
+    s.bossCharge = 0;
   }
   // Fresh ink; strokes still being drawn carry on, others fade out.
   for (const st of g.strokes) if (!st.drawing) fadeStroke(st, 0.6);
@@ -903,6 +908,9 @@ function updateBoss(g, dt) {
         (BOSS_PATTERNS.indexOf(b.pattern) + 1) % BOSS_PATTERNS.length
       ];
     s.bossShotT = 0.6;
+    s.bossBurst = 0;
+    s.bossCharge = 0;
+    b.charging = false;
   }
   const speed = 125 + level * 12;
   const bullet = (angle, sp, r = 4) =>
@@ -925,19 +933,29 @@ function updateBoss(g, dt) {
         Math.PI / 2 + Math.sin(s.bossSpiral + Math.PI) * 1.1,
         speed * 0.95,
       );
-      s.bossShotT = 0.16 * rage;
+      s.bossShotT = 0.22 * rage;
     }
   } else {
-    if (s.bossShotT <= 0 && s.bossBurst === 0) {
-      s.bossBurst = 3;
-      s.bossBurstT = 0;
+    if (s.bossShotT <= 0 && s.bossBurst === 0 && s.bossCharge <= 0) {
+      // Visible "tell" before the burst.
+      s.bossCharge = 0.35;
+      b.charging = true;
       s.bossShotT = 1.7 * rage;
+    }
+    if (s.bossCharge > 0) {
+      s.bossCharge -= dt;
+      if (s.bossCharge <= 0) {
+        s.bossCharge = 0;
+        b.charging = false;
+        s.bossBurst = 3;
+        s.bossBurstT = 0;
+      }
     }
     if (s.bossBurst > 0) {
       s.bossBurstT -= dt;
       if (s.bossBurstT <= 0) {
         const a = Math.atan2(g.ship.y - b.y, g.ship.x - b.x);
-        bullet(a, speed * 1.45);
+        bullet(a, speed * 1.25);
         s.bossBurst--;
         s.bossBurstT = 0.13;
       }
@@ -981,6 +999,7 @@ function updateBullets(g, dt) {
     b.x += b.vx * dt;
     b.y += b.vy * dt;
     if (b.ricochet) {
+      if (b.vy < 0) steerTowardTarget(g, b, dt);
       b.trail.push({ x: b.x, y: b.y });
       if (b.trail.length > 12) b.trail.shift();
     }
@@ -990,6 +1009,43 @@ function updateBullets(g, dt) {
     kept.push(b);
   }
   g.bullets = kept;
+}
+
+/**
+ * Gently bend a ricochet toward the nearest target above it. Speed unchanged.
+ * @param {any} g @param {any} b @param {number} dt
+ */
+function steerTowardTarget(g, b, dt) {
+  let best = null;
+  let bestD = Infinity;
+  /** @param {number} x @param {number} y */
+  const consider = (x, y) => {
+    if (y >= b.y - 4) return;
+    const d = Math.hypot(x - b.x, y - b.y);
+    // Prefer targets roughly ahead: penalise sideways offset.
+    const score = d + Math.abs(x - b.x) * 0.5;
+    if (score < bestD) {
+      bestD = score;
+      best = { x, y };
+    }
+  };
+  for (const inv of g.invaders) if (inv.y > 0) consider(inv.x, inv.y);
+  if (g.boss) consider(g.boss.x, g.boss.y);
+  if (g.mothership) consider(g.mothership.x, g.mothership.y);
+  if (!best) return;
+  const speed = Math.hypot(b.vx, b.vy);
+  const cur = Math.atan2(b.vy, b.vx);
+  const want = Math.atan2(best.y - b.y, best.x - b.x);
+  let diff = want - cur;
+  while (diff > Math.PI) diff -= 2 * Math.PI;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
+  const turn = clamp(diff, -HOMING_RATE * dt, HOMING_RATE * dt);
+  let a = cur + turn;
+  // Keep it travelling upward.
+  const ny = Math.sin(a);
+  if (ny > -0.2) a = Math.sign(Math.cos(a) || 1) > 0 ? -0.2 : -Math.PI + 0.2;
+  b.vx = Math.cos(a) * speed;
+  b.vy = Math.sin(a) * speed;
 }
 
 /** @param {any} g @param {any} b */
@@ -1271,7 +1327,7 @@ function burstBomb(g, bomb) {
   }
   addHitStop(g, 0.12);
   addTrauma(g, 0.9);
-  emit(g, "bombBurst", { x: bomb.x, y: bomb.y });
+  emit(g, "bombBurst", { x: bomb.x, y: bomb.y, radius: BOMB_RADIUS });
 }
 
 // --------------------------------------------------------- player damage ----
