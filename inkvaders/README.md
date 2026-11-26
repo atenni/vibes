@@ -26,7 +26,12 @@ Inkubus, which only ricochets and bombs hurt properly.
 | Keyboard | ← → or A D        |                 | Space or B | P / Esc   | M    |
 
 The game pauses itself when the tab is hidden or loses focus. Lifting a thumb
-never pauses. Sound and haptics have separate toggles, and are remembered.
+never pauses. Sound (♫) and haptics (vibrating phone) have separate pixel icon
+toggles, crossed out when off, and are remembered.
+
+On iOS, sound plays even with the ring/silent switch on: the game asks for the
+`playback` audio session, as video does, where Safari supports
+`navigator.audioSession` (iOS 17 and later).
 
 ## Running it
 
