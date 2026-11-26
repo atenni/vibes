@@ -127,6 +127,8 @@ export function createRenderer(canvas) {
   let drawHintArmed = false;
   let bannerSeen = { text: "", start: 0 };
 
+  /** @type {Map<number, Array<{x:number,y:number}>>} */ const trails =
+    new Map();
   /** @type {Array<any>} */ let particles = [];
   /** @type {Array<any>} */ let popups = [];
   /** @type {Array<any>} */ let rings = [];
@@ -407,10 +409,27 @@ export function createRenderer(canvas) {
           ring(e.x, e.y, 26, colour, 0.3, 2);
           kick = Math.max(kick, e.byRicochet ? 0.3 : 0.14);
           popup(`+${e.points}`, e.x, e.y - 8, { scale: 2, colour });
+          if (e.combo >= 3) {
+            // A beat of extra shake and a bigger burst for real combos.
+            kick = Math.max(kick, Math.min(0.85, 0.4 + (e.combo - 3) * 0.1));
+            ring(
+              e.x,
+              e.y,
+              40 + e.combo * 8,
+              inkColour(e.combo * 0.35, 68),
+              0.45,
+              5,
+            );
+            burst(e.x, e.y, inkPalette(), 10 + e.combo * 3, 300, {
+              round: true,
+              life: 1,
+            });
+            if (e.combo >= 4) addFlash(0.08 + e.combo * 0.015, "#ff8bf5");
+          }
           if (e.combo >= 2) {
             const top = e.combo >= 8;
             popup(top ? "×8 INKREDIBLE" : `×${e.combo}`, e.x, e.y - 26, {
-              scale: top ? 2.4 : 2 + e.combo * 0.45,
+              scale: top ? 2.6 : e.combo >= 3 ? 3.2 + (e.combo - 3) * 0.5 : 2.9,
               colour: inkColour(e.combo * 0.35, 64),
               life: top ? 1.5 : 1.1,
               vy: -26,
@@ -448,7 +467,7 @@ export function createRenderer(canvas) {
           });
           break;
         case "bombBurst": {
-          const r = e.r ?? e.radius ?? 120;
+          const r = e.radius ?? e.r ?? 120;
           kick = 1;
           addFlash(0.55, "#ffffff");
           ring(e.x, e.y, r, "#ffffff", 0.5, 8);
@@ -605,6 +624,17 @@ export function createRenderer(canvas) {
     popups = popups.filter((p) => p.age < p.life);
 
     if (!game) return;
+    // Longer, renderer-owned trails for ricocheted bullets so homing curves read.
+    const seen = new Set();
+    for (const b of game.bullets ?? []) {
+      if (!(b.friendly && b.ricochet)) continue;
+      seen.add(b.id);
+      let tr = trails.get(b.id);
+      if (!tr) trails.set(b.id, (tr = []));
+      tr.push({ x: b.x, y: b.y });
+      if (tr.length > 30) tr.shift();
+    }
+    for (const id of trails.keys()) if (!seen.has(id)) trails.delete(id);
     shownScore += (game.score - shownScore) * Math.min(1, dt * 12);
     if (game.score - shownScore < 1) shownScore = game.score;
 
@@ -649,6 +679,7 @@ export function createRenderer(canvas) {
 
   function reset() {
     particles = [];
+    trails.clear();
     popups = [];
     rings = [];
     kick = 0;
@@ -765,11 +796,34 @@ export function createRenderer(canvas) {
     // glowing eyes
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    ctx.fillStyle = inkColour(t, 65, 0.8);
+    const charging = Boolean(b.charging);
+    ctx.fillStyle = charging
+      ? Math.floor(t * 20) % 2
+        ? "#ffffff"
+        : "#ff2a3d"
+      : inkColour(t, 65, 0.8);
     for (const ex of [-14, 14]) {
       ctx.beginPath();
-      ctx.arc(b.x + ex, b.y - 4, 4 + Math.sin(t * 6) * 0.8, 0, 6.3);
+      ctx.arc(
+        b.x + ex,
+        b.y - 4,
+        charging ? 7 : 4 + Math.sin(t * 6) * 0.8,
+        0,
+        6.3,
+      );
       ctx.fill();
+    }
+    if (charging && game.ship?.alive) {
+      // The tell: a flickering aim line toward the ship.
+      ctx.strokeStyle = `rgba(255, 60, 80, ${0.45 + 0.35 * Math.sin(t * 40)})`;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.lineDashOffset = -t * 80;
+      ctx.beginPath();
+      ctx.moveTo(b.x, b.y + b.h / 2);
+      ctx.lineTo(game.ship.x, game.ship.y - 14);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
     ctx.restore();
   }
@@ -861,23 +915,25 @@ export function createRenderer(canvas) {
         ctx.fillStyle = "#fff";
         ctx.fillRect(b.x - 1, b.y - 1, 2, 2);
       } else if (b.ricochet) {
-        const trail = b.trail ?? [];
+        const own = trails.get(b.id) ?? [];
+        const trail =
+          own.length > (b.trail?.length ?? 0) ? own : (b.trail ?? []);
         if (trail.length > 1) {
-          ctx.lineWidth = 4;
-          for (let i = 1; i < trail.length; i++) {
-            const a = i / trail.length;
-            ctx.strokeStyle = inkColour(t * 2 + i * 0.08, 62, a * 0.6);
-            ctx.lineWidth = 1 + a * 5;
-            ctx.beginPath();
-            ctx.moveTo(trail[i - 1].x, trail[i - 1].y);
-            ctx.lineTo(trail[i].x, trail[i].y);
-            ctx.stroke();
+          const pts = [...trail, { x: b.x, y: b.y }];
+          for (const [wMul, aMul, light] of [
+            [2.4, 0.3, 55],
+            [1, 0.85, 75],
+          ]) {
+            for (let i = 1; i < pts.length; i++) {
+              const a = i / pts.length;
+              ctx.strokeStyle = inkColour(t * 2 + i * 0.1, light, a * aMul);
+              ctx.lineWidth = (1 + a * 5) * wMul;
+              ctx.beginPath();
+              ctx.moveTo(pts[i - 1].x, pts[i - 1].y);
+              ctx.lineTo(pts[i].x, pts[i].y);
+              ctx.stroke();
+            }
           }
-          const last = trail[trail.length - 1];
-          ctx.beginPath();
-          ctx.moveTo(last.x, last.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.stroke();
         }
         const r = (b.r ?? 3) + 1;
         ctx.fillStyle = inkColour(t * 2, 60, 0.35);
@@ -998,19 +1054,16 @@ export function createRenderer(canvas) {
     const hints = game.hints ?? {};
     const pulse = 0.55 + 0.45 * Math.sin(t * 4);
     if (!hints.steered) {
-      drawText(ctx, "SLIDE HERE ↓", FIELD.w / 2, FIELD.dockY + 80, 3, {
+      drawText(ctx, "SLIDE HERE ↓", FIELD.w / 2, 594, 3, {
         align: "center",
         colour: "#7df9ff",
         alpha: pulse,
       });
-      drawText(
-        ctx,
-        "SHIP FOLLOWS YOUR THUMB",
-        FIELD.w / 2,
-        FIELD.dockY + 110,
-        1.6,
-        { align: "center", colour: "#bfefff", alpha: pulse * 0.8 },
-      );
+      drawText(ctx, "SHIP FOLLOWS YOUR THUMB", FIELD.w / 2, 622, 1.4, {
+        align: "center",
+        colour: "#bfefff",
+        alpha: pulse * 0.8,
+      });
     } else if (!hints.drew && drawHintArmed) {
       drawText(ctx, "DRAW HERE ↑", FIELD.w / 2, 370, 3.2, {
         align: "center",
@@ -1044,14 +1097,11 @@ export function createRenderer(canvas) {
       game.ink >= (game.inkMax ?? 100) - 0.5 &&
       game.state === "playing"
     ) {
-      drawText(
-        ctx,
-        "FLICK ↑ FOR INK BOMB",
-        FIELD.w / 2,
-        FIELD.dockY + 100,
-        2.6,
-        { align: "center", colour: "#ff9cf5", alpha: pulse },
-      );
+      drawText(ctx, "FLICK ↑ FOR INK BOMB", FIELD.w / 2, 598, 2.4, {
+        align: "center",
+        colour: "#ff9cf5",
+        alpha: pulse,
+      });
     }
   }
 
@@ -1084,13 +1134,26 @@ export function createRenderer(canvas) {
     ctx.restore();
   }
 
+  /** Screen-space geometry of the title wordmark and the band it owns. */
+  function wordmarkBox() {
+    const text = "INKVADERS";
+    const px = Math.min(6 * layout.scale, (layout.w - 36) / textWidth(text, 1));
+    const width = textWidth(text, px);
+    const y0 = Math.max(layout.safe.top, 0) + 18;
+    const drips = 22;
+    return {
+      text,
+      px,
+      width,
+      x0: (layout.w - width) / 2,
+      y0,
+      bottom: y0 + GLYPH_H * px + drips + 10,
+    };
+  }
+
   /** The wordmark for the title screen, with an ink shimmer and drips. */
   function drawWordmark() {
-    const text = "INKVADERS";
-    const px = Math.min(6, (FIELD.w - 36) / textWidth(text, 1));
-    const width = textWidth(text, px);
-    const x0 = (FIELD.w - width) / 2;
-    const y0 = 30;
+    const { text, px, width, x0, y0 } = wordmarkBox();
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     drawText(ctx, text, x0 - 2, y0, px, { colour: "rgba(255, 60, 220, 0.55)" });
@@ -1288,13 +1351,29 @@ export function createRenderer(canvas) {
     drawBackground(game?.ship?.x);
     if (!game) return;
 
+    // On the title the demo playfield sits below the wordmark's own band.
+    let { scale, ox, oy } = layout;
+    const title = view.mode === "title";
+    const band = title ? wordmarkBox().bottom : 0;
+    if (title) {
+      scale = Math.min(layout.scale, (layout.h - band) / FIELD.h);
+      ox = (layout.w - FIELD.w * scale) / 2;
+      oy = band;
+    }
+    ctx.save();
+    if (title) {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.beginPath();
+      ctx.rect(0, band, layout.w, layout.h - band);
+      ctx.clip();
+    }
     ctx.setTransform(
-      dpr * layout.scale,
+      dpr * scale,
       0,
       0,
-      dpr * layout.scale,
-      dpr * (layout.ox + (sxo * layout.scale) / 2),
-      dpr * (layout.oy + (syo * layout.scale) / 2),
+      dpr * scale,
+      dpr * (ox + (sxo * scale) / 2),
+      dpr * (oy + (syo * scale) / 2),
     );
     drawDock();
     drawInvaders(game);
@@ -1307,10 +1386,11 @@ export function createRenderer(canvas) {
     if (view.mode !== "title") drawTouches(view.touches);
     drawPopups();
     drawHints(game, view);
-    if (view.mode === "title") drawWordmark();
-    else drawBanner(game, view);
+    if (!title) drawBanner(game, view);
+    ctx.restore();
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (title) drawWordmark();
     if (flash.a > 0.005) {
       ctx.globalAlpha = Math.min(1, flash.a);
       ctx.fillStyle = flash.colour;

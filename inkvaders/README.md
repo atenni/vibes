@@ -69,3 +69,9 @@ time, input and presentation: particles, popups and screen shake live in
 
 Persisted in `localStorage` under `inkvaders:`: `best`, `stats`, `settings`,
 `hints` (first-play hints are shown until completed).
+
+## Maintainer notes
+
+- `globalThis.__inkvaders` exposes `{ game, mode }` for debugging and QC (for
+  example `__inkvaders.game.ink = 100` in the console, or driving the game from
+  `playwright-cli eval`). It is read-only in spirit; leave it in.

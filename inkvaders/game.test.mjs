@@ -438,3 +438,59 @@ test("formation stays inside the field over a long run", () => {
   for (const i of g.invaders)
     if (i.mode === "formation") assert.ok(i.x > 0 && i.x < FIELD.w);
 });
+
+test("ricochets home gently toward a target above", () => {
+  const g = arena();
+  spawnInvader(g, "blob", 220, 200);
+  // Heading up-left-ish, aimed ~40 units off the invader.
+  bullet(g, {
+    friendly: true,
+    ricochet: true,
+    pierce: 2,
+    x: 180,
+    y: 400,
+    vx: 0,
+    vy: -300,
+  });
+  const b0 = g.bullets[0];
+  run(g, 0.3);
+  assert.ok(b0.vx > 20, `vx ${b0.vx}`);
+  assert.ok(Math.abs(Math.hypot(b0.vx, b0.vy) - 300) < 1e-6, "speed unchanged");
+  assert.ok(b0.vy < 0);
+});
+
+test("ricochet homing turns at most ~4 rad/s", () => {
+  const g = arena();
+  spawnInvader(g, "blob", 340, 395);
+  bullet(g, {
+    friendly: true,
+    ricochet: true,
+    pierce: 2,
+    x: 100,
+    y: 400,
+    vx: 0,
+    vy: -300,
+  });
+  const b0 = g.bullets[0];
+  run(g, 0.1);
+  const angle = Math.abs(Math.atan2(b0.vx, -b0.vy));
+  assert.ok(angle <= 4 * 0.1 + 0.02, `turned ${angle}`);
+});
+
+test("boss aimed burst has a charging tell and bombBurst has a radius", () => {
+  const g = createGame({ seed: 1, wave: 5 });
+  run(g, 2);
+  g.invaders = [];
+  g.lives = 99;
+  g.boss.pattern = "aimed";
+  g.sim.bossShotT = 0;
+  g.sim.bossPhaseT = 0;
+  run(g, 0.05);
+  assert.equal(g.boss.charging, true);
+  run(g, 0.4);
+  assert.equal(g.boss.charging, false);
+  const h = createGame({ seed: 1 });
+  run(h, 2);
+  const ev = [...run(h, 0.01, () => frame({ bomb: true })), ...run(h, 1.5)];
+  assert.ok(ev.find((e) => e.type === "bombBurst")?.radius > 0);
+});
