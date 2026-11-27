@@ -118,8 +118,8 @@ function bead(parent, x, y, r, kind) {
     {
       cx: String(x - r * 0.3),
       cy: String(y - r * 0.42),
-      rx: String(r * 0.38),
-      ry: String(r * 0.24),
+      rx: String(r * 0.28),
+      ry: String(r * 0.17),
       class: "spec",
       fill: "url(#spec)",
     },
@@ -222,7 +222,15 @@ export function createDisplay(root) {
     const points = SEGMENT_POINTS[name];
     add("polygon", { class: "seg-halo", points }, seg);
     add("polygon", { class: "seg-body", points }, seg);
-    add("polygon", { class: "seg-hot", points }, seg);
+    add(
+      "polygon",
+      {
+        class: "seg-hot",
+        points,
+        fill: `url(#seg-${"adg".includes(name) ? "h" : "v"})`,
+      },
+      seg,
+    );
     segs[name] = seg;
   }
   digit.append(group);
