@@ -89,6 +89,16 @@
                 <stop offset="0.5" stop-color="#c4ffd2" stop-opacity="0.8" />
                 <stop offset="1" stop-color="#7cff9a" stop-opacity="0" />
               </radialGradient>
+              <linearGradient id="seg-h" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ff9a86" stop-opacity="0" />
+                <stop offset="0.5" stop-color="#fff0ea" />
+                <stop offset="1" stop-color="#ff9a86" stop-opacity="0" />
+              </linearGradient>
+              <linearGradient id="seg-v" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#ff9a86" stop-opacity="0" />
+                <stop offset="0.5" stop-color="#fff0ea" />
+                <stop offset="1" stop-color="#ff9a86" stop-opacity="0" />
+              </linearGradient>
               <radialGradient id="spec">
                 <stop offset="0" stop-color="#fff" stop-opacity="0.9" />
                 <stop offset="1" stop-color="#fff" stop-opacity="0" />
@@ -158,39 +168,39 @@
             <!-- Bracket: the thin line under the ticks, round CHROMATIC to MODE. -->
             <path
               class="bracket"
-              d="M23.3 27.2Q45 21.6 75 29.8Q81 32 82 35.6Q82.2 37.2 80.6 37.2H74.6"
+              d="M11.4 32.2Q38.6 18.6 66 26.1Q76 29.4 81 34.2Q82.6 36.2 80.6 37.2H74.6"
             />
 
             <!-- Flats (upright, slightly slanted) and mode names. -->
             <g class="flats">
               <use
                 href="#flat"
-                transform="translate(14 34.9) skewX(-6) scale(2.5)"
+                transform="translate(14 35.4) skewX(-6) scale(2.5)"
               />
               <use
                 href="#flat"
-                transform="translate(15.9 34.9) skewX(-6) scale(2.5)"
+                transform="translate(15.9 35.4) skewX(-6) scale(2.5)"
               />
               <use
                 href="#flat"
-                transform="translate(19.1 32.9) skewX(-6) scale(2.5)"
+                transform="translate(19.1 34.2) skewX(-6) scale(2.5)"
               />
               <use
                 href="#flat"
-                transform="translate(38.2 27.7) skewX(-6) scale(2.5)"
+                transform="translate(38.2 29.5) skewX(-6) scale(2.5)"
               />
               <use
                 href="#flat"
-                transform="translate(40.1 27.7) skewX(-6) scale(2.5)"
+                transform="translate(40.1 29.5) skewX(-6) scale(2.5)"
               />
               <use
                 href="#flat"
-                transform="translate(46.1 27.4) skewX(-6) scale(2.5)"
+                transform="translate(46.1 29.3) skewX(-6) scale(2.5)"
               />
             </g>
             <text
               class="silk"
-              transform="translate(21.7 30.6) rotate(-13)"
+              transform="translate(21.9 32.6) rotate(-13)"
               textLength="8.7"
               lengthAdjust="spacingAndGlyphs"
             >
@@ -198,13 +208,17 @@
             </text>
             <text
               class="silk"
-              transform="translate(50.8 27.1) rotate(5)"
+              transform="translate(50.6 29.0) rotate(5)"
               textLength="10.4"
               lengthAdjust="spacingAndGlyphs"
             >
               GUITAR
             </text>
-            <path id="chroma-path" fill="none" d="M62.2 29.2Q73 30 80.3 36" />
+            <path
+              id="chroma-path"
+              fill="none"
+              d="M62.4 31.4Q73 31.8 79.8 36.6"
+            />
             <text class="silk">
               <textPath
                 href="#chroma-path"
@@ -318,16 +332,12 @@
         </div>
 
         <!-- Everything below the panel is the hinged hood; the pad stomps. -->
-        <span class="hinge-screw hinge-l" aria-hidden="true"></span>
-        <span class="hinge-screw hinge-r" aria-hidden="true"></span>
         <div class="hood" id="hood">
+          <span class="lip-shadow" aria-hidden="true"></span>
           <svg class="body-silk" viewBox="0 61 100 116" aria-hidden="true">
             <defs>
-              <!-- Left-pointing arrow, tip at the origin, 7.6 × 7 units. -->
-              <path
-                id="arrow"
-                d="M0 0 2.9 -3.1 4.4 -1.7 3.3 -0.65H7.8V0.65H3.3L4.4 1.7 2.9 3.1Z"
-              />
+              <!-- Left-pointing stroked arrow, tip at the origin, 7.4 × 6 units. -->
+              <path id="arrow" d="M7.4 0H0.6M3.5 -3L0.6 0 3.5 3" />
             </defs>
             <g class="arrow">
               <use href="#arrow" transform="translate(4.8 70.8)" />
