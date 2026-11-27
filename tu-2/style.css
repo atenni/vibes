@@ -88,6 +88,8 @@ button {
   --u: calc(var(--w) / 100);
   position: relative;
   flex: none;
+  perspective: calc(var(--u) * 260);
+  perspective-origin: 50% 40%;
   width: var(--w);
   height: calc(var(--u) * 177);
   border-radius: calc(var(--u) * 6) calc(var(--u) * 6) calc(var(--u) * 5)
@@ -177,115 +179,137 @@ button {
 .silk {
   fill: #f1efe9;
   font:
-    700 2.6px/1 system-ui,
-    -apple-system,
+    700 3.1px/1 "Arial Narrow",
     "Helvetica Neue",
+    system-ui,
     sans-serif;
-  letter-spacing: 0.02px;
-}
-.silk.word {
-  font-size: 2.1px;
+  font-stretch: condensed;
 }
 .silk-fill {
   fill: #f1efe9;
 }
 .pitch-line {
   stroke: #f1efe9;
-  stroke-width: 0.35;
+  stroke-width: 0.3;
   fill: none;
+}
+.bracket {
+  fill: none;
+  stroke: #d4d6da;
+  stroke-width: 0.3;
+}
+.flats use {
+  fill: none;
+  stroke: #f1efe9;
+  stroke-width: 0.1;
+  stroke-linecap: round;
 }
 .screws circle {
   fill: url(#screw);
-  stroke: #55565b;
-  stroke-width: 0.5;
+  stroke: #5a5b60;
+  stroke-width: 0.45;
 }
-
-.tri-off {
-  fill: #3b3c40;
+.screws .socket {
+  fill: #030304;
+  stroke: #26272b;
+  stroke-width: 0.3;
 }
-.tri-on {
-  --b: 0;
-  fill: #ffc21a;
-  opacity: var(--b);
-}
-.check-off {
-  fill: #e9e6df;
-}
-.check-on {
-  --b: 0;
-  fill: #ff3a28;
-  opacity: var(--b);
-}
-.glow {
-  --b: 0;
-  opacity: var(--b);
-  pointer-events: none;
-}
-.glow.amber {
-  fill: url(#glow-amber);
-}
-.glow.red {
-  fill: url(#glow-red);
+.screws path {
+  fill: #121214;
+  stroke: #3a3b40;
+  stroke-width: 0.2;
 }
 
 .pipe {
   fill: none;
-  stroke: #1d1e22;
-  stroke-width: 4.4;
+  stroke: #17181b;
+  stroke-width: 5.2;
   stroke-linecap: round;
 }
 .pipe-edge {
   fill: none;
   stroke: #c9ccd2;
-  stroke-width: 5;
+  stroke-width: 6;
   stroke-linecap: round;
   opacity: 0.85;
 }
 .tick {
-  fill: #f1efe9;
+  fill: #cfcdc6;
 }
 
+/* LEDs: dark glass bead (always drawn), then lit layers faded in by --b. */
 .led {
   --b: 0;
 }
-.led .glow {
-  fill: url(#glow-red);
+.led .halo,
+.led .on,
+.led .hot {
+  opacity: var(--b);
+  pointer-events: none;
 }
-.led[data-green] .glow {
-  fill: url(#glow-green);
+.led .hot {
+  opacity: calc((var(--b) - 0.6) * 2.5);
 }
-.led .lamp {
-  stroke: #000;
-  stroke-width: 0.25;
-  fill: color-mix(
-    in srgb,
-    var(--lit, #ff2a1a) calc(var(--b) * 100%),
-    var(--dim, #4a1612)
-  );
+.led .spec {
+  opacity: calc(0.85 - var(--b) * 0.35);
 }
-.led[data-green] {
-  --lit: #3dff6a;
-  --dim: #cfd3cf;
+.led .halo {
+  opacity: calc(var(--b) * 0.9);
+}
+.tri .off {
+  fill: #4a3a1e;
+  stroke: #1c150a;
+  stroke-width: 0.2;
+}
+.tri .on {
+  fill: url(#tri-amber);
+}
+.tri .hot {
+  fill: #fff3c8;
 }
 
-.digit .seg {
-  fill: rgb(255 42 26 / 0.07);
+.seg {
+  --b: 0;
 }
-.digit .seg.on {
+.seg-body {
+  fill: #3a0f12;
+  opacity: 0.55;
+}
+.seg-halo {
+  fill: none;
+  stroke: #ff2a1a;
+  stroke-width: 14;
+  stroke-linejoin: round;
+  opacity: 0;
+}
+.seg-hot {
+  fill: #ffd8cc;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  scale: 0.45;
+}
+.seg.on .seg-body {
   fill: #ff3a28;
-  filter: drop-shadow(0 0 4px rgb(255 42 26 / 0.9));
+  opacity: 1;
 }
-.digit[data-lock] .seg.on {
+.seg.on .seg-halo {
+  opacity: 0.22;
+}
+.seg.on .seg-hot {
+  opacity: 0.85;
+}
+.digit[data-lock] .seg.on .seg-body {
   fill: #ff5a48;
 }
 .ind {
-  fill: rgb(255 42 26 / 0.1);
-  font:
-    800 4.6px/1 system-ui,
-    sans-serif;
+  fill: none;
+  stroke: #3a0f12;
+  stroke-width: 0.5;
+  stroke-linecap: round;
 }
 .ind.on {
-  fill: #ff3a28;
+  stroke: #ff3a28;
 }
 
 /* The two keys: black rubber rectangles over the panel art. */
@@ -320,25 +344,96 @@ button {
 
 /* ---- hood: silkscreen and footswitch --------------------------------------- */
 
+/* The base shows beneath the hood; it never moves. */
+.base {
+  position: absolute;
+  left: 0;
+  top: calc(var(--u) * 61);
+  width: 100%;
+  height: calc(var(--u) * 116);
+  border-radius: 0 0 calc(var(--u) * 5) calc(var(--u) * 5);
+  background: linear-gradient(180deg, #3b3a38, #8f8b81 8%, #b5b1a6);
+}
+
 .hood {
   position: absolute;
   left: 0;
   top: calc(var(--u) * 61);
   width: 100%;
   height: calc(var(--u) * 116);
+  border-radius: 0 0 calc(var(--u) * 5) calc(var(--u) * 5);
+  background:
+    linear-gradient(
+      90deg,
+      rgb(0 0 0 / 0.09),
+      transparent 9%,
+      transparent 91%,
+      rgb(0 0 0 / 0.1)
+    ),
+    var(--body);
+  transform-origin: 50% 0;
+  transform: rotateX(0deg);
+  transition: transform 260ms cubic-bezier(0.3, 1.7, 0.5, 1);
+  will-change: transform;
 }
+.hood::before {
+  /* Dark gap at the hinge, deepening as it opens. */
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: calc(var(--u) * 0.5);
+  background: rgb(0 0 0 / 0.35);
+}
+.hood::after {
+  /* Shade towards the free end while pressed. */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, transparent 10%, rgb(30 20 10 / 0.3));
+  opacity: 0;
+  transition: opacity 260ms ease-out;
+  pointer-events: none;
+}
+.hood.down {
+  transform: rotateX(-4deg);
+  transition: transform 70ms ease-out;
+}
+.hood.down::after {
+  opacity: 1;
+  transition-duration: 70ms;
+}
+
+.hinge-screw {
+  position: absolute;
+  top: calc(var(--u) * 59.9);
+  width: calc(var(--u) * 3);
+  height: calc(var(--u) * 3);
+  border-radius: 50%;
+  background:
+    linear-gradient(90deg, transparent 42%, #2b2c30 42% 58%, transparent 58%),
+    linear-gradient(0deg, transparent 42%, #2b2c30 42% 58%, transparent 58%),
+    radial-gradient(circle at 35% 30%, #f4f4f2, #9d9fa4 70%, #6e7076);
+  box-shadow: 0 0 0 calc(var(--u) * 0.25) #7b7d82;
+  transform: rotate(35deg);
+  z-index: 3;
+}
+.hinge-l {
+  left: calc(var(--u) * 1.4);
+}
+.hinge-r {
+  right: calc(var(--u) * 1.4);
+  transform: rotate(-20deg);
+}
+
 .body-silk {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
-.arrow path {
-  fill: none;
-  stroke: var(--orange);
-  stroke-width: 1.3;
-  stroke-linecap: square;
-  stroke-linejoin: miter;
+.arrow use {
+  fill: var(--orange);
 }
 .silk-body {
   fill: var(--orange);
@@ -397,36 +492,12 @@ button {
   stroke-width: 0.35;
   paint-order: stroke;
 }
-.pedal[data-power="on"] .footswitch {
-  box-shadow:
-    inset 0 1px 1px rgb(255 255 255 / 0.12),
-    inset 0 0 0 calc(var(--u) * 0.4) #000,
-    0 0 0 calc(var(--u) * 0.5) #b9b5aa,
-    0 calc(var(--u) * 0.8) 0 #9f9b90;
-}
-
-/* Stomp: the hood dips a touch, the pad a little more. */
-.hood.stomp,
-.hood:has(.footswitch:active) {
-  translate: 0 calc(var(--u) * 0.7);
-}
-.hood.stomp {
-  animation: stomp 180ms ease-out;
-}
-.footswitch:active {
-  translate: 0 calc(var(--u) * 0.8);
-}
-@keyframes stomp {
-  from {
-    translate: 0 calc(var(--u) * 1.2);
-  }
-  to {
-    translate: 0 0;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
-  .hood.stomp {
-    animation: none;
+  .hood {
+    transition: transform 120ms ease-out;
+  }
+  .hood.down {
+    transform: rotateX(-1.5deg);
   }
 }
 
