@@ -12,6 +12,17 @@ import {
 import { detectPitch } from "./pitch.mjs";
 import { createTuner } from "./tuner.mjs";
 
+/** MODE cycle order, per the TU-2 manual. */
+const MODE_ORDER = [
+  "chromatic",
+  "guitar",
+  "guitar-flat",
+  "guitar-double-flat",
+  "bass-double-flat",
+  "bass-flat",
+  "bass",
+];
+
 const STORAGE_KEY = "tu-2:settings";
 const FLASH_MS = 1200;
 const ERROR_MS = 5000;
@@ -305,7 +316,11 @@ function nudgePitch(step) {
 pressKey(
   $("#mode-btn"),
   () => {
-    const next = MODES[(MODES.indexOf(modeOf()) + 1) % MODES.length];
+    // The pedal's order: right to left along the arc, then back to CHROMATIC.
+    const ids = MODE_ORDER;
+    const next = MODES.find(
+      (m) => m.id === ids[(ids.indexOf(modeOf().id) + 1) % ids.length],
+    );
     settings.mode = next.id;
     save();
     updateReadout();
@@ -319,8 +334,13 @@ pressKey(
   () => {
     settings.style = settings.style === "stream" ? "cent" : "stream";
     save();
-    // The real pedal shows no code for this; show 5 (looks like S, stream) or C (cent) briefly.
-    flash(settings.style === "stream" ? "5" : "C", {}, 800);
+    // Like the pedal, the meter shows the chosen style for about two seconds:
+    // a frozen stream of pairs, or the single centre LED.
+    flash(
+      " ",
+      { leds: settings.style === "stream" ? [0, 1, 6, 7] : [5] },
+      2000,
+    );
   },
   () => nudgePitch(-1),
 );

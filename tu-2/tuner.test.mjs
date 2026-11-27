@@ -60,74 +60,148 @@ function signedSteps(frames) {
 test("streamSpeed: signed, monotonic in |cents|, clamped", () => {
   assert.ok(streamSpeed(10) > 0 && streamSpeed(-10) < 0);
   let last = 0;
-  for (const c of [3, 5, 10, 20, 30, 40, 50]) {
+  for (const c of [3, 4, 5, 10, 20, 25, 30, 40, 50]) {
     const s = Math.abs(streamSpeed(c));
     assert.ok(s >= last, `speed at ${c}`);
     last = s;
   }
-  assert.ok(Math.abs(streamSpeed(3)) < 2.5, "slow crawl near pitch");
-  assert.ok(Math.abs(streamSpeed(40)) > 10, "fast when far out");
-  assert.equal(Math.abs(streamSpeed(5000)), 22);
+  assert.ok(Math.abs(streamSpeed(4)) >= 1 && Math.abs(streamSpeed(4)) < 2);
+  assert.ok(Math.abs(streamSpeed(5)) < 2.5, "slow crawl near pitch");
+  assert.ok(Math.abs(streamSpeed(25)) >= 23, "near max by 25 cents");
+  assert.equal(Math.abs(streamSpeed(1)), 1, "minimum 1 LED/s");
+  assert.equal(Math.abs(streamSpeed(5000)), 24);
 });
 
-test("stream flows right when sharp and left when flat", () => {
-  const sharp = signedSteps(travel(+30));
-  const flat = signedSteps(travel(-30));
-  assert.ok(
-    sharp.right > 5 && sharp.left < sharp.right / 3,
-    JSON.stringify(sharp),
+/** Lit indices of a frame. */
+const lit = (leds) => leds.flatMap((v, i) => (v > 0.5 ? [i] : []));
+
+test("stream pattern is pairs repeating every six LEDs", () => {
+  const tuner = createTuner({ decayMs: 0.01, attackMs: 0.01 });
+  for (const { leds } of frames(tuner, 20, 1000)) {
+    const on = lit(leds);
+    if (on.length === 0) continue;
+    // Some phase p makes exactly mod(i - p, 6) < 2 lit.
+    const fits = [0, 1, 2, 3, 4, 5].some((p) =>
+      leds.every((v, i) => v > 0.5 === (((i - p) % 6) + 6) % 6 < 2),
+    );
+    assert.ok(fits, JSON.stringify(on));
+  }
+});
+
+const sharpTuner = () => createTuner({ attackMs: 0.01, decayMs: 0.01 });
+
+/** Run a tuner on a fixed offset and return every frame's state. */
+function frames(tuner, cents, ms, from = 0) {
+  const out = [];
+  for (let t = from; t < from + ms; t += STEP)
+    out.push(
+      tuner.update({
+        now: t,
+        detection: det(cents),
+        mode: "chromatic",
+        reference: 440,
+        style: "stream",
+      }),
+    );
+  return out;
+}
+
+/** The marquee phase (0–5) that exactly explains a frame, or null. */
+function phaseOf(leds) {
+  const p = [0, 1, 2, 3, 4, 5].filter((q) =>
+    leds.every((v, i) => v > 0.5 === (((i - q) % 6) + 6) % 6 < 2),
   );
-  assert.ok(flat.left > 5 && flat.right < flat.left / 3, JSON.stringify(flat));
+  return p.length === 1 ? p[0] : null;
+}
+
+/** Net LEDs travelled between frames, wrapping the phase. */
+function netSteps(states) {
+  let net = 0;
+  let prev = null;
+  for (const { leds } of states) {
+    const phase = phaseOf(leds);
+    if (phase === null) continue;
+    if (prev !== null) net += ((((phase - prev + 3) % 6) + 6) % 6) - 3;
+    prev = phase;
+  }
+  return net;
+}
+
+test("stream flows right when sharp and left when flat", () => {
+  assert.ok(netSteps(frames(sharpTuner(), 30, 1000).slice(30)) > 10);
+  assert.ok(netSteps(frames(sharpTuner(), -30, 1000).slice(30)) < -10);
 });
 
 test("further out of tune flows faster", () => {
-  const flow = (c) => {
-    const { right } = signedSteps(travel(c));
-    return right;
-  };
+  const flow = (c) =>
+    Math.abs(netSteps(frames(sharpTuner(), c, 1500).slice(30)));
   assert.ok(flow(40) > flow(15));
   assert.ok(flow(15) > flow(6));
 });
 
-test("stream stops in tune and locks the centre", () => {
+test("stream freezes in tune and shows both guides, no centre green", () => {
   const tuner = createTuner();
-  const { state } = run(tuner, 0, 1000, () => det(1));
-  assert.equal(state.inTune, true);
-  assert.equal(state.status, "tuning");
-  assert.equal(argmax(state.leds), 5);
-  assert.ok(state.leds[4] > 0.4 && state.leds[6] > 0.4, "neighbours lit");
-  assert.ok(state.leds[5] > 0.95);
-  assert.equal(state.leds[0] + state.leds[10], 0);
-  assert.ok(state.guides.inTune > 0.9);
-  assert.equal(state.guides.flat + state.guides.sharp, 0);
-  // And it stays put.
-  const later = run(tuner, 1000, 500, () => det(1)).state;
-  assert.deepEqual(
-    later.leds.map((v) => +v.toFixed(2)),
-    state.leds.map((v) => +v.toFixed(2)),
-  );
+  frames(tuner, 20, 600);
+  const settled = frames(tuner, 0, 1000, 600);
+  const last = settled.slice(-30);
+  assert.equal(last[0].inTune, true);
+  assert.equal(last[0].centreGreen, false);
+  assert.ok(last[0].guides.inTune > 0.9);
+  assert.equal(last[0].guides.flat + last[0].guides.sharp, 0);
+  assert.ok(lit(last[0].leds).length >= 3);
+  for (const s of last) assert.deepEqual(s.leds, last[0].leds);
 });
 
-test("settling into tune takes about 120 ms rather than snapping", () => {
-  const tuner = createTuner();
-  run(tuner, 0, 400, () => det(25)); // far out, streaming
-  // Jump the pitch to perfect: the smoothed value takes time to reach 3 cents,
-  // then the comet runs into the centre before locking.
-  let lockedAt = null;
-  for (let t = 400; t < 1500; t += STEP) {
-    const s = tuner.update({
-      now: t,
-      detection: det(0),
-      mode: "chromatic",
-      reference: 440,
-      style: "stream",
-    });
-    if (lockedAt === null && s.guides.inTune > 0.9) lockedAt = t;
+test("stream resumes from the frozen phase when leaving tune", () => {
+  const tuner = createTuner({ medianSize: 1 });
+  frames(tuner, 0, 500);
+  const frozen = frames(tuner, 0, 200, 500).at(-1).leds;
+  const out = frames(tuner, 40, 600, 700);
+  assert.ok(netSteps([{ leds: frozen }, ...out]) > 3, "moves right again");
+  assert.ok(lit(out[0].leds).length >= 2);
+});
+
+test("stream: flat and sharp guides in both styles", () => {
+  for (const style of ["stream", "cent"]) {
+    for (const [c, key] of [
+      [-20, "flat"],
+      [20, "sharp"],
+      [0, "inTune"],
+    ]) {
+      const tuner = createTuner();
+      let s;
+      for (let t = 0; t < 800; t += STEP)
+        s = tuner.update({
+          now: t,
+          detection: det(c),
+          mode: "chromatic",
+          reference: 440,
+          style,
+        });
+      assert.ok(s.guides[key] > 0.9, `${style} ${c}`);
+      for (const other of ["flat", "inTune", "sharp"])
+        if (other !== key)
+          assert.equal(s.guides[other], 0, `${style} ${c} ${other}`);
+    }
   }
-  assert.ok(
-    lockedAt !== null && lockedAt - 400 > 120,
-    `lock at +${lockedAt - 400} ms`,
-  );
+});
+
+test("centreGreen only in cent style when in tune", () => {
+  for (const style of ["stream", "cent"]) {
+    for (const c of [0, 20]) {
+      const tuner = createTuner();
+      let s;
+      for (let t = 0; t < 800; t += STEP)
+        s = tuner.update({
+          now: t,
+          detection: det(c),
+          mode: "chromatic",
+          reference: 440,
+          style,
+        });
+      assert.equal(s.centreGreen, style === "cent" && c === 0, `${style} ${c}`);
+    }
+  }
 });
 
 test("in-tune hysteresis: enter at ≤3, leave only beyond 5", () => {

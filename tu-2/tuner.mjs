@@ -19,6 +19,7 @@ import { analyse, getMode } from "./notes.mjs";
  *   guides: { flat: number, inTune: number, sharp: number },
  *   cents: number | null,
  *   inTune: boolean,
+ *   centreGreen: boolean,
  *   note: string | null,
  *   string: number | null,
  *   frequency: number | null,
@@ -35,19 +36,18 @@ import { analyse, getMode } from "./notes.mjs";
 
 export const LED_COUNT = 11;
 const CENTRE = 5;
-/** LEDs plus a three-LED gap so the comet leaves and re-enters. */
-export const TRACK_LENGTH = LED_COUNT + 3;
-const COMET = [1, 0.55, 0.2];
-const LOCK = [0.6, 1, 0.6];
+/** The stream is a marquee of lit pairs repeating every six LEDs. */
+export const TRACK_LENGTH = 6;
+const PAIR = 2;
 const DIM = 0.35;
 
 const DEFAULTS = {
   inTuneEnter: 3, // cents
   inTuneLeave: 5,
-  speedK: 0.5,
-  speedPower: 0.9,
-  minSpeed: 1.2, // LEDs/s
-  maxSpeed: 22,
+  speedK: 0.094, // ≈1 LED/s at 4 cents, ≈1.5 at 5, ≈5 at 10
+  speedPower: 1.72,
+  minSpeed: 1, // LEDs/s
+  maxSpeed: 24, // reached by ≈25 cents
   medianSize: 5,
   jumpCents: 700,
   jumpFrames: 3,
@@ -56,7 +56,6 @@ const DEFAULTS = {
   graceMs: 250, // short dropouts keep tuning
   holdMs: 1500, // then hold, then idle
   restartGapMs: 400, // a gap this long starts a fresh median window
-  settleMs: 120,
   attackMs: 10,
   decayMs: 60,
 };
@@ -112,13 +111,8 @@ export function createTuner(options = {}) {
   // Meter.
   let smoothed = 0;
   let inTune = false;
-  /** @type {"free" | "settling" | "locked"} */
-  let lock = "free";
-  let phase = CENTRE;
-  let direction = 1;
-  let settleElapsed = 0;
-  let settleFrom = CENTRE;
-  let settleDistance = 0;
+  /** Unwrapped marquee position in LEDs; only its floor matters. */
+  let phase = 0;
 
   let lastNow = /** @type {number | null} */ (null);
   const leds = new Array(LED_COUNT).fill(0);
@@ -135,9 +129,7 @@ export function createTuner(options = {}) {
     switchKey = null;
     switchCount = 0;
     inTune = false;
-    lock = "free";
-    phase = CENTRE;
-    direction = 1;
+    phase = 0;
   }
 
   /**
@@ -190,7 +182,6 @@ export function createTuner(options = {}) {
         displayed = candidate;
         smoothed = rawCents();
         inTune = false;
-        lock = "free";
       } else {
         // Same target: refresh in case the mode's tuning table is the same.
         displayed = candidate;
@@ -208,7 +199,6 @@ export function createTuner(options = {}) {
       switchCount = 0;
       smoothed = rawCents();
       inTune = false;
-      lock = "free";
     }
   }
 
@@ -231,14 +221,12 @@ export function createTuner(options = {}) {
     }
   }
 
-  /** @param {number} p unwrapped track position */
-  function cometTarget(p, dir) {
+  /** Pairs of lit LEDs: LED i is lit when mod(i - floor(phase), 6) < 2. */
+  function marqueeTarget() {
     const target = new Array(LED_COUNT).fill(0);
-    const head = Math.floor(p);
-    for (let k = 0; k < COMET.length; k++) {
-      const index = mod(head - dir * k, TRACK_LENGTH);
-      if (index < LED_COUNT) target[index] = Math.max(target[index], COMET[k]);
-    }
+    const base = Math.floor(phase);
+    for (let i = 0; i < LED_COUNT; i++)
+      if (mod(i - base, TRACK_LENGTH) < PAIR) target[i] = 1;
     return target;
   }
 
@@ -298,41 +286,11 @@ export function createTuner(options = {}) {
       }
 
       if (style === "stream") {
-        if (inTune) {
-          if (lock === "free") {
-            lock = "settling";
-            settleElapsed = 0;
-            settleFrom = phase;
-            // Travel on in the current direction until we reach the centre.
-            settleDistance = mod((CENTRE - phase) * direction, TRACK_LENGTH);
-          }
-          if (lock === "settling" && moving) {
-            settleElapsed += dt;
-            const t = Math.min(1, settleElapsed / o.settleMs);
-            const next = settleFrom + direction * settleDistance * t;
-            phase = next;
-            if (t >= 1) {
-              lock = "locked";
-              phase = CENTRE;
-            }
-          }
-        } else {
-          if (lock !== "free") {
-            lock = "free";
-            phase = CENTRE;
-          }
-          if (moving) {
-            direction = smoothed < 0 ? -1 : 1;
-            const next = phase + (streamSpeed(smoothed, o) * dt) / 1000;
-            phase = next;
-          }
-        }
+        // In tune the pattern freezes where it is; it resumes from there.
+        if (moving && !inTune) phase += (streamSpeed(smoothed, o) * dt) / 1000;
         phase = mod(phase, TRACK_LENGTH);
-        ledTarget =
-          lock === "locked" ? lockTarget() : cometTarget(phase, direction);
+        ledTarget = marqueeTarget();
       } else {
-        lock = "free";
-        phase = CENTRE;
         ledTarget = centTarget(inTune ? 0 : smoothed);
         if (inTune) ledTarget[CENTRE] = 1;
       }
@@ -351,11 +309,10 @@ export function createTuner(options = {}) {
 
     // Guides.
     const lit = active ? (moving ? 1 : DIM) : 0;
-    const settled = inTune && (style === "cent" || lock === "locked");
     const guideTarget = {
       flat: active && !inTune && smoothed < 0 ? lit : 0,
       sharp: active && !inTune && smoothed >= 0 ? lit : 0,
-      inTune: active && settled ? lit : 0,
+      inTune: active && inTune ? lit : 0,
     };
     if (ledFlash) guideTarget.flat = guideTarget.sharp = guideTarget.inTune = 0;
     const attack = 1 - Math.exp(-dt / o.attackMs);
@@ -378,6 +335,7 @@ export function createTuner(options = {}) {
       guides: { ...guides },
       cents: null,
       inTune: false,
+      centreGreen: false,
       note: null,
       string: null,
       frequency: null,
@@ -387,6 +345,7 @@ export function createTuner(options = {}) {
       const flats = getMode(mode).flats;
       state.cents = smoothed;
       state.inTune = inTune;
+      state.centreGreen = inTune && style === "cent";
       state.note = displayed.note;
       state.string = displayed.string;
       state.frequency = medianFrequency;
@@ -410,12 +369,6 @@ export function createTuner(options = {}) {
       }
     }
     return state;
-  }
-
-  function lockTarget() {
-    const target = new Array(LED_COUNT).fill(0);
-    for (let k = 0; k < LOCK.length; k++) target[CENTRE - 1 + k] = LOCK[k];
-    return target;
   }
 
   /**

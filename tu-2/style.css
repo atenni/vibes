@@ -565,3 +565,8 @@ button {
     display: none;
   }
 }
+/* Bi-colour centre LED: red layers unless in tune in cent style. */
+.led:not([data-green]) .green,
+.led[data-green] .red {
+  display: none;
+}

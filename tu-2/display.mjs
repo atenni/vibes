@@ -89,11 +89,21 @@ function bead(parent, x, y, r, kind) {
   const lit = kind === "green" ? "green" : "red";
   const g = add("g", { class: "led" }, parent);
   const at = { cx: String(x), cy: String(y) };
-  add(
-    "circle",
-    { ...at, r: String(r * 2.7), class: "halo", fill: `url(#glow-${lit})` },
-    g,
-  );
+  // The centre LED is bi-colour: red in stream style, green when in tune in
+  // cent style. It carries both lit layers; CSS picks one via data-green.
+  const colours = kind === "green" ? ["red", "green"] : [lit];
+  for (const colour of colours) {
+    add(
+      "circle",
+      {
+        ...at,
+        r: String(r * 2.7),
+        class: `halo ${colour}`,
+        fill: `url(#glow-${colour})`,
+      },
+      g,
+    );
+  }
   add(
     "circle",
     {
@@ -103,16 +113,28 @@ function bead(parent, x, y, r, kind) {
     },
     g,
   );
-  add(
-    "circle",
-    { ...at, r: String(r), class: "on", fill: `url(#bead-on-${lit})` },
-    g,
-  );
-  add(
-    "circle",
-    { ...at, r: String(r * 0.8), class: "hot", fill: `url(#hot-${lit})` },
-    g,
-  );
+  for (const colour of colours) {
+    add(
+      "circle",
+      {
+        ...at,
+        r: String(r),
+        class: `on ${colour}`,
+        fill: `url(#bead-on-${colour})`,
+      },
+      g,
+    );
+    add(
+      "circle",
+      {
+        ...at,
+        r: String(r * 0.8),
+        class: `hot ${colour}`,
+        fill: `url(#hot-${colour})`,
+      },
+      g,
+    );
+  }
   add(
     "ellipse",
     {
@@ -243,6 +265,7 @@ export function createDisplay(root) {
     sharp: false,
     check: 0,
     lock: false,
+    green: false,
   };
 
   /** @param {Element} el @param {number} b */
@@ -253,7 +276,12 @@ export function createDisplay(root) {
    * @param {{ on: boolean, check?: boolean }} opts
    */
   function render(state, { on, check: checkOn = on }) {
-    // Arc LEDs: red, except the green centre one.
+    // Arc LEDs: red; the centre one turns green in cent style when in tune.
+    const green = on && Boolean(state.centreGreen);
+    if (green !== prev.green) {
+      prev.green = green;
+      leds[5].toggleAttribute("data-green", green);
+    }
     for (let i = 0; i < LED_COUNT; i++) {
       const b = on ? level(state.leds[i] ?? 0) : 0;
       if (b !== prev.leds[i]) {
