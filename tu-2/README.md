@@ -7,8 +7,9 @@ the device and never recorded or sent anywhere.
 ## Use
 
 - **Footswitch** (or Space/Enter): start or stop listening.
-- **MODE** (right key, tap): chromatic, guitar, bass, each also a semitone or
-  whole tone down. The mode's LED on the arc lights briefly.
+- **MODE** (right key, tap): Chromatic → Guitar → Guitar ♭ → Guitar ♭♭ → Bass ♭♭
+  → Bass ♭ → Bass, as in the TU-2 manual. The mode's LED on the arc lights
+  briefly.
 - **STREAM/CENT** (left key, tap): stream (marquee that stops when in tune) or
   single cent LED.
 - **PITCH**: hold the left key to lower, the right key to raise the reference A4
