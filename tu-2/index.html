@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+    />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'"
+    />
+    <title>TU-2 · Vibes</title>
+    <meta name="application-name" content="TU-2" />
+    <meta
+      name="description"
+      content="A chromatic guitar and bass tuner in the style of a classic stompbox. Tap the pedal, play a string and chase the LEDs until they stop."
+    />
+    <meta name="keywords" content="music, audio, tuner" />
+    <meta name="theme-color" content="#14151a" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" type="image/svg+xml" href="icon.svg" />
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" src="app.mjs"></script>
+    <script type="module" src="../version.mjs"></script>
+  </head>
+  <body>
+    <main class="stage">
+      <div class="pedal" id="pedal" data-power="off">
+        <span class="thumbscrew" aria-hidden="true"></span>
+        <span class="jack jack-l" aria-hidden="true"></span>
+        <span class="jack jack-r" aria-hidden="true"></span>
+
+        <!-- Display panel: 91 × 57 units; the keys sit over the SVG. -->
+        <div class="panel">
+          <svg
+            class="panel-art"
+            viewBox="0 0 91 57"
+            role="img"
+            aria-label="Tuner display"
+          >
+            <defs>
+              <radialGradient id="glow-red">
+                <stop offset="0" stop-color="#ff2a1a" stop-opacity="0.85" />
+                <stop offset="1" stop-color="#ff2a1a" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="glow-green">
+                <stop offset="0" stop-color="#3dff6a" stop-opacity="0.85" />
+                <stop offset="1" stop-color="#3dff6a" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="glow-amber">
+                <stop offset="0" stop-color="#ffc21a" stop-opacity="0.7" />
+                <stop offset="1" stop-color="#ffc21a" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="screw" cx="0.4" cy="0.35" r="0.8">
+                <stop offset="0" stop-color="#4a4b50" />
+                <stop offset="1" stop-color="#0a0a0b" />
+              </radialGradient>
+              <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#2a2890" />
+                <stop offset="1" stop-color="#15145a" />
+              </linearGradient>
+            </defs>
+
+            <rect width="91" height="57" rx="1.6" fill="#08080a" />
+
+            <g class="screws">
+              <circle cx="8.5" cy="8" r="2.6" />
+              <circle cx="82.5" cy="8" r="2.6" />
+              <circle cx="5.8" cy="50" r="2.6" />
+              <circle cx="85.2" cy="50" r="2.6" />
+            </g>
+
+            <!-- Top row: flat (▶), CHECK, sharp (◀). -->
+            <polygon class="tri-off" points="19,5.4 19,10.6 25.4,8" />
+            <polygon
+              class="tri-on"
+              data-tri="flat"
+              points="19,5.4 19,10.6 25.4,8"
+            />
+            <polygon class="tri-off" points="72,5.4 72,10.6 65.6,8" />
+            <polygon
+              class="tri-on"
+              data-tri="sharp"
+              points="72,5.4 72,10.6 65.6,8"
+            />
+            <circle class="check-off" cx="45.5" cy="5.6" r="1.4" />
+            <circle class="check-on" data-check cx="45.5" cy="5.6" r="1.4" />
+            <text class="silk" x="48" y="6.7">CHECK</text>
+            <text class="silk" x="45.5" y="10.8" text-anchor="middle">0</text>
+
+            <!-- LED arc, ticks and labels are filled in by display.mjs. -->
+            <g data-arc></g>
+            <text class="silk" x="2.6" y="18.6" font-size="2.5">-50</text>
+            <text
+              class="silk"
+              x="88.4"
+              y="18.6"
+              text-anchor="end"
+              font-size="2.5"
+            >
+              +50
+            </text>
+
+            <!-- Bottom row. -->
+            <text class="silk" x="21.5" y="36.4" text-anchor="middle">
+              STREAM/CENT
+            </text>
+            <text class="silk" x="70.5" y="36.4" text-anchor="middle">
+              MODE
+            </text>
+            <rect
+              x="37.5"
+              y="28.5"
+              width="16"
+              height="21"
+              rx="0.6"
+              fill="url(#glass)"
+              stroke="#000"
+              stroke-width="0.4"
+            />
+            <svg
+              class="digit"
+              x="39.5"
+              y="30"
+              width="12"
+              height="18"
+              viewBox="0 0 96 144"
+              data-digit
+            ></svg>
+            <text class="ind" data-sharp x="56.8" y="48.4" text-anchor="middle">
+              #
+            </text>
+            <text class="silk" x="54.3" y="48.4" font-size="3.2">-</text>
+
+            <path class="pitch-line" d="M25 53.5H39.5M51.5 53.5H66" />
+            <polygon class="silk-fill" points="19.4,52.2 23.8,52.2 21.6,55.2" />
+            <polygon class="silk-fill" points="67.4,55.2 71.8,55.2 69.6,52.2" />
+            <text class="silk" x="45.5" y="54.6" text-anchor="middle">
+              PITCH
+            </text>
+          </svg>
+
+          <button
+            type="button"
+            class="key key-style"
+            id="style-btn"
+            aria-label="Stream or cent display. Hold to lower the reference pitch."
+          ></button>
+          <button
+            type="button"
+            class="key key-mode"
+            id="mode-btn"
+            aria-label="Mode. Hold to raise the reference pitch."
+          ></button>
+        </div>
+
+        <!-- Everything below the panel is the hinged hood; the pad stomps. -->
+        <div class="hood">
+          <svg class="body-silk" viewBox="0 61 100 116" aria-hidden="true">
+            <g class="arrow">
+              <path d="M12 70.3H4.8M8.6 66.6 4.8 70.3 8.6 74" />
+              <path d="M12 79.3H4.8M8.6 75.6 4.8 79.3 8.6 83" />
+              <path d="M96 70.3H88.8M92.6 66.6 88.8 70.3 92.6 74" />
+            </g>
+            <g class="silk-body">
+              <text x="14.2" y="72.8" font-size="5.6" textLength="25">
+                OUTPUT
+              </text>
+              <text x="14.2" y="81.8" font-size="5.6" textLength="23.5">
+                BYPASS
+              </text>
+              <text x="64.5" y="72.8" font-size="5.6" textLength="22">
+                INPUT
+              </text>
+              <text
+                class="big"
+                x="10"
+                y="94.2"
+                font-size="12.6"
+                textLength="75"
+                lengthAdjust="spacingAndGlyphs"
+              >
+                Chromatic
+              </text>
+              <text
+                class="big"
+                x="46.5"
+                y="108.4"
+                font-size="12.6"
+                textLength="43.5"
+                lengthAdjust="spacingAndGlyphs"
+              >
+                Tuner
+              </text>
+              <text
+                x="70.5"
+                y="117.6"
+                font-size="6.6"
+                font-weight="600"
+                textLength="19.5"
+              >
+                TU-2
+              </text>
+            </g>
+          </svg>
+
+          <button
+            type="button"
+            class="footswitch"
+            id="stomp"
+            aria-pressed="false"
+            aria-label="Tuner on or off"
+          >
+            <svg viewBox="0 0 90 52" aria-hidden="true">
+              <g class="emboss">
+                <rect x="11" y="8" width="11" height="10" rx="1.6" />
+                <path d="M14.2 11.6 16.5 15.4 18.8 11.6" />
+                <text
+                  x="26"
+                  y="17.4"
+                  textLength="53"
+                  lengthAdjust="spacingAndGlyphs"
+                >
+                  VIBES
+                </text>
+              </g>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <p class="under">
+      <span id="hint">Tap to tune</span><span id="readout"></span>
+    </p>
+    <p id="note" class="note" role="alert" hidden></p>
+    <p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
+
+    <footer class="site-footer">
+      <a href="../">← Vibes</a>
+      <span>Audio stays on your device.</span>
+      <span><a data-version hidden></a></span>
+    </footer>
+  </body>
+</html>
