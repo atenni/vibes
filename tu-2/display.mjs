@@ -41,17 +41,17 @@ function svg(name, attrs) {
 
 /** LED centres traced from the reference photo, in panel units (91 × 57). */
 const LEDS = [
-  [8.9, 27.2],
-  [16.3, 23.6],
-  [23.1, 20.7],
-  [30.4, 19.0],
-  [38.3, 17.9],
-  [46.3, 17.4],
-  [53.9, 17.8],
-  [61.6, 19.0],
-  [69.2, 20.8],
-  [76.4, 23.5],
-  [83.5, 27.0],
+  [9.75, 27.2],
+  [16.7, 23.8],
+  [23.4, 21.0],
+  [30.4, 19.3],
+  [37.7, 18.2],
+  [45.3, 17.9],
+  [52.7, 18.2],
+  [60.0, 19.3],
+  [67.3, 21.0],
+  [74.3, 23.6],
+  [81.0, 27.2],
 ];
 
 /** White tick blocks under the arc: [x, y, rotation in degrees]. */
@@ -88,6 +88,7 @@ function add(name, attrs, parent) {
 function bead(parent, x, y, r, kind) {
   const lit = kind === "green" ? "green" : "red";
   const g = add("g", { class: "led" }, parent);
+  if (kind === "green") g.setAttribute("data-centre", "");
   const at = { cx: String(x), cy: String(y) };
   // The centre LED is bi-colour: red in stream style, green when in tune in
   // cent style. It carries both lit layers; CSS picks one via data-green.
@@ -205,11 +206,11 @@ export function createDisplay(root) {
   // Light-pipe: a pale-bordered clear strip through the LED centres.
   const [x0, y0] = LEDS[0];
   const [x1] = LEDS[10];
-  const k = (y0 - LEDS[5][1]) / (46.3 - x0) ** 2;
+  const k = (y0 - LEDS[5][1]) / (LEDS[5][0] - x0) ** 2;
   let d = "";
   for (let i = 0; i <= 40; i++) {
     const x = x0 - 3.2 + (i / 40) * (x1 - x0 + 6.4);
-    const y = LEDS[5][1] + k * (x - 46.3) ** 2;
+    const y = LEDS[5][1] + k * (x - LEDS[5][0]) ** 2;
     d += `${i ? "L" : "M"}${x.toFixed(2)} ${y.toFixed(2)} `;
   }
   add("path", { class: "pipe-edge", d }, arc);

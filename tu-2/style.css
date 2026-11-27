@@ -201,7 +201,7 @@ button {
 .flats use {
   fill: none;
   stroke: #f1efe9;
-  stroke-width: 0.1;
+  stroke-width: 0.13;
   stroke-linecap: round;
 }
 .screws circle {
@@ -300,8 +300,8 @@ button {
 }
 .ind {
   fill: none;
-  stroke: #3a0f12;
-  stroke-width: 0.5;
+  stroke: #e9e7e0;
+  stroke-width: 0.45;
   stroke-linecap: round;
 }
 .ind.on {
@@ -569,4 +569,10 @@ button {
 .led:not([data-green]) .green,
 .led[data-green] .red {
   display: none;
+}
+/* The centre LED's off bead is milky white like the real one. Its lit layers
+   saturate early so that dim or fading states still read red or green, never
+   washed-out white. */
+.led[data-centre] .on {
+  opacity: min(1, calc(var(--b) * 3));
 }
