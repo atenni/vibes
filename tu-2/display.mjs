@@ -39,19 +39,30 @@ function svg(name, attrs) {
   return el;
 }
 
-/** Arc geometry in panel units (91 × 57): centre highest, ends lower. */
-const arcX = (i) => 8.8 + i * 7.38;
-const arcY = (i) => 16 + 10 * ((i - 5) / 5) ** 2;
+/** LED centres traced from the reference photo, in panel units (91 × 57). */
+const LEDS = [
+  [8.9, 27.2],
+  [16.3, 23.6],
+  [23.1, 20.7],
+  [30.4, 19.0],
+  [38.3, 17.9],
+  [46.3, 17.4],
+  [53.9, 17.8],
+  [61.6, 19.0],
+  [69.2, 20.8],
+  [76.4, 23.5],
+  [83.5, 27.0],
+];
 
-/** Tick labels under the arc: [LED index, text, kind]. */
+/** White tick blocks under the arc: [x, y, rotation in degrees]. */
 const TICKS = [
-  [0, "♭♭", "small"],
-  [1, "♭", "small"],
-  [2, "BASS", "word"],
-  [4, "♭♭", "small"],
-  [5, "♭", "small"],
-  [6, "GUITAR", "word"],
-  [9, "CHROMATIC", "word"],
+  [11.6, 31.3, -27],
+  [18.3, 28.5, -22],
+  [24.6, 25.9, -17],
+  [38.3, 23.2, -6],
+  [45.3, 22.6, 0],
+  [52.4, 22.9, 5],
+  [72.6, 28, 24],
 ];
 
 /**
@@ -65,6 +76,88 @@ function add(name, attrs, parent) {
   return el;
 }
 
+/**
+ * A glass LED bead: halo, unlit bead, lit bead, hot core and a specular
+ * highlight, all driven by the group's --b.
+ * @param {Element} parent
+ * @param {number} x
+ * @param {number} y
+ * @param {number} r
+ * @param {"red" | "green" | "pale"} kind  pale = white when off, red when lit
+ */
+function bead(parent, x, y, r, kind) {
+  const lit = kind === "green" ? "green" : "red";
+  const g = add("g", { class: "led" }, parent);
+  const at = { cx: String(x), cy: String(y) };
+  add(
+    "circle",
+    { ...at, r: String(r * 2.7), class: "halo", fill: `url(#glow-${lit})` },
+    g,
+  );
+  add(
+    "circle",
+    {
+      ...at,
+      r: String(r),
+      fill: `url(#bead-off-${kind === "red" ? "red" : "pale"})`,
+    },
+    g,
+  );
+  add(
+    "circle",
+    { ...at, r: String(r), class: "on", fill: `url(#bead-on-${lit})` },
+    g,
+  );
+  add(
+    "circle",
+    { ...at, r: String(r * 0.8), class: "hot", fill: `url(#hot-${lit})` },
+    g,
+  );
+  add(
+    "ellipse",
+    {
+      cx: String(x - r * 0.3),
+      cy: String(y - r * 0.42),
+      rx: String(r * 0.38),
+      ry: String(r * 0.24),
+      class: "spec",
+      fill: "url(#spec)",
+    },
+    g,
+  );
+  return g;
+}
+
+/**
+ * An amber triangle lamp, same layers as a bead.
+ * @param {Element} slot  a <g data-shape="x1,y1 x2,y2 x3,y3">
+ */
+function triangle(slot) {
+  const points = slot.getAttribute("data-shape");
+  const [a, b, c] = points.split(" ").map((p) => p.split(",").map(Number));
+  const cx = (a[0] + b[0] + c[0]) / 3;
+  const cy = (a[1] + b[1] + c[1]) / 3;
+  const hot = [a, b, c]
+    .map(([x, y]) => `${cx + (x - cx) * 0.55},${cy + (y - cy) * 0.55}`)
+    .join(" ");
+  slot.classList.add("led", "tri");
+  add("polygon", { points, class: "off" }, slot);
+  add(
+    "circle",
+    {
+      cx: String(cx),
+      cy: String(cy),
+      r: "6.4",
+      class: "halo",
+      fill: "url(#glow-amber)",
+    },
+    slot,
+  );
+  add("polygon", { points, class: "on" }, slot);
+  add("polygon", { points: hot, class: "hot" }, slot);
+  return slot;
+}
+
 /** Quantise brightness so tiny float changes don't cause style writes. */
 const level = (value) => Math.round(Math.min(1, Math.max(0, value)) * 50) / 50;
 
@@ -74,97 +167,65 @@ const level = (value) => Math.round(Math.min(1, Math.max(0, value)) * 50) / 50;
 export function createDisplay(root) {
   const arc = root.querySelector("[data-arc]");
   const digit = root.querySelector("[data-digit]");
-  const check = root.querySelector("[data-check]");
   const sharpMark = root.querySelector("[data-sharp]");
   const tri = {
-    flat: root.querySelector('[data-tri="flat"]'),
-    sharp: root.querySelector('[data-tri="sharp"]'),
+    flat: triangle(root.querySelector('[data-tri="flat"]')),
+    sharp: triangle(root.querySelector('[data-tri="sharp"]')),
   };
+  const check = bead(
+    root.querySelector("[data-check]"),
+    45.4,
+    6.5,
+    1.9,
+    "pale",
+  );
 
-  // Light-pipe: a pale-bordered clear strip following the LED curve.
+  // Light-pipe: a pale-bordered clear strip through the LED centres.
+  const [x0, y0] = LEDS[0];
+  const [x1] = LEDS[10];
+  const k = (y0 - LEDS[5][1]) / (46.3 - x0) ** 2;
   let d = "";
   for (let i = 0; i <= 40; i++) {
-    const t = (i / 40) * 10;
-    d += `${i ? "L" : "M"}${arcX(0) - 1.6 + (t / 10) * (arcX(10) - arcX(0) + 3.2)} ${arcY(t) + 0.2} `;
+    const x = x0 - 3.2 + (i / 40) * (x1 - x0 + 6.4);
+    const y = LEDS[5][1] + k * (x - 46.3) ** 2;
+    d += `${i ? "L" : "M"}${x.toFixed(2)} ${y.toFixed(2)} `;
   }
   add("path", { class: "pipe-edge", d }, arc);
   add("path", { class: "pipe", d }, arc);
 
-  // Ticks and mode silkscreen.
-  for (const [i, text, kind] of TICKS) {
-    const x = arcX(i);
-    const y = arcY(i);
-    // Slope of the arc at this LED (dy/dx), so labels follow the curve.
-    const angle = (Math.atan((20 * (i - 5)) / 25 / 7.38) * 180) / Math.PI;
+  for (const [x, y, angle] of TICKS) {
     add(
       "rect",
       {
         class: "tick",
-        x: String(x - 0.5),
-        y: String(y + 2.6),
-        width: "1",
-        height: "2",
+        x: "-1.65",
+        y: "-1.2",
+        width: "3.3",
+        height: "2.4",
+        transform: `translate(${x} ${y}) rotate(${angle})`,
       },
       arc,
     );
-    const label = add(
-      "text",
-      {
-        class: kind === "word" ? "silk word" : "silk",
-        x: String(kind === "word" ? x + (i === 9 ? -6.5 : 1.2) : x),
-        y: String(y + 7),
-        "text-anchor": kind === "word" ? "start" : "middle",
-        transform: `rotate(${angle.toFixed(1)} ${x} ${y + 7})`,
-      },
-      arc,
-    );
-    label.textContent = text;
   }
 
-  // LEDs: a glow disc under a lamp, both driven by --b.
   /** @type {SVGElement[]} */
-  const leds = [];
-  for (let i = 0; i < LED_COUNT; i++) {
-    const g = add("g", { class: "led" }, arc);
-    if (i === 5) g.setAttribute("data-green", "");
-    add(
-      "circle",
-      { class: "glow", cx: String(arcX(i)), cy: String(arcY(i)), r: "4.6" },
-      g,
-    );
-    add(
-      "circle",
-      { class: "lamp", cx: String(arcX(i)), cy: String(arcY(i)), r: "1.5" },
-      g,
-    );
-    leds.push(g);
-  }
+  const leds = LEDS.map(([x, y], i) =>
+    bead(arc, x, y, 2.3, i === 5 ? "green" : "red"),
+  );
 
-  // 7-segment digit, slightly italic like the real thing.
+  // 7-segment digit, slightly italic like the real thing: halo, body, hot core.
   const group = svg("g", { transform: "translate(10 0) skewX(-5)" });
   /** @type {Record<string, SVGElement>} */
   const segs = {};
   for (const name of SEGMENTS) {
-    segs[name] = svg("polygon", { class: "seg", points: SEGMENT_POINTS[name] });
-    group.append(segs[name]);
+    const seg = add("g", { class: "seg" }, group);
+    const points = SEGMENT_POINTS[name];
+    add("polygon", { class: "seg-halo", points }, seg);
+    add("polygon", { class: "seg-body", points }, seg);
+    add("polygon", { class: "seg-hot", points }, seg);
+    segs[name] = seg;
   }
   digit.append(group);
-
-  // Glow discs for the triangles and CHECK LED.
-  for (const [el, kind, r] of [
-    [tri.flat, "amber", 7],
-    [tri.sharp, "amber", 7],
-    [check, "red", 4],
-  ]) {
-    const glow = add("circle", {
-      class: `glow ${kind}`,
-      cx: el.getAttribute("cx") ?? String(el === tri.flat ? 21.8 : 69.2),
-      cy: el.getAttribute("cy") ?? "8",
-      r: String(r),
-    });
-    el.before(glow);
-    el.glow = glow;
-  }
 
   /** Previous values, to skip redundant writes. */
   const prev = {
@@ -177,10 +238,7 @@ export function createDisplay(root) {
   };
 
   /** @param {Element} el @param {number} b */
-  const setB = (el, b) => {
-    el.style.setProperty("--b", String(b));
-    if (el.glow) el.glow.style.setProperty("--b", String(b));
-  };
+  const setB = (el, b) => el.style.setProperty("--b", String(b));
 
   /**
    * @param {object} state  DisplayState from tuner.update
@@ -192,7 +250,7 @@ export function createDisplay(root) {
       const b = on ? level(state.leds[i] ?? 0) : 0;
       if (b !== prev.leds[i]) {
         prev.leds[i] = b;
-        leds[i].style.setProperty("--b", String(b));
+        setB(leds[i], b);
       }
     }
 

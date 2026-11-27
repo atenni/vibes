@@ -92,12 +92,25 @@ function setPower(on) {
   hint.textContent = on ? "Tap to stop" : "Tap to tune";
 }
 
-function nudge() {
-  const hood = stomp.parentElement;
-  hood.classList.remove("stomp");
-  void hood.offsetWidth;
-  hood.classList.add("stomp");
+const hood = $("#hood");
+let released = 0;
+
+/** Rotate the hood down about its hinge. */
+function press() {
+  clearTimeout(released);
+  hood.classList.add("down");
+}
+
+/** Let the spring push it back up (CSS handles the overshoot). */
+function release() {
+  hood.classList.remove("down");
+}
+
+/** Toggle the tuner; the press itself is drawn by press() / release(). */
+function toggle() {
   navigator.vibrate?.(12);
+  if (listening) stopListening();
+  else startListening();
 }
 
 /** Show a transient glyph on the 7-segment display, even when off. */
@@ -202,10 +215,33 @@ function stopListening() {
   run();
 }
 
-stomp.addEventListener("click", () => {
-  nudge();
-  if (listening) stopListening();
-  else startListening();
+// Pointer: dip on press, toggle and spring back on release. Same on desktop and iOS.
+let pointerId = -1;
+stomp.addEventListener("pointerdown", (event) => {
+  if (event.button > 0 || pointerId !== -1) return;
+  pointerId = event.pointerId;
+  stomp.setPointerCapture(pointerId);
+  press();
+});
+stomp.addEventListener("pointerup", (event) => {
+  if (event.pointerId !== pointerId) return;
+  pointerId = -1;
+  release();
+  toggle();
+});
+stomp.addEventListener("pointercancel", (event) => {
+  if (event.pointerId !== pointerId) return;
+  pointerId = -1;
+  release();
+});
+stomp.addEventListener("contextmenu", (event) => event.preventDefault());
+
+// Keyboard (and assistive tech) clicks have detail 0: play the same press.
+stomp.addEventListener("click", (event) => {
+  if (event.detail !== 0) return;
+  press();
+  released = setTimeout(release, 110);
+  toggle();
 });
 
 // Space/Enter on the focused pedal already clicks it; make it work anywhere

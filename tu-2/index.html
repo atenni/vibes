@@ -28,10 +28,12 @@
     <main class="stage">
       <div class="pedal" id="pedal" data-power="off">
         <span class="thumbscrew" aria-hidden="true"></span>
+        <span class="base" aria-hidden="true"></span>
         <span class="jack jack-l" aria-hidden="true"></span>
         <span class="jack jack-r" aria-hidden="true"></span>
 
-        <!-- Display panel: 91 × 57 units; the keys sit over the SVG. -->
+        <!-- Display panel: 91 × 57 units; the keys sit over the SVG. Layout
+             traced from the reference photo (1120 × 700 px ≈ 12.3 px/unit). -->
         <div class="panel">
           <svg
             class="panel-art"
@@ -40,103 +42,263 @@
             aria-label="Tuner display"
           >
             <defs>
+              <!-- Halos: pre-built gradients, opacity follows --b. -->
               <radialGradient id="glow-red">
-                <stop offset="0" stop-color="#ff2a1a" stop-opacity="0.85" />
+                <stop offset="0" stop-color="#ff3a22" stop-opacity="0.8" />
+                <stop offset="0.35" stop-color="#ff2a1a" stop-opacity="0.38" />
                 <stop offset="1" stop-color="#ff2a1a" stop-opacity="0" />
               </radialGradient>
               <radialGradient id="glow-green">
-                <stop offset="0" stop-color="#3dff6a" stop-opacity="0.85" />
+                <stop offset="0" stop-color="#3dff6a" stop-opacity="0.8" />
+                <stop offset="0.35" stop-color="#3dff6a" stop-opacity="0.38" />
                 <stop offset="1" stop-color="#3dff6a" stop-opacity="0" />
               </radialGradient>
               <radialGradient id="glow-amber">
-                <stop offset="0" stop-color="#ffc21a" stop-opacity="0.7" />
-                <stop offset="1" stop-color="#ffc21a" stop-opacity="0" />
+                <stop offset="0" stop-color="#ffc21a" stop-opacity="0.75" />
+                <stop offset="0.35" stop-color="#ffb400" stop-opacity="0.32" />
+                <stop offset="1" stop-color="#ffb400" stop-opacity="0" />
               </radialGradient>
+              <!-- Glass beads: unlit, lit and the hot core. -->
+              <radialGradient id="bead-off-red" cx="0.42" cy="0.38" r="0.75">
+                <stop offset="0" stop-color="#8f241b" />
+                <stop offset="0.6" stop-color="#43100c" />
+                <stop offset="1" stop-color="#170403" />
+              </radialGradient>
+              <radialGradient id="bead-off-pale" cx="0.42" cy="0.38" r="0.75">
+                <stop offset="0" stop-color="#f4f3ee" />
+                <stop offset="0.7" stop-color="#c3c4c0" />
+                <stop offset="1" stop-color="#85878a" />
+              </radialGradient>
+              <radialGradient id="bead-on-red" cx="0.45" cy="0.4" r="0.7">
+                <stop offset="0" stop-color="#ff9c84" />
+                <stop offset="0.45" stop-color="#ff3a22" />
+                <stop offset="1" stop-color="#b8160a" />
+              </radialGradient>
+              <radialGradient id="bead-on-green" cx="0.45" cy="0.4" r="0.7">
+                <stop offset="0" stop-color="#d8ffe2" />
+                <stop offset="0.45" stop-color="#44ff72" />
+                <stop offset="1" stop-color="#0f9a35" />
+              </radialGradient>
+              <radialGradient id="hot-red">
+                <stop offset="0" stop-color="#fff4ee" />
+                <stop offset="0.5" stop-color="#ffc4b4" stop-opacity="0.8" />
+                <stop offset="1" stop-color="#ff8a70" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="hot-green">
+                <stop offset="0" stop-color="#f6fff8" />
+                <stop offset="0.5" stop-color="#c4ffd2" stop-opacity="0.8" />
+                <stop offset="1" stop-color="#7cff9a" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="spec">
+                <stop offset="0" stop-color="#fff" stop-opacity="0.9" />
+                <stop offset="1" stop-color="#fff" stop-opacity="0" />
+              </radialGradient>
+              <linearGradient id="tri-amber" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ffd24a" />
+                <stop offset="1" stop-color="#ff9d00" />
+              </linearGradient>
               <radialGradient id="screw" cx="0.4" cy="0.35" r="0.8">
-                <stop offset="0" stop-color="#4a4b50" />
-                <stop offset="1" stop-color="#0a0a0b" />
+                <stop offset="0" stop-color="#3c3d42" />
+                <stop offset="1" stop-color="#050506" />
               </radialGradient>
               <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#2a2890" />
-                <stop offset="1" stop-color="#15145a" />
+                <stop offset="0" stop-color="#14137a" />
+                <stop offset="1" stop-color="#0b0a52" />
               </linearGradient>
+              <!-- A lowercase-b style flat, 1 unit tall, baseline at y = 0. -->
+              <path
+                id="flat"
+                d="M0 -1V0M0 -0.52C0.34 -0.66 0.68 -0.48 0.68 -0.26C0.68 -0.02 0.32 0.05 0 -0.08"
+              />
             </defs>
 
             <rect width="91" height="57" rx="1.6" fill="#08080a" />
 
             <g class="screws">
-              <circle cx="8.5" cy="8" r="2.6" />
-              <circle cx="82.5" cy="8" r="2.6" />
-              <circle cx="5.8" cy="50" r="2.6" />
-              <circle cx="85.2" cy="50" r="2.6" />
+              <g transform="translate(9.1 8.9)">
+                <circle r="4.1" />
+                <circle class="socket" r="2.5" />
+                <path d="M-1.3-0.75 0-1.5 1.3-0.75V0.75L0 1.5-1.3 0.75Z" />
+              </g>
+              <g transform="translate(81.3 8.1)">
+                <circle r="4.1" />
+                <circle class="socket" r="2.5" />
+                <path d="M-1.3-0.75 0-1.5 1.3-0.75V0.75L0 1.5-1.3 0.75Z" />
+              </g>
+              <g transform="translate(6.9 49.3)">
+                <circle r="4.1" />
+                <circle class="socket" r="2.5" />
+                <path d="M-1.3-0.75 0-1.5 1.3-0.75V0.75L0 1.5-1.3 0.75Z" />
+              </g>
+              <g transform="translate(85 49.2)">
+                <circle r="4.1" />
+                <circle class="socket" r="2.5" />
+                <path d="M-1.3-0.75 0-1.5 1.3-0.75V0.75L0 1.5-1.3 0.75Z" />
+              </g>
             </g>
 
-            <!-- Top row: flat (▶), CHECK, sharp (◀). -->
-            <polygon class="tri-off" points="19,5.4 19,10.6 25.4,8" />
-            <polygon
-              class="tri-on"
-              data-tri="flat"
-              points="19,5.4 19,10.6 25.4,8"
-            />
-            <polygon class="tri-off" points="72,5.4 72,10.6 65.6,8" />
-            <polygon
-              class="tri-on"
-              data-tri="sharp"
-              points="72,5.4 72,10.6 65.6,8"
-            />
-            <circle class="check-off" cx="45.5" cy="5.6" r="1.4" />
-            <circle class="check-on" data-check cx="45.5" cy="5.6" r="1.4" />
-            <text class="silk" x="48" y="6.7">CHECK</text>
-            <text class="silk" x="45.5" y="10.8" text-anchor="middle">0</text>
-
-            <!-- LED arc, ticks and labels are filled in by display.mjs. -->
-            <g data-arc></g>
-            <text class="silk" x="2.6" y="18.6" font-size="2.5">-50</text>
+            <!-- Top row: flat (▶), CHECK, sharp (◀). The lamps are built by display.mjs. -->
+            <g data-tri="flat" data-shape="20.2,6.9 20.2,11.3 26,9.1"></g>
+            <g data-tri="sharp" data-shape="70.8,6.9 70.8,11.3 65,9.1"></g>
+            <g data-check></g>
             <text
               class="silk"
-              x="88.4"
-              y="18.6"
-              text-anchor="end"
-              font-size="2.5"
+              x="48.7"
+              y="7.9"
+              textLength="11.4"
+              lengthAdjust="spacingAndGlyphs"
+            >
+              CHECK
+            </text>
+            <text class="silk" x="45.4" y="12.4" text-anchor="middle">0</text>
+
+            <!-- LED arc, light-pipe and ticks are built by display.mjs. -->
+            <g data-arc></g>
+
+            <!-- Bracket: the thin line under the ticks, round CHROMATIC to MODE. -->
+            <path
+              class="bracket"
+              d="M23.3 27.2Q45 21.6 75 29.8Q81 32 82 35.6Q82.2 37.2 80.6 37.2H74.6"
+            />
+
+            <!-- Flats (upright, slightly slanted) and mode names. -->
+            <g class="flats">
+              <use
+                href="#flat"
+                transform="translate(14 34.9) skewX(-6) scale(2.5)"
+              />
+              <use
+                href="#flat"
+                transform="translate(15.9 34.9) skewX(-6) scale(2.5)"
+              />
+              <use
+                href="#flat"
+                transform="translate(19.1 32.9) skewX(-6) scale(2.5)"
+              />
+              <use
+                href="#flat"
+                transform="translate(38.2 27.7) skewX(-6) scale(2.5)"
+              />
+              <use
+                href="#flat"
+                transform="translate(40.1 27.7) skewX(-6) scale(2.5)"
+              />
+              <use
+                href="#flat"
+                transform="translate(46.1 27.4) skewX(-6) scale(2.5)"
+              />
+            </g>
+            <text
+              class="silk"
+              transform="translate(21.7 30.6) rotate(-13)"
+              textLength="8.7"
+              lengthAdjust="spacingAndGlyphs"
+            >
+              BASS
+            </text>
+            <text
+              class="silk"
+              transform="translate(50.8 27.1) rotate(5)"
+              textLength="10.4"
+              lengthAdjust="spacingAndGlyphs"
+            >
+              GUITAR
+            </text>
+            <path id="chroma-path" fill="none" d="M62.2 29.2Q73 30 80.3 36" />
+            <text class="silk">
+              <textPath
+                href="#chroma-path"
+                textLength="18"
+                lengthAdjust="spacingAndGlyphs"
+              >
+                CHROMATIC
+              </textPath>
+            </text>
+
+            <text
+              class="silk"
+              x="4.5"
+              y="21.9"
+              textLength="4.5"
+              lengthAdjust="spacingAndGlyphs"
+            >
+              -50
+            </text>
+            <text
+              class="silk"
+              x="81.5"
+              y="21.9"
+              textLength="5.1"
+              lengthAdjust="spacingAndGlyphs"
             >
               +50
             </text>
 
             <!-- Bottom row. -->
-            <text class="silk" x="21.5" y="36.4" text-anchor="middle">
+            <text
+              class="silk"
+              x="10.8"
+              y="38"
+              textLength="22.8"
+              lengthAdjust="spacingAndGlyphs"
+            >
               STREAM/CENT
             </text>
-            <text class="silk" x="70.5" y="36.4" text-anchor="middle">
+            <text
+              class="silk"
+              x="64.5"
+              y="37.9"
+              textLength="9.1"
+              lengthAdjust="spacingAndGlyphs"
+            >
               MODE
             </text>
             <rect
-              x="37.5"
-              y="28.5"
-              width="16"
-              height="21"
-              rx="0.6"
+              x="38.5"
+              y="29.4"
+              width="14.4"
+              height="19.1"
+              rx="0.3"
               fill="url(#glass)"
               stroke="#000"
-              stroke-width="0.4"
+              stroke-width="0.3"
             />
             <svg
               class="digit"
-              x="39.5"
-              y="30"
-              width="12"
-              height="18"
+              x="39.7"
+              y="30.3"
+              width="11.9"
+              height="17.4"
               viewBox="0 0 96 144"
               data-digit
             ></svg>
-            <text class="ind" data-sharp x="56.8" y="48.4" text-anchor="middle">
-              #
-            </text>
-            <text class="silk" x="54.3" y="48.4" font-size="3.2">-</text>
+            <rect
+              class="silk-fill"
+              x="54.3"
+              y="47.8"
+              width="2.2"
+              height="0.55"
+            />
+            <path
+              class="ind"
+              data-sharp
+              d="M58.2 46.4 57.7 49.5M59.8 46.4 59.3 49.5M56.9 47.4H60.4M56.7 48.5H60.2"
+            />
 
-            <path class="pitch-line" d="M25 53.5H39.5M51.5 53.5H66" />
-            <polygon class="silk-fill" points="19.4,52.2 23.8,52.2 21.6,55.2" />
-            <polygon class="silk-fill" points="67.4,55.2 71.8,55.2 69.6,52.2" />
-            <text class="silk" x="45.5" y="54.6" text-anchor="middle">
+            <path class="pitch-line" d="M24.1 52.4H38.2M52.8 52.4H67" />
+            <polygon
+              class="silk-fill"
+              points="20.7,50.9 23.4,50.9 22.05,54.1"
+            />
+            <polygon class="silk-fill" points="67.5,54.1 70.3,54.1 68.9,50.9" />
+            <text
+              class="silk"
+              x="39.5"
+              y="53.8"
+              font-size="4.7"
+              textLength="12.6"
+              lengthAdjust="spacingAndGlyphs"
+            >
               PITCH
             </text>
           </svg>
@@ -156,12 +318,21 @@
         </div>
 
         <!-- Everything below the panel is the hinged hood; the pad stomps. -->
-        <div class="hood">
+        <span class="hinge-screw hinge-l" aria-hidden="true"></span>
+        <span class="hinge-screw hinge-r" aria-hidden="true"></span>
+        <div class="hood" id="hood">
           <svg class="body-silk" viewBox="0 61 100 116" aria-hidden="true">
+            <defs>
+              <!-- Left-pointing arrow, tip at the origin, 7.6 × 7 units. -->
+              <path
+                id="arrow"
+                d="M0 0 2.9 -3.1 4.4 -1.7 3.3 -0.65H7.8V0.65H3.3L4.4 1.7 2.9 3.1Z"
+              />
+            </defs>
             <g class="arrow">
-              <path d="M12 70.3H4.8M8.6 66.6 4.8 70.3 8.6 74" />
-              <path d="M12 79.3H4.8M8.6 75.6 4.8 79.3 8.6 83" />
-              <path d="M96 70.3H88.8M92.6 66.6 88.8 70.3 92.6 74" />
+              <use href="#arrow" transform="translate(4.8 70.8)" />
+              <use href="#arrow" transform="translate(4.8 79.8)" />
+              <use href="#arrow" transform="translate(88.6 70.8)" />
             </g>
             <g class="silk-body">
               <text x="14.2" y="72.8" font-size="5.6" textLength="25">
